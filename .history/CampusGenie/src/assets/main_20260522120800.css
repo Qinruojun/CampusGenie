@@ -1,0 +1,41 @@
+@import './base.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  width:100%;
+  background: #f4f6fb;
+  font-family: Arial, sans-serif;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {/*@media(hover:hover)表示只有当前设备支持鼠标悬停才生效，避免手机端bug*/
+  a:hover {/*链接的hover效果*/
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+
