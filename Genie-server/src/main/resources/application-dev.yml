@@ -1,15 +1,12 @@
 genie:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    host: 192.168.30.101
+    host: 8.148.158.43
     port: 3306
     database: CampusGenie
-    username: hhy
-    password: Hongyuan.1
+    username: dev
+    password: Campus@Dev#DB123456
 
-  redis:
-    host: 192.168.30.101
-    port: 6379
 
 
 
