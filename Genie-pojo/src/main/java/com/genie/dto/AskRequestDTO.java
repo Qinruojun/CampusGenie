@@ -1,8 +1,8 @@
 package com.genie.dto;
 
 import lombok.Data;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Data
 public class AskRequestDTO {
