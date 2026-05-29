@@ -1,23 +1,24 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import TopNav from './components/TopNav.vue'
-import AdminShell from './components/AdminShell.vue'
 
 const route = useRoute()
-const isAdminPage = computed(() => route.meta.admin)
-const isAdminLogin = computed(() => route.name === 'admin-login')
+const hideNav = computed(() => route.meta.hideNav)
 </script>
 
 <template>
-  <div class="app">
-    <AdminShell v-if="isAdminPage">
-      <RouterView />
-    </AdminShell>
+  <div class="app-shell">
+    <header v-if="!hideNav" class="site-header">
+      <RouterLink class="brand" to="/">CampusGenie</RouterLink>
 
-    <template v-else>
-      <TopNav v-if="!isAdminLogin" />
-      <RouterView />
-    </template>
+      <nav class="nav-links">
+        <RouterLink to="/">首页</RouterLink>
+        <RouterLink to="/hot">热点问题</RouterLink>
+        <RouterLink to="/contribute">用户贡献</RouterLink>
+        <RouterLink to="/admin/login">管理员</RouterLink>
+      </nav>
+    </header>
+
+    <RouterView />
   </div>
 </template>

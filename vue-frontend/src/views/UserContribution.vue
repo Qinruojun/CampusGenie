@@ -1,148 +1,106 @@
 <script setup>
 import { ref } from 'vue'
-import { categories } from '../data/mockData'
 
-const form = ref({ category: '图书馆', question: '', answer: '', source: '' })
-const submissions = ref([
-  { id: 1, question: '社团招新一般什么时候开始？', category: '社团', status: '待审核' },
-  { id: 2, question: '操场晚上开放到几点？', category: '活动', status: '审核中' }
-])
+const submitted = ref(false)
 
-function submitContribution() {
-  if (!form.value.question || !form.value.answer) return
-  submissions.value.unshift({
-    id: Date.now(),
-    question: form.value.question,
-    category: form.value.category,
-    status: '待审核'
-  })
-  form.value = { category: '图书馆', question: '', answer: '', source: '' }
+function submit() {
+  submitted.value = true
 }
 </script>
 
 <template>
-  <main class="page-shell contribute-page">
-    <header class="contribute-header card">
-      <span class="badge">众包更新</span>
-      <h1>用户贡献页</h1>
-      <p>发现知识库没有收录的问题？你可以提交新问答，经管理员审核后进入校园知识库。</p>
-    </header>
+  <main class="page contribute-page">
+    <p class="eyebrow">用户贡献</p>
+    <h1 class="page-title">补充一条校园知识</h1>
+    <p class="page-desc">你提交的内容会进入审核队列，通过后加入知识库。</p>
 
-    <section class="contribute-grid">
-      <form class="card contribution-form" @submit.prevent="submitContribution">
-        <h2>提交新问答</h2>
-
-        <label>
-          问题分类
-          <select v-model="form.category" class="form-control">
-            <option v-for="category in categories.filter(c => c !== '全部')" :key="category">{{ category }}</option>
-          </select>
-        </label>
-
+    <div class="content-grid">
+      <form class="card panel form" @submit.prevent="submit">
         <label>
           问题标题
-          <input v-model="form.question" class="form-control" placeholder="例如：校医院周末上班吗？" />
+          <input class="input" placeholder="例如：体育馆周末开放吗？" required />
         </label>
-
         <label>
-          建议答案
-          <textarea v-model="form.answer" class="form-control" placeholder="请尽量写清楚办理地点、时间、流程或注意事项"></textarea>
+          问题说明
+          <textarea class="textarea" placeholder="补充你知道的信息或需要解答的细节"></textarea>
         </label>
-
         <label>
-          信息来源
-          <input v-model="form.source" class="form-control" placeholder="例如：学生手册 / 官网通知 / 公众号" />
+          分类
+          <select class="select">
+            <option>生活服务</option>
+            <option>学习资源</option>
+            <option>住宿管理</option>
+            <option>教务相关</option>
+          </select>
         </label>
-
-        <button class="btn btn-primary" type="submit">提交审核</button>
+        <button class="primary-btn" type="submit">提交问题</button>
       </form>
 
-      <aside class="card contribution-list">
-        <h2>我的提交</h2>
-        <div v-for="item in submissions" :key="item.id" class="submission-item">
-          <div>
-            <strong>{{ item.question }}</strong>
-            <p>{{ item.category }}</p>
-          </div>
-          <span class="badge">{{ item.status }}</span>
-        </div>
+      <aside class="card panel status">
+        <div class="status-mark">✓</div>
+        <h2>{{ submitted ? '已提交' : '等待提交' }}</h2>
+        <p class="muted">{{ submitted ? '感谢你的贡献，我们会尽快审核。' : '填写左侧表单后，这里会显示提交状态。' }}</p>
       </aside>
-    </section>
+    </div>
   </main>
 </template>
 
 <style scoped>
 .contribute-page {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
+  max-width: 900px;
 }
 
-.contribute-header {
-  padding: 34px;
-  background: linear-gradient(135deg, #ffffff, #eef2ff);
+.contribute-page > .eyebrow,
+.contribute-page > .page-title,
+.contribute-page > .page-desc {
+  text-align: center;
 }
 
-.contribute-header h1 {
-  margin: 14px 0 8px;
-  font-size: 34px;
-  font-weight: 900;
-}
-
-.contribute-header p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.8;
-}
-
-.contribute-grid {
+.content-grid {
+  margin-top: 44px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 26px;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
 }
 
-.contribution-form,
-.contribution-list {
-  padding: 28px;
-}
-
-.contribution-form h2,
-.contribution-list h2 {
-  margin: 0 0 22px;
-}
-
-.contribution-form {
+.form {
   display: grid;
   gap: 18px;
 }
 
-.contribution-form label {
+label {
   display: grid;
   gap: 8px;
-  color: #475569;
-  font-weight: 800;
+  color: #53564f;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.submission-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--line);
+.status {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  align-content: center;
 }
 
-.submission-item strong {
-  font-weight: 900;
+.status-mark {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  color: var(--green);
+  border: 1px solid rgba(35, 157, 83, 0.3);
+  font-size: 30px;
 }
 
-.submission-item p {
-  margin: 6px 0 0;
-  color: var(--muted);
+.status h2 {
+  margin: 0 0 8px;
 }
 
-@media (max-width: 980px) {
-  .contribute-grid {
+@media (max-width: 720px) {
+  .content-grid {
     grid-template-columns: 1fr;
   }
 }

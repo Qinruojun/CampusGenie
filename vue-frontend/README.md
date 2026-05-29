@@ -1,38 +1,34 @@
-# CampusGenie
+# CampusGenie Minimal Website
 
-This template should help get you started developing with Vue 3 in Vite.
+课题二：校园生活百事通（智能问答知识库）前端原型。
 
-## Recommended IDE Setup
+这版是正常网站结构，不包含“总览页面”。首页 `/` 就是用户首页。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 运行
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+默认访问：
 
-```sh
-npm run build
+```text
+http://localhost:5173/
 ```
+
+## 页面路由
+
+```text
+/#/                  用户首页
+/#/qa-result         问答结果页
+/#/contribute        用户贡献页
+/#/admin/login       管理员登录页
+/#/admin/knowledge   知识库管理页
+/#/admin/audit       审核管理页
+/#/hot               热点问题页
+```
+
+## 说明
+
+当前数据在 `src/data/mockData.js` 中，后续可替换为后端接口。
