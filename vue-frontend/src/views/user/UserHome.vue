@@ -13,6 +13,7 @@ function search() {
 
 <template>
   <main class="home page">
+    <RouterView />
     <section class="hero-center">
       <p class="eyebrow">CampusGenie</p>
       <h1 class="page-title">你好，有什么可以帮助你？</h1>

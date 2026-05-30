@@ -1,6 +1,4 @@
-<script setup>
-import { knowledgeItems } from '../data/mockData'
-</script>
+
 
 <template>
   <main class="admin-shell">
@@ -45,3 +43,6 @@ import { knowledgeItems } from '../data/mockData'
     </section>
   </main>
 </template>
+<script setup>
+import { knowledgeItems } from '../../data/mockData'
+</script>

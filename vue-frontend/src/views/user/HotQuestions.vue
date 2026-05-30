@@ -1,5 +1,5 @@
 <script setup>
-import { hotQuestions } from '../data/mockData'
+import { hotQuestions } from '../../data/mockData'
 </script>
 
 <template>
@@ -11,7 +11,7 @@ import { hotQuestions } from '../data/mockData'
     <section class="card panel hot-card">
       <ol class="hot-list">
         <li v-for="item in hotQuestions" :key="item.id">
-          <RouterLink :to="`/qa-result?q=${encodeURIComponent(item.title)}`">
+          <RouterLink :to="`{name = 'qa-result'}q=${encodeURIComponent(item.title)}`">
             <span class="rank">{{ item.id }}</span>
             <strong>{{ item.title }}</strong>
             <small>{{ item.views }} 次浏览</small>

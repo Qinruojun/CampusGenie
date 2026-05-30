@@ -1,5 +1,5 @@
 <script setup>
-import { auditItems } from '../data/mockData'
+import { auditItems } from '../../data/mockData'
 </script>
 
 <template>
@@ -7,8 +7,8 @@ import { auditItems } from '../data/mockData'
     <aside class="admin-sidebar">
       <RouterLink class="brand" to="/">CampusGenie</RouterLink>
       <nav class="admin-menu">
-        <RouterLink to="/admin/knowledge">知识库管理</RouterLink>
-        <RouterLink to="/admin/audit">审核管理</RouterLink>
+        <RouterLink to="{name = 'admin-kownledge'}">知识库管理</RouterLink>
+        <RouterLink to="{name: 'admin-audit'}">审核管理</RouterLink>
         <RouterLink to="/">返回首页</RouterLink>
       </nav>
     </aside>

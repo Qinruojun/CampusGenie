@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { relatedQuestions } from '../data/mockData'
+import { relatedQuestions } from '../../data/mockData'
 
 const route = useRoute()
 const question = computed(() => route.query.q || '图书馆的开放时间是多少？')
