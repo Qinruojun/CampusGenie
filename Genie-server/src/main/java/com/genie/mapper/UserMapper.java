@@ -8,11 +8,11 @@ import org.apache.ibatis.annotations.Select;
 public interface UserMapper {
 
 
-    @Select( "select * from user where username = #{username}")
+    @Select( "select id, username, email, phone from user where username = #{username}")
     User selectByUserName(String username);
-    @Select("select * from user where email=#{email}")
+    @Select("select id, username, email, phone from user where email=#{email}")
     User selectByEmail(String email);
-    @Select("SELECT * from user where phone = #{phone}")
+    @Select("SELECT id, username, email, phone from user where phone = #{phone}")
     User selectByPhone(String phone);
     void insert(User user);
 }
