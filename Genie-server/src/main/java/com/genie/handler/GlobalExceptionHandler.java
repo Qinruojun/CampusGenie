@@ -21,12 +21,13 @@ public class GlobalExceptionHandler {
      * @param ex 业务异常
      * @return 错误结果
      */
-    @ExceptionHandler
+
+    @ExceptionHandler(BaseException.class)
     public Result<Void> exceptionHandler(BaseException ex) {
         log.error("业务异常：{}", ex.getMessage());
-        return Result.error(ex.getMessage());
+        // 直接使用异常对象中的 code 和 message
+        return Result.error(ex.getCode(), ex.getMessage());
     }
-
     /**
      * 处理 SQL 唯一约束冲突异常（如用户名重复）
      * @param ex SQL异常
