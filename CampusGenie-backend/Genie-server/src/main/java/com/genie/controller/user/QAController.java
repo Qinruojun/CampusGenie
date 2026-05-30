@@ -6,6 +6,7 @@ import com.genie.dto.AskRequestDTO;
 import com.genie.result.Result;
 import com.genie.service.QAService;
 import com.genie.vo.AnswerVO;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,7 @@ public class QAController {
     @Autowired
     private QAService qaService;
     @PostMapping("/qa")
-    public Result ask(@RequestBody AskRequestDTO askRequestDTO) {
+    public Result ask(@Valid @RequestBody AskRequestDTO askRequestDTO) {
         AnswerVO answerVO=qaService.getAnswer(askRequestDTO);
 
         return Result.success(answerVO, CodeConstant.SUCCESS, "获取答案成功");

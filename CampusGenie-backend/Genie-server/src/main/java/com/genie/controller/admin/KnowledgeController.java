@@ -6,6 +6,7 @@ import com.genie.result.Result;
 import com.genie.service.HotQuestionService;
 import com.genie.service.KnowledgeService;
 import com.genie.vo.UserContributionVO;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +17,12 @@ import org.springframework.web.bind.annotation.*;
 public class KnowledgeController {
     @Autowired private KnowledgeService knowledgeService;
     @PostMapping("/new")//新增知识条目
-    public Result newKnowledge(KnowledgeDTO knowledgeDTO) {
+    public Result newKnowledge(@Valid @RequestBody KnowledgeDTO knowledgeDTO) {
          knowledgeService.newKnowledge(knowledgeDTO);
          return null;
     }
     @PutMapping("/edit")//修改知识条目
-    public Result editKnowledge(KnowledgeDTO knowledgeDTO) {
+    public Result editKnowledge(@Valid @RequestBody KnowledgeDTO knowledgeDTO) {
          knowledgeService.editKnowledge(knowledgeDTO);
          return null;
     }

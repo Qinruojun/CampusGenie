@@ -8,6 +8,7 @@ import com.genie.dto.LoginDTO;
 import com.genie.result.Result;
 import com.genie.service.ContributionService;
 import com.genie.service.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +25,7 @@ public class ContributionController {
     private ContributionService contributionService;
 
     @PostMapping("/contribute")
-    public Result contribute(@RequestBody ContributionSubmitDTO contributionSubmitDTO) {
+    public Result contribute(@Valid @RequestBody ContributionSubmitDTO contributionSubmitDTO) {
         contributionService.contribute(contributionSubmitDTO);
         return Result.success(null, CodeConstant.SUCCESS,"贡献成功");
     }

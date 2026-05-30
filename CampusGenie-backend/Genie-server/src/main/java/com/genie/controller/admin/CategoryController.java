@@ -25,5 +25,6 @@ public class CategoryController {
       if(list!=null){
           return Result.success(list, CodeConstant.SUCCESS, MessageConstant.OPERATION_SUCCESS);
       }
+      return Result.error(CodeConstant.NOT_FOUND, MessageConstant.NOT_FOUND);
     }
 }
