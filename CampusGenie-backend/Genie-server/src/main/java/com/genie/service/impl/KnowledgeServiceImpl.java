@@ -12,10 +12,29 @@ import org.springframework.stereotype.Service;
 public class KnowledgeServiceImpl implements KnowledgeService {
     @Autowired
     private KnowledgeBaseMapper knowledgeBaseMapper;
+
     @Override
-    public void addKnowledge(KnowledgeDTO knowledgeDTO) {
-        KnowledgeBase knowledgeBase = new KnowledgeBase();
-        BeanUtils.copyProperties(knowledgeDTO,knowledgeBase);
+    public void newKnowledge(KnowledgeDTO knowledgeDTO) {
+
+    }
+
+    @Override
+    public void editKnowledge(KnowledgeDTO knowledgeDTO) {
+
+    }
+
+    @Override
+    public void deleteKnowledge(long id) {
+
+    }
+
+    @Override
+    public void enableKnowledge(long id) {
+
+    }
+
+    @Override
+    public void disableKnowledge(long id) {
 
     }
 }

@@ -8,30 +8,43 @@ package com.genie.context;
 public class BaseContext {
 
     /**
-     * 存储当前用户的 ID
+     * 存储当前用户信息上下文
      */
-    private static final ThreadLocal<Long> threadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<UserContext> threadLocal = new ThreadLocal<>();
 
     /**
-     * 设置当前用户 ID
-     * @param id 用户ID
+     * 设置当前用户信息上下文
+     * @param userContent 用户上下文
      */
-    public static void setCurrentId(Long id) {
-        threadLocal.set(id);
+    public static void setCurrentUserContext(UserContext userContent) {
+        threadLocal.set(userContent);
     }
 
     /**
-     * 获取当前用户 ID
-     * @return 用户ID，可能为 null
+     * 获取当前用户 信息上下文
+     * @return 用户信息上下文
      */
-    public static Long getCurrentId() {
+    public static UserContext getCurrentUserContext() {
         return threadLocal.get();
     }
 
     /**
-     * 清除当前线程中的用户 ID（必须在请求结束时调用，防止内存泄漏）
+     * 清除当前线程中的用户 信息上下文（必须在请求结束时调用，防止内存泄漏）
      */
-    public static void removeCurrentId() {
+    public static void removeCurrentUserContent() {
         threadLocal.remove();
+    }
+    public static Long getCurrentUserId() {
+        UserContext user = threadLocal.get();
+        return user != null ? user.getUserId() : null;
+    }
+
+    public static String getCurrentUsername() {
+        UserContext user = threadLocal.get();
+        return user != null ? user.getUsername() : null;
+    }
+    public static Integer getCurrentRole() {
+        UserContext user = threadLocal.get();
+        return user != null ? user.getRole() : null;
     }
 }

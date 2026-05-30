@@ -39,11 +39,13 @@ public class UserServiceImpl  implements UserService {
     }
     @Override
     public LoginVO login(LoginDTO loginDTO) {
-        if (userMapper.selectByUserName(loginDTO.getUsername())==null){
+        User user=userMapper.selectByUserName(loginDTO.getUsername());
+        if (user==null){
             throw new LoginFailedException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
+        LoginVO loginVO=new LoginVO();
 
        //还要验证密码是否匹配
-
+        return new LoginVO();
     }
 }

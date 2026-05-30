@@ -21,13 +21,4 @@ public class JwtClaimsConstant {
     public static final String ROLE = "role";
 
 
-    /**
-     * 手机号（可选）
-     */
-    public static final String PHONE = "phone";
-
-    /**
-     * 昵称
-     */
-    public static final String NAME = "name";
 }
