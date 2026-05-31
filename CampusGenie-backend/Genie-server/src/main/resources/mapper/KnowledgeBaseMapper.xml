@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.KnowledgeBaseMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into knowledge_base(question, answer, category_id, source, status, contribution_id, created_by, created_time, updated_by, updated_time)
+        values(#{question}, #{answer}, #{categoryId}, #{source}, #{status}, #{contributionId}, #{createdBy}, #{createdTime}, #{updatedBy}, #{updatedTime})
+    </insert>
+</mapper>

@@ -16,28 +16,17 @@ public class KnowledgeController {
     @PostMapping("/new")//新增知识条目
     public Result newKnowledge(@Valid @RequestBody KnowledgeDTO knowledgeDTO) {
          knowledgeService.newKnowledge(knowledgeDTO);
-         return null;
+         return Result.success(null,200,"新增知识条目成功");
     }
-    @PutMapping("/edit")//修改知识条目
-    public Result editKnowledge(@Valid @RequestBody KnowledgeDTO knowledgeDTO) {
-         knowledgeService.editKnowledge(knowledgeDTO);
-         return null;
-    }
-    @PutMapping("/{id}/enable")//启用知识条目
-    public Result enableKnowledge(@PathVariable Long id) {
-        knowledgeService.enableKnowledge(id);
-            return null;
-
-    }
-    @PutMapping("/{id}/disable")//停用知识条目
-    public Result disableKnowledge(@PathVariable Long id) {
-        knowledgeService.disableKnowledge(id);
-        return null;
-    }
-    @DeleteMapping("/{id}/delete")//删除知识条目
-    public Result deleteKnowledge(@PathVariable Long id) {//将URL中的id取出来传给方法里的id
-         knowledgeService.deleteKnowledge(id);
-         return null;
-    }
+//    @PutMapping("/edit")//修改知识条目
+//    public Result editKnowledge(@Valid @RequestBody KnowledgeDTO knowledgeDTO) {
+//         knowledgeService.editKnowledge(knowledgeDTO);
+//         return null;
+//    }
+//    @DeleteMapping("/{id}/delete")//删除知识条目
+//    public Result deleteKnowledge(@PathVariable Long id) {//将URL中的id取出来传给方法里的id
+//         knowledgeService.deleteKnowledge(id);
+//         return null;
+//    }
 
 }
