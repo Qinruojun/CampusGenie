@@ -1,11 +1,14 @@
 package com.genie.service.impl;
 
+import com.genie.constant.JwtClaimsConstant;
 import com.genie.dto.RegisterDTO;
 import com.genie.entity.User;
 import com.genie.exception.LoginFailedException;
 import com.genie.exception.RegisterFailedException;
 import com.genie.mapper.UserMapper;
+import com.genie.properties.JwtProperties;
 import com.genie.service.UserService;
+import com.genie.utils.JwtUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,8 @@ import com.genie.vo.LoginVO;
 public class UserServiceImpl  implements UserService {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private JwtProperties jwtProperties;
 
     @Override
     public void register(RegisterDTO registerDTO) {
@@ -51,20 +56,27 @@ public class UserServiceImpl  implements UserService {
         if (!user.getPassword().equals(loginDTO.getPassword())){
             throw new LoginFailedException(MessageConstant.PASSWORD_ERROR);
         }
-
-//        log.info("用户登录：{}", userLoginDTO);
-//        User user = userService.login(userLoginDTO);
-//        Map<String, Object> claims = new HashMap<>();
-//        claims.put(JwtClaimsConstant.USER_ID, user.getId());
-//
-//        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
-//        UserLoginVO userLoginVO = UserLoginVO.builder()
-//                .id(user.getId())
-//                .openid(user.getOpenid())
-//                .token(token)
-//                .build();
-
-       //还要验证密码是否匹配
-        return new LoginVO();
+        //身份是否正确
+        if(!user.getRole().equals(0)){
+            throw new LoginFailedException(MessageConstant.IDENTITY_ERROR);
+        }
+        //创造jwt
+        Map<String,Object> claims=new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID,user.getId());
+        claims.put(JwtClaimsConstant.USERNAME,user.getUsername());
+        claims.put(JwtClaimsConstant.ROLE,user.getRole());
+        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
+        //构造视图对象并返回给前端
+        LoginVO loginVO = LoginVO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .token(token)
+                .build();
+        //修改最后登陆时间
+        userMapper.updateLastLoginTime(user.getId(),LocalDateTime.now());
+        return  loginVO;
     }
 }

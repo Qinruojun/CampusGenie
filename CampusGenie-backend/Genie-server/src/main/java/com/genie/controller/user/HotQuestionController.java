@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @Slf4j
-@RestController
+@RestController("userHotQuestionController")
 @RequestMapping("/user")
 public class HotQuestionController {
     @Autowired

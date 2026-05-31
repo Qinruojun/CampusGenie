@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @Slf4j
-@RestController
+@RestController("adminHotQuestionController")
 @RequestMapping("/admin")
 public class HotQuestionController {//管理员刷新热门问题
     @Autowired

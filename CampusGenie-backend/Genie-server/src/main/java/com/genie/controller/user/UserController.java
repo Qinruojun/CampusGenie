@@ -32,7 +32,7 @@ public class UserController {
     public Result login(@Valid @RequestBody LoginDTO loginDTO){
         log.info("用户进行登录{}", loginDTO);
         LoginVO loginVO =userService.login(loginDTO);//调用service层的登录方法
-        return Result.success(loginVO, CodeConstant.SUCCESS,"登录成功");//返回包含用户token的loginVO给前端
+        return Result.success(loginVO, CodeConstant.SUCCESS,"用户登录成功");//返回包含用户token的loginVO给前端
     }
 
 }

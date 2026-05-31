@@ -8,4 +8,7 @@
         insert into user(username, password, email, phone, role, status, last_login_time, created_time, updated_time)
         values(#{username}, #{password}, #{email}, #{phone}, #{role}, #{status}, #{lastLoginTime}, #{createdTime}, #{updatedTime})
     </insert>
+    <update id="updateLastLoginTime">
+        update user set last_login_time = #{lastLoginTime} where id = #{id}
+    </update>
 </mapper>
