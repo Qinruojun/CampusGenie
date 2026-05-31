@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.genie.dto.LoginDTO;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.genie.constant.MessageConstant;
 import com.genie.vo.LoginVO;
 @Service
@@ -39,11 +42,27 @@ public class UserServiceImpl  implements UserService {
     }
     @Override
     public LoginVO login(LoginDTO loginDTO) {
+        //进行用户查找获得用户信息，找不到报错
         User user=userMapper.selectByUserName(loginDTO.getUsername());
         if (user==null){
             throw new LoginFailedException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
-        LoginVO loginVO=new LoginVO();
+        //密码不正确
+        if (!user.getPassword().equals(loginDTO.getPassword())){
+            throw new LoginFailedException(MessageConstant.PASSWORD_ERROR);
+        }
+
+//        log.info("用户登录：{}", userLoginDTO);
+//        User user = userService.login(userLoginDTO);
+//        Map<String, Object> claims = new HashMap<>();
+//        claims.put(JwtClaimsConstant.USER_ID, user.getId());
+//
+//        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
+//        UserLoginVO userLoginVO = UserLoginVO.builder()
+//                .id(user.getId())
+//                .openid(user.getOpenid())
+//                .token(token)
+//                .build();
 
        //还要验证密码是否匹配
         return new LoginVO();
