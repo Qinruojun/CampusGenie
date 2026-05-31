@@ -1,8 +1,9 @@
 """
+（此处本地指服务器）
 本系统采用 RAG (检索增强生成) 技术，结合了“本地知识库优先 + 联网搜索兜底”的双层机制。
 1. 本地知识检索：
-       - 读取本地数据文件 (1_classification_log.json) 并进行文本分块
-       - 使用 BAAI/bge-small-zh-v1.5 模型进行向量化，由 FAISS 构建并存储本地向量库 → 后续会修改
+       - 读取本地数据库数据 并进行文本分块
+       - 使用 BAAI/bge-small-zh-v1.5 模型进行向量化，由 FAISS 构建并存储本地向量库
 2. 大模型 (LLM) 生成：
        - 接入 DeepSeek 大语言模型 (deepseek-v4-pro)
        - 将检索到的本地文档作为上下文，利用预设 Prompt 生成准确、口语化的回答
@@ -28,6 +29,8 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+import pymysql
+from langchain_core.documents import Document
 
 # 调试开关：设置为False可一键关闭所有调试信息
 DEBUG_MODE = True
@@ -51,7 +54,7 @@ CONFIG = {
     "model_name": "deepseek-v4-pro",
     "temperature": 0.1,
     "max_tokens": 800,
-    "vectorstore_path": os.path.join(os.path.expanduser("~"), ".scut_rag_total", "faiss_index")
+    "vectorstore_path": os.path.join(os.path.expanduser("~"), ".scut_rag_total_V2", "faiss_index")
 }
 
 class ModelScopeEmbeddings(Embeddings):
@@ -77,36 +80,51 @@ class ModelScopeEmbeddings(Embeddings):
         return embedding
 
 def initialize_rag_system():
-    """初始化RAG系统：加载文档->分块->创建向量数据库->构建检索链"""
+    # 1 & 2. 直连数据库读取并按QA对切分
+    print("正在连接数据库并构建知识块...")
+    chunks = []
     
-    # 1. 加载文本文档
-    print("正在加载数据...")
-    loader = TextLoader(CONFIG["text_file_path"], encoding="utf-8")
-    documents = loader.load()
+    # 数据库配置
+    db_config = {
+        "host": "8.148.158.43",
+        "user": "dev",
+        "password": "Campus@Dev#DB123456",
+        "database": "CampusGenie",
+        "charset": "utf8mb4"
+    }
     
-    # 验证文档加载
-    if not documents:
-        raise RuntimeError("错误：没有加载到任何文档！请检查文件路径和编码。")
-    print(f"成功加载 {len(documents)} 个原始文档")
-    if DEBUG_MODE:
-        print(f"[DEBUG] 第一个文档前200字符: {documents[0].page_content[:200]}...")
-    
-    # 2. 文本分块
-    print("正在处理文本分块...")
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CONFIG["chunk_size"],
-        chunk_overlap=CONFIG["chunk_overlap"],
-        separators=["\n\n", "\n", "。", "，", " ", ""],
-        length_function=len
-    )
-    chunks = text_splitter.split_documents(documents)
-    
-    # 验证文本分块
+    try:
+        # 连接数据库
+        connection = pymysql.connect(**db_config)
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            # 仅读取已发布状态 (status=1) 的知识
+            sql = "SELECT id, question, answer, category_id FROM knowledge_base WHERE status = 1"
+            cursor.execute(sql)
+            records = cursor.fetchall()
+            
+            for row in records:
+                # 拼接 page_content
+                content = f"问题：{row['question']}\n答案：{row['answer']}"
+                
+                # 保留元数据
+                metadata = {
+                    "kb_id": row['id'],
+                    "category_id": row['category_id']
+                }
+                
+                doc = Document(page_content=content, metadata=metadata)
+                chunks.append(doc)
+                
+    except Exception as e:
+         raise RuntimeError(f"数据库连接或读取失败：{e}")
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
     if not chunks:
-        raise RuntimeError("错误：没有生成任何文本块！请检查文档内容。")
-    print(f"文档已分割为 {len(chunks)} 个文本块")
-    if DEBUG_MODE:
-        print(f"[DEBUG] 第一个文本块长度: {len(chunks[0].page_content)} 字符")
+        raise RuntimeError("错误：数据库中没有找到已发布的知识条目！")
+        
+    print(f"成功从数据库读取并转化为 {len(chunks)} 个问答对（知识块）")
     
     # 3. 加载嵌入模型
     print("正在加载嵌入模型...")
@@ -135,11 +153,11 @@ def initialize_rag_system():
         raise RuntimeError("错误：向量数据库为空！")
     print(f"向量数据库中共有 {vectorstore.index.ntotal} 个文档")
     
-    # 5. 创建检索器（单独保存，方便调试）
+    # 5. 创建检索器
     retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
     print("检索器创建完成")
     
-    # 6. 定义提示词模板（修复格式问题）
+    # 6. 定义提示词模板
     prompt_template = """
     你是校园百事通的智能助手，只能基于以下提供的上下文回答问题。
     如果上下文中没有相关信息，请明确回答"抱歉，我在数据库中没有找到相关信息"。
@@ -179,7 +197,7 @@ def initialize_rag_system():
     search_wrapper = DuckDuckGoSearchAPIWrapper(region="cn-zh", max_results=3)
     web_search = DuckDuckGoSearchResults(api_wrapper=search_wrapper)
     
-    # 专门为网络搜索设计的 Prompt 模板
+    # 为网络搜索设计的 Prompt 
     web_prompt_template = """
     你是华南理工大学校园百事通的智能助手。关于用户的问题，本地数据库中没有找到记录。
     以下是通过互联网搜索引擎检索到的最新相关信息。
@@ -197,7 +215,6 @@ def initialize_rag_system():
     """
     web_prompt = ChatPromptTemplate.from_template(web_prompt_template)
     print("搜索引擎初始化完成")
-    # ===========================================================
 
     rewrite_prompt_template = """
     你是一个搜索引擎关键词提取专家。你的任务是将用户的口语化提问转化为最高效的搜索关键词。
@@ -213,20 +230,19 @@ def initialize_rag_system():
         """
     rewrite_prompt = ChatPromptTemplate.from_template(rewrite_prompt_template)
 
-    # 9. 构建新的RAG链 (原代码中的 第8步)
+    # 9. 构建新的RAG链
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
     
     def rag_chain(question):
         total_start_time = time.time()
         
-        # --- 本地 RAG 流程 ---
         docs = retriever.invoke(question)
         context = format_docs(docs)
         messages = prompt.format_messages(context=context, question=question)
         response = llm.invoke(messages)
         
-        # --- 核心逻辑：触发搜索引擎 ---
+        # 触发搜索引擎
         # 检查大模型是否回复了我们设定的找不到信息的固定话术
             
         if "抱歉，我在数据库中没有找到相关信息" in response.content:
