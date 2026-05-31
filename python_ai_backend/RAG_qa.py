@@ -1,15 +1,23 @@
 """
-本系统采用 RAG (检索增强生成) 技术，结合了“本地知识库优先 + 联网搜索兜底”的双层机制。
-1. 本地知识检索：
-       - 读取本地数据文件 (1_classification_log.json) 并进行文本分块
-       - 使用 BAAI/bge-small-zh-v1.5 模型进行向量化，由 FAISS 构建并存储本地向量库 → 后续会修改
-2. 大模型 (LLM) 生成：
-       - 接入 DeepSeek 大语言模型 (deepseek-v4-pro)
-       - 将检索到的本地文档作为上下文，利用预设 Prompt 生成准确、口语化的回答
-3. 智能联网兜底 (Fallback)：
-       - 若本地数据库未命中，自动触发大模型重写用户提问，提取包含“华南理工大学”的精准搜索关键词
-       - 调用 DuckDuckGo 搜索引擎获取全网最新信息，并让大模型基于网络搜索结果重新生成最终答案
+当用户输入一个问题后，系统会按照以下“三级降级策略”来寻找并生成答案：
+1. 第一级：意图识别与精准检索
+  - 系统首先会调用一个外部 API（为训练的意图识别小模型，本地部署，需要通过 ngrok 内网穿透），试图识别用户问题所属的类别（Category）。
+  - 如果识别出类别，系统会在 FAISS 向量数据库中通过 metadata 过滤，专门针对该类别的知识块进行精确检索。
+2. 第二级：全局向量检索（整个知识兜底）
+  - 如果意图识别失败，或者精确检索没有找到相关度高的答案（距离分数大于设定的阈值 1.1），系统会降级为在整个向量数据库中进行全局相似度检索。
+  - 如果找到了靠谱的上下文，系统会将内容提交给大模型，要求其基于本地知识生成回答
+3. 第三级：联网搜索兜底（全网知识兜底）
+  - 如果本地知识库完全没有命中，或者大模型判定本地知识不足以回答，系统会再次降级，触发搜索引擎。
+  - 它会先用大模型重写用户的搜索关键词（强制加上“华南理工大学”等限定词），然后调用 DuckDuckGo 搜索全网最新信息。
+  - 最后，大模型基于网页搜索结果生成回答（并打上 【联网搜索结果】 标签）。
+
+系统初始化与数据处理模块
+在进入问答循环之前，initialize_rag_system 函数做了大量的准备工作：
+- 直连 MySQL 提取知识： 直接连接远程 MySQL 数据库 (CampusGenie)，拉取状态为“已发布”的 QA（问答）对，并拼接成 LangChain 所需的 Document 格式，同时保留分类 ID 等元数据。
+- 服务器本地向量库管理： * 将所有 QA 对通过特定的嵌入模型转化为向量。
+  - 如果本地已经存在 FAISS 索引文件，则直接加载（节省启动时间）；如果没有，则重新创建并保存到本地磁盘。
 """
+
 import os
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["TRANSFORMERS_OFFLINE"] = "0"
@@ -28,6 +36,9 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+import pymysql
+from langchain_core.documents import Document
+import requests
 
 # 调试开关：设置为False可一键关闭所有调试信息
 DEBUG_MODE = True
@@ -60,7 +71,7 @@ class ModelScopeEmbeddings(Embeddings):
             print(f"[DEBUG] 正在加载嵌入模型: {model_name}")
         self.model = SentenceTransformer(model_name)
         if DEBUG_MODE:
-            print(f"[DEBUG] 嵌入模型加载完成 ✅")
+            print(f"[DEBUG] 嵌入模型加载完成")
 
     def embed_documents(self, texts):
         start_time = time.time()
@@ -77,36 +88,51 @@ class ModelScopeEmbeddings(Embeddings):
         return embedding
 
 def initialize_rag_system():
-    """初始化RAG系统：加载文档->分块->创建向量数据库->构建检索链"""
+    # 1 & 2. 直连数据库读取并按QA对切分
+    print("正在连接数据库并构建知识块...")
+    chunks = []
     
-    # 1. 加载文本文档
-    print("正在加载数据...")
-    loader = TextLoader(CONFIG["text_file_path"], encoding="utf-8")
-    documents = loader.load()
+    # 数据库配置
+    db_config = {
+        "host": "8.148.158.43",
+        "user": "dev",
+        "password": "Campus@Dev#DB123456",
+        "database": "CampusGenie",
+        "charset": "utf8mb4"
+    }
     
-    # 验证文档加载
-    if not documents:
-        raise RuntimeError("错误：没有加载到任何文档！请检查文件路径和编码。")
-    print(f"成功加载 {len(documents)} 个原始文档")
-    if DEBUG_MODE:
-        print(f"[DEBUG] 第一个文档前200字符: {documents[0].page_content[:200]}...")
-    
-    # 2. 文本分块
-    print("正在处理文本分块...")
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CONFIG["chunk_size"],
-        chunk_overlap=CONFIG["chunk_overlap"],
-        separators=["\n\n", "\n", "。", "，", " ", ""],
-        length_function=len
-    )
-    chunks = text_splitter.split_documents(documents)
-    
-    # 验证文本分块
+    try:
+        # 连接数据库
+        connection = pymysql.connect(**db_config)
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            # 仅读取已发布状态 (status=1) 的知识
+            sql = "SELECT id, question, answer, category_id FROM knowledge_base WHERE status = 1"
+            cursor.execute(sql)
+            records = cursor.fetchall()
+            
+            for row in records:
+                # 拼接 page_content
+                content = f"问题：{row['question']}\n答案：{row['answer']}"
+                
+                # 保留元数据
+                metadata = {
+                    "kb_id": row['id'],
+                    "category_id": row['category_id']
+                }
+                
+                doc = Document(page_content=content, metadata=metadata)
+                chunks.append(doc)
+                
+    except Exception as e:
+         raise RuntimeError(f"数据库连接或读取失败：{e}")
+    finally:
+        if 'connection' in locals() and connection.open:
+            connection.close()
+
     if not chunks:
-        raise RuntimeError("错误：没有生成任何文本块！请检查文档内容。")
-    print(f"文档已分割为 {len(chunks)} 个文本块")
-    if DEBUG_MODE:
-        print(f"[DEBUG] 第一个文本块长度: {len(chunks[0].page_content)} 字符")
+        raise RuntimeError("错误：数据库中没有找到已发布的知识条目！")
+        
+    print(f"成功从数据库读取并转化为 {len(chunks)} 个问答对（知识块）")
     
     # 3. 加载嵌入模型
     print("正在加载嵌入模型...")
@@ -134,12 +160,8 @@ def initialize_rag_system():
     if vectorstore.index.ntotal == 0:
         raise RuntimeError("错误：向量数据库为空！")
     print(f"向量数据库中共有 {vectorstore.index.ntotal} 个文档")
-    
-    # 5. 创建检索器（单独保存，方便调试）
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-    print("检索器创建完成")
-    
-    # 6. 定义提示词模板（修复格式问题）
+     
+    # 5. 定义提示词模板
     prompt_template = """
     你是校园百事通的智能助手，只能基于以下提供的上下文回答问题。
     如果上下文中没有相关信息，请明确回答"抱歉，我在数据库中没有找到相关信息"。
@@ -157,7 +179,7 @@ def initialize_rag_system():
     prompt = ChatPromptTemplate.from_template(prompt_template)
     print("提示词模板创建完成")
     
-    # 7. 初始化大模型
+    # 6. 初始化大模型
     print("正在初始化大模型...")
     # 从 .env 文件获取 Key，如果没拿到就报错提醒
     deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
@@ -173,7 +195,7 @@ def initialize_rag_system():
     )
     print("大模型初始化完成")
     
-    # 8. 初始化搜索引擎
+    # 7. 初始化搜索引擎
     print("正在初始化搜索引擎...")
     # 配置搜索参数，设定区域和最大结果数
     search_wrapper = DuckDuckGoSearchAPIWrapper(region="cn-zh", max_results=3)
@@ -197,7 +219,6 @@ def initialize_rag_system():
     """
     web_prompt = ChatPromptTemplate.from_template(web_prompt_template)
     print("搜索引擎初始化完成")
-    # ===========================================================
 
     rewrite_prompt_template = """
     你是一个搜索引擎关键词提取专家。你的任务是将用户的口语化提问转化为最高效的搜索关键词。
@@ -213,62 +234,100 @@ def initialize_rag_system():
         """
     rewrite_prompt = ChatPromptTemplate.from_template(rewrite_prompt_template)
 
-    # 9. 构建新的RAG链 (原代码中的 第8步)
+    # 8. 定义请求本地意图识别小模型的 API 函数
+    def get_category_from_api(question):
+        # 替换为你内网穿透工具生成的公网地址！
+        API_URL = "https://的内网穿透地址.ngrok.io/classify"
+        try:
+            start_time = time.time()
+            response = requests.post(API_URL, json={"question": question}, timeout=3)
+            data = response.json()
+            if DEBUG_MODE:
+                print(f"[DEBUG] 远程意图识别耗时: {time.time()-start_time:.2f}s, 返回结果: {data}")
+            return data.get("category_id")
+        except Exception as e:
+            if DEBUG_MODE:
+                print(f"[WARNING] 无法连接到本地意图识别服务，已降级处理。错误: {e}")
+            return None
+
+    # 9. 构建新的多级 RAG 链
     def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
+        # 这里传入的是 tuple 列表 [(doc, score), ...]
+        return "\n\n".join(doc.page_content for doc, score in docs)
     
     def rag_chain(question):
         total_start_time = time.time()
         
-        # --- 本地 RAG 流程 ---
-        docs = retriever.invoke(question)
-        context = format_docs(docs)
-        messages = prompt.format_messages(context=context, question=question)
-        response = llm.invoke(messages)
+        # [配置项] 距离阈值设定 (FAISS 默认 L2 距离，越小越相似)
+        # 对于 bge-small-zh，一般 1.0 ~ 1.2 是分水岭。如果发现找不准，可以把这个值调小(要求更严格)。
+        DISTANCE_THRESHOLD = 1.1 
         
-        # --- 核心逻辑：触发搜索引擎 ---
-        # 检查大模型是否回复了我们设定的找不到信息的固定话术
-            
-        if "抱歉，我在数据库中没有找到相关信息" in response.content:
-            print("\n[INFO] 🚨 本地知识库未命中，正在请大模型提炼搜索关键词...")
-            
-            # 1. 调用大模型重写查询词 (Query Rewrite)
-            rewrite_start = time.time()
-            rewrite_messages = rewrite_prompt.format_messages(question=question)
-            # 这里复用我们已经初始化好的 llm，它只生成几个词，速度极快
-            rewrite_response = llm.invoke(rewrite_messages) 
-            
-            # 拿到大模型生成的关键词，并清理首尾可能多余的空格或换行
-            search_query = rewrite_response.content.strip() 
-            
-            if DEBUG_MODE:
-                print(f"[DEBUG] 大模型提取词耗时: {time.time()-rewrite_start:.2f}s")
-                print(f"[DEBUG] 实际发送给搜索引擎的查询词: 🔍 [{search_query}]")
-            
-            # 2. 调用搜索引擎获取结果 (使用大模型提炼后的词)
-            web_search_start = time.time()
-            try:
-                web_context = web_search.run(search_query) 
-            except Exception as e:
-                web_context = f"搜索引擎调用失败: {e}"
-            
-            if DEBUG_MODE:
-                print(f"[DEBUG] 网络搜索耗时: {time.time()-web_search_start:.2f}s")
-                print(f"[DEBUG] 搜索返回的原始数据:\n{web_context}")
-            
-            # 3. 构建新的基于网络的提示词（注意：回答时依然使用用户最原始的 question）
-            web_messages = web_prompt.format_messages(context=web_context, question=question)
-            
-            # 4. 再次调用大模型生成最终答案
-            web_response = llm.invoke(web_messages)
-            
-            return f"🌐【联网搜索结果】\n{web_response.content}"
+        docs_with_scores = []
         
-        # 如果本地库直接命中了，就返回本地的答案
+        # 1. 调用远程 API 获取分类并精准检索 
+        print("\n[INFO] 正在分析问题意图...")
+        target_category_id = get_category_from_api(question)
+        
+        if target_category_id is not None:
+            if DEBUG_MODE:
+                print(f"[INFO] 锁定分类 ID: {target_category_id}，正在执行精确检索...")
+            # 利用 metadata filter 进行精准搜索
+            raw_docs = vectorstore.similarity_search_with_score(
+                question, 
+                k=3, 
+                filter={"category_id": target_category_id}
+            )
+            # 过滤掉分数过高的（距离太远，不相关）
+            docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
+            
+        # 2. 分类库未命中，降级为全局检索 
+        if not docs_with_scores:
+            if DEBUG_MODE:
+                reason = "未识别出明确分类" if target_category_id is None else "对应分类库中无高匹配度答案"
+                print(f"[INFO] {reason}，触发全局向量检索...")
+            
+            raw_docs = vectorstore.similarity_search_with_score(question, k=3)
+            docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
+
+        # 3. 本地库有靠谱结果，交由大模型生成
+        if docs_with_scores:
+            if DEBUG_MODE:
+                print(f"[DEBUG] 本地库检索成功，最佳相似度得分: {docs_with_scores[0][1]:.4f}")
+            
+            context = format_docs(docs_with_scores)
+            messages = prompt.format_messages(context=context, question=question)
+            response = llm.invoke(messages)
+            
+            # 检查大模型是否依然认为上下文不足以回答
+            if "抱歉，我在数据库中没有找到相关信息" not in response.content:
+                if DEBUG_MODE:
+                    print(f"[DEBUG] 本地检索总耗时: {time.time() - total_start_time:.2f}s")
+                return f"📚【本地知识库】\n{response.content}"
+
+        # 4. 本地全面溃败，启动搜索引擎兜底 
+        print("\n[INFO] 本地知识库全面未命中，正在触发全网搜索引擎...")
+        
+        rewrite_start = time.time()
+        rewrite_messages = rewrite_prompt.format_messages(question=question)
+        rewrite_response = llm.invoke(rewrite_messages) 
+        search_query = rewrite_response.content.strip() 
+        
         if DEBUG_MODE:
-            print(f"\n[DEBUG] 检索阶段完成，耗时: {time.time() - total_start_time:.2f}s")
+            print(f"[DEBUG] 提取搜索关键词耗时: {time.time()-rewrite_start:.2f}s -> [{search_query}]")
+        
+        web_search_start = time.time()
+        try:
+            web_context = web_search.run(search_query) 
+        except Exception as e:
+            web_context = f"搜索引擎调用失败: {e}"
+        
+        if DEBUG_MODE:
+            print(f"[DEBUG] 网络搜索耗时: {time.time()-web_search_start:.2f}s")
             
-        return f"📚【本地知识库】\n{response.content}"
+        web_messages = web_prompt.format_messages(context=web_context, question=question)
+        web_response = llm.invoke(web_messages)
+        
+        return f"【联网搜索结果】\n{web_response.content}"
     
     print("RAG系统初始化完成！")
     return rag_chain
@@ -292,7 +351,7 @@ rag_chain = initialize_rag_system()
 
 if __name__ == "__main__":
     print("\n" + "="*50)
-    print("校园百事通 - 智能问答系统（终端版）")
+    print("校园百事通")
     print("输入你的问题，输入 'exit' 或 'quit' 退出系统")
     print(f"调试模式: {'开启' if DEBUG_MODE else '关闭'}")
     print("="*50 + "\n")
