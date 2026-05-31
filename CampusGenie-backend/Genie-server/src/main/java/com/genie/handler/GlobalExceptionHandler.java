@@ -4,7 +4,9 @@ import com.genie.constant.MessageConstant;
 import com.genie.exception.BaseException;
 import com.genie.result.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -23,9 +25,9 @@ public class GlobalExceptionHandler {
      */
 
     @ExceptionHandler(BaseException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> exceptionHandler(BaseException ex) {
         log.error("业务异常：{}", ex.getMessage());
-        // 直接使用异常对象中的 code 和 message
         return Result.error(ex.getCode(), ex.getMessage());
     }
     /**
@@ -34,6 +36,7 @@ public class GlobalExceptionHandler {
      * @return 错误结果
      */
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
     public Result<Void> exceptionHandler(SQLIntegrityConstraintViolationException ex) {
         String msg = ex.getMessage();
         if (msg != null && msg.contains("Duplicate entry")) {

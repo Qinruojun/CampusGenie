@@ -7,4 +7,63 @@
         insert into knowledge_base(question, answer, category_id, source, status, contribution_id, created_by, created_time, updated_by, updated_time)
         values(#{question}, #{answer}, #{categoryId}, #{source}, #{status}, #{contributionId}, #{createdBy}, #{createdTime}, #{updatedBy}, #{updatedTime})
     </insert>
+    <update id="update">
+        update knowledge_base
+        <set>
+            <if test="question != null">
+                question = #{question},
+            </if>
+            <if test="answer != null">
+                answer = #{answer},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="source != null">
+                source = #{source},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+
+                updated_by = #{updatedBy}
+
+
+
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="deleteById">
+        delete from knowledge_base where id = #{id}
+    </delete>
+    <select id="selectById" resultType="com.genie.entity.KnowledgeBase">
+        select  question, answer, category_id, source, status from knowledge_base where id = #{id}
+    </select>
+    <select id="selectByIdAndStatus" resultType="com.genie.entity.KnowledgeBase">
+        select  id, status from knowledge_base where id = #{id} and status = #{status}
+    </select>
+    <select id="pageQuery" resultType="com.genie.vo.KnowledgeVO">
+        select k.id, k.question, k.answer, c.name as category_name, k.source, k.updated_time from knowledge_base k
+        left join category c on k.category_id = c.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and question like concat('%', #{keyword}, '%')
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by k.updated_time
+        <choose>
+            <when test="sortOrder != null and sortOrder == 'desc'">
+                desc
+            </when>
+            <otherwise>
+                asc
+            </otherwise>
+        </choose>
+    </select>
 </mapper>

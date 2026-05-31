@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.constant.JwtClaimsConstant;
+import com.genie.constant.StatusConstant;
 import com.genie.dto.RegisterDTO;
 import com.genie.entity.User;
 import com.genie.exception.LoginFailedException;
@@ -59,6 +60,10 @@ public class UserServiceImpl  implements UserService {
         //身份是否正确
         if(!user.getRole().equals(0)){
             throw new LoginFailedException(MessageConstant.IDENTITY_ERROR);
+        }
+        //账号是否正常
+        if (!user.getStatus().equals(StatusConstant.ENABLE)){
+            throw new LoginFailedException(MessageConstant.ACCOUNT_LOCKED);
         }
         //创造jwt
         Map<String,Object> claims=new HashMap<>();
