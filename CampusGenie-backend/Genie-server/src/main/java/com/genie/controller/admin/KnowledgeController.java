@@ -1,11 +1,8 @@
 package com.genie.controller.admin;
 
-import com.genie.dto.ContributionSubmitDTO;
 import com.genie.dto.KnowledgeDTO;
 import com.genie.result.Result;
-import com.genie.service.HotQuestionService;
 import com.genie.service.KnowledgeService;
-import com.genie.vo.UserContributionVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
