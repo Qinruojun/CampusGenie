@@ -73,8 +73,16 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
             } else {
                 // 全部通过，批量插入
                 log.info("ALL 策略预校验通过，开始批量插入...");
-                successCount = batchInsertAll(dtoList);
-                log.info("ALL 策略批量插入完成，成功 {} 条", successCount);
+                List<Long> insertedIds = batchInsertAll(dtoList);
+                successCount = insertedIds.size();
+                
+                if (!insertedIds.isEmpty()) {
+                    firstInsertId = insertedIds.get(0);
+                    lastInsertId = insertedIds.get(insertedIds.size() - 1);
+                }
+                
+                log.info("ALL 策略批量插入完成，成功 {} 条，ID范围：{}-{}", 
+                        successCount, firstInsertId, lastInsertId);
             }
 
         } else {
@@ -100,6 +108,12 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
                     // 保存
                     KnowledgeBase entity = convertToEntity(dto);
                     knowledgeBaseMapper.insert(entity);
+                    
+                    if (firstInsertId == null) {
+                        firstInsertId = entity.getId();
+                    }
+                    lastInsertId = entity.getId();
+                    
                     successCount++;
 
                 } catch (Exception e) {
@@ -108,25 +122,37 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
                 }
             }
 
-            log.info("ROW 策略处理完成，成功 {} 条，失败 {} 条", successCount, errors.size());
+            if (firstInsertId != null && lastInsertId != null) {
+                log.info("ROW 策略处理完成，成功 {} 条，失败 {} 条，ID范围：{}-{}", 
+                        successCount, errors.size(), firstInsertId, lastInsertId);
+            } else {
+                log.info("ROW 策略处理完成，成功 {} 条，失败 {} 条", successCount, errors.size());
+            }
         }
 
         long endTime = System.currentTimeMillis();
         log.info("导入完成 - 总: {}, 成功: {}, 失败: {}, 耗时: {}ms",
                 totalCount, successCount, errors.size(), (endTime - startTime));
-        //生成并插入管理员操作日志
+        
+        StringBuilder detailBuilder = new StringBuilder();
+        detailBuilder.append("导入文件：").append(file.getOriginalFilename());
+        if (firstInsertId != null && lastInsertId != null) {
+            detailBuilder.append("，ID范围：").append(firstInsertId).append("-").append(lastInsertId);
+        }
+        detailBuilder.append("，成功：").append(successCount).append("条");
+        if (!errors.isEmpty()) {
+            detailBuilder.append("，失败：").append(errors.size()).append("条");
+        }
+        
         AdminLog adminLog = AdminLog.builder()
                 .adminName(BaseContext.getCurrentUsername())
                 .actionType(ActionTypeConstant.BATCH_IMPORT)
                 .targetType(TargetTypeConstant.KNOWLEDGE_BASE)
-                .detail("导入文件：" + file.getOriginalFilename())
+                .detail(detailBuilder.toString())
                 .createdTime(LocalDateTime.now())
-                .detail(String.format("导入文件：%s，成功：%d条，失败：%d条",
-                        file.getOriginalFilename(), successCount, errors.size()))
-
                 .build();
         adminLogMapper.insert(adminLog);
-
+                
         return buildResult(totalCount, successCount, errors);
     }
 
@@ -156,9 +182,6 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
                 continue;
             }
 
-            // TODO重复检查
-
-
             // 预校验通过，将分类ID设置回原对象
             dto.setCategoryId(tempDto.getCategoryId());
         }
@@ -169,14 +192,14 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
     /**
      * ALL 策略：批量插入所有行
      */
-    private int batchInsertAll(List<KnowledgeDTO> dtoList) {
-        int successCount = 0;
+    private List<Long> batchInsertAll(List<KnowledgeDTO> dtoList) {
+        List<Long> insertedIds = new ArrayList<>();
         for (KnowledgeDTO dto : dtoList) {
             KnowledgeBase entity = convertToEntity(dto);
             knowledgeBaseMapper.insert(entity);
-            successCount++;
+            insertedIds.add(entity.getId());
         }
-        return successCount;
+        return insertedIds;
     }
 
     /**
