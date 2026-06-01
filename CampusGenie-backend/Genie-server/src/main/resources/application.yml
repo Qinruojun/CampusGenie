@@ -1,0 +1,145 @@
+# ============================================
+# 服务器配置
+# ============================================
+server:
+  # 应用服务端口号，默认8080
+  port: 8080
+
+# ============================================
+# Spring 框架配置
+# ============================================
+spring:
+  profiles:
+    # 激活的环境配置文件（dev=开发环境，prod=生产环境）
+    # 会加载 application-dev.yml 或 application-prod.yml
+    active: dev
+  
+  main:
+    # 允许循环依赖（当Bean之间相互引用时不报错）
+    allow-circular-references: true
+  
+  # 数据源配置（数据库连接）
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: ${genie.datasource.driver-class-name}
+    url: jdbc:mysql://${genie.datasource.host}:${genie.datasource.port}/${genie.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${genie.datasource.username}
+    password: ${genie.datasource.password}
+    
+    druid:
+      # ============================================
+      # Druid 数据库连接池配置
+      # ============================================
+      
+      # 初始连接数：应用启动时创建的连接数量
+      initial-size: 5
+      
+      # 最小连接池数量：保持的最小空闲连接数
+      min-idle: 10
+      
+      # 最大连接池数量：允许的最大连接数（根据并发量调整）
+      max-active: 20
+      
+      # 获取连接等待超时的时间（毫秒），超过此时间抛出异常
+      max-wait: 60000
+      
+      # 空闲连接存活最小时间（毫秒），超过此时间的空闲连接可能被回收
+      min-evictable-idle-time-millis: 300000
+      
+      # 检测连接是否有效的 SQL 语句（Druid 会定期执行此SQL检查连接）
+      validation-query: select 1
+      
+      # 建议配置为 true，不影响性能，在连接空闲时检测有效性
+      test-while-idle: true
+      
+      # 申请连接时检测是否需要回收（设为false以提高性能）
+      test-on-borrow: false
+      
+      # 归还连接时检测是否需要回收（设为false以提高性能）
+      test-on-return: false
+      
+      # 开启 PSCache（PreparedStatement缓存，提高预编译SQL性能）
+      pool-prepared-statements: true
+      
+      # 配置 PSCache 大小（每个连接的预编译语句缓存数量）
+      max-pool-prepared-statement-per-connection-size: 20
+  
+  # Redis 缓存配置
+  redis:
+    # Redis 服务器主机地址
+    host: ${genie.redis.host}
+    
+    # Redis 服务器端口号
+    port: ${genie.redis.port}
+
+# ============================================
+# MyBatis 配置（ORM 框架）
+# ============================================
+mybatis:
+  # Mapper XML 配置文件的位置（classpath 表示 resources 目录）
+  mapper-locations: classpath:mapper/*.xml
+  
+  # 实体类包路径，用于类型别名（XML中可直接使用类名而不需要全限定名）
+  type-aliases-package: com.genie.entity
+  
+  # MyBatis 全局配置
+  configuration:
+    # 开启驼峰命名自动映射（数据库字段 user_name 自动映射到 Java 属性 userName）
+    map-underscore-to-camel-case: true
+
+# ============================================
+# 日志配置
+# ============================================
+logging:
+  level:
+    com:
+      genie:
+        # Mapper 层日志级别为 debug（显示 SQL 语句和参数）
+        mapper: debug
+        
+        # Service 层日志级别为 info（显示关键业务日志）
+        service: info
+        
+        # Controller 层日志级别为 info（显示请求日志）
+        controller: info
+
+# ============================================
+# 自定义配置（Genie 项目专属配置）
+# ============================================
+genie:
+  # JWT（JSON Web Token）配置，用于身份认证
+  jwt:
+    # ============================================
+    # 管理员端 JWT 配置
+    # ============================================
+    
+    # 管理员 JWT 签名加密密钥（用于生成和验证 Token）
+    # ⚠️ 生产环境应使用更复杂的密钥，并妥善保管
+    admin-secret-key: genie-admin-secret-key-2026-secure
+    
+    # 管理员 JWT 过期时间（毫秒）
+    # 720000000 毫秒 = 720000 秒 = 12000 分钟 = 200 小时 ≈ 8.33 天
+    admin-ttl: 720000000
+    
+    # 前端传递管理员令牌时的请求头名称
+    # 前端需要在请求头中携带：token: xxxxx
+    admin-token-name: token
+
+    # ============================================
+    # 用户端 JWT 配置
+    # ============================================
+    
+    # 用户端 JWT 签名加密密钥
+    # ⚠️ 生产环境应使用更复杂的密钥
+    user-secret-key: genie-user-secret-key-2026-secure
+    
+    # 用户端 JWT 过期时间（毫秒）
+    # 720000000 毫秒 = 200 小时 ≈ 8.33 天
+    user-ttl: 720000000
+    
+    # 前端传递用户令牌时的请求头名称
+    # 前端需要在请求头中携带：authentication: xxxxx
+    user-token-name: authentication
+
+
+
