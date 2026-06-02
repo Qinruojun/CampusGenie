@@ -7,4 +7,37 @@
         insert into user_contribution(user_id, question, answer, category_id, supplement, contact, status, created_time)
         values (#{userId}, #{question}, #{answer}, #{categoryId}, #{supplement}, #{contact}, #{status}, #{createdTime})
     </insert>
+    <select id="pageQueryByUser" resultType="com.genie.vo.UserContributionVO">
+        select uc.id, question, answer,  c.name as categoryName,
+               CASE uc.status
+                   WHEN 0 THEN '待审核'
+                   WHEN 1 THEN '已通过'
+                   WHEN 2 THEN '已驳回'
+                   END as statusDesc, uc.created_time, uc.reviewed_time, uc.reject_reason
+        from user_contribution uc
+        left join category c on uc.category_id = c.id
+        <where>
+            <if test="userId != null">
+                and uc.user_id = #{userId}
+            </if>
+            <if test="query.status != null">
+                and uc.status = #{query.status}
+            </if>
+            <if test="query.keyword != null and query.keyword != ''">
+                and question like concat('%', #{query.keyword}, '%')
+            </if>
+        </where>
+        <if test="query.sortOrder != null">
+            order by uc.created_time
+            <choose>
+                <when test="query.sortOrder == 'desc'">
+                    desc
+                </when>
+                <otherwise>
+                    asc
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+
 </mapper>

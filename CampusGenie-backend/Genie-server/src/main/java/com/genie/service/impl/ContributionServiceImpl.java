@@ -2,11 +2,15 @@ package com.genie.service.impl;
 
 import com.genie.constant.StatusConstant;
 import com.genie.context.BaseContext;
+import com.genie.dto.ContributionPageQueryDTO;
 import com.genie.dto.ContributionSubmitDTO;
 import com.genie.entity.UserContribution;
 import com.genie.mapper.UserContributionMapper;
+import com.genie.result.PageResult;
 import com.genie.service.ContributionService;
 import com.genie.vo.UserContributionVO;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,5 +31,14 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setStatus(StatusConstant.WAIT_FOR_REVIEW);
         userContribution.setCreatedTime(LocalDateTime.now());
         userContributionMapper.insert(userContribution);
+    }
+
+    @Override
+    public PageResult pageQueryByUser(ContributionPageQueryDTO contributionPageQueryDTO) {
+        PageHelper.startPage(contributionPageQueryDTO.getPage(),contributionPageQueryDTO.getPageSize());
+        Long userId = BaseContext.getCurrentUserId();
+        Page<UserContributionVO> page = userContributionMapper.pageQueryByUser(userId,contributionPageQueryDTO);
+        return new PageResult(page.getTotal(),page.getResult());
+
     }
 }
