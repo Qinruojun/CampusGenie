@@ -30,7 +30,7 @@ public class ContributionController {
         return Result.success(null, CodeConstant.SUCCESS,"贡献成功");
     }
     @GetMapping("/contributions/page")
-    public Result<PageResult> page(ContributionPageQueryDTO contributionPageQueryDTO)
+    public Result<PageResult> page(@Valid ContributionPageQueryDTO contributionPageQueryDTO)
         {
             log.info("分页查询{}", contributionPageQueryDTO);
 

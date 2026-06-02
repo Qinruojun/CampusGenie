@@ -39,5 +39,49 @@
             </choose>
         </if>
     </select>
+    <select id="pageQueryByAdmin" resultType="com.genie.vo.AdminContributionVO">
+        select uc.id, u.username, question, answer,  c.name as categoryName,
+               supplement, contact,
+               CASE uc.status
+                   WHEN 0 THEN '待审核'
+                   WHEN 1 THEN '已通过'
+                   WHEN 2 THEN '已驳回'
+                   END as statusDesc, uc.created_time, uc.reviewed_time, uc.reject_reason
+        from user_contribution uc
+        left join category c on uc.category_id = c.id
+        left join user u on uc.user_id = u.id
+        <where>
+            <if test="status != null">
+                and uc.status = #{status}
+            </if>
+            <if test="categoryId != null">
+                and uc.category_id = #{categoryId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and question like concat('%', #{keyword}, '%')
+            </if>
+            <if test="username != null and username != ''">
+                and u.username like concat('%', #{username}, '%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                and uc.created_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                and uc.created_time &lt;= #{endTime}
+            </if>
+
+        </where>
+        <if test="sortOrder != null">
+            order by uc.created_time
+            <choose>
+                <when test="sortOrder == 'desc'">
+                    desc
+                </when>
+                <otherwise>
+                    asc
+                </otherwise>
+            </choose>
+        </if>
+    </select>
 
 </mapper>
