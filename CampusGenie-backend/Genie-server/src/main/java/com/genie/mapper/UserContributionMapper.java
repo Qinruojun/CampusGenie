@@ -18,4 +18,8 @@ public interface UserContributionMapper {
     Page<UserContributionVO> pageQueryByUser(@Param("userId") Long userId, @Param("query") ContributionPageQueryDTO contributionPageQueryDTO);
 
     Page<AdminContributionVO> pageQueryByAdmin(AdminContributionPageQueryDTO adminContributionPageQueryDTO);
+
+    UserContribution selectById(Long id);
+
+    void update(UserContribution userContribution);
 }

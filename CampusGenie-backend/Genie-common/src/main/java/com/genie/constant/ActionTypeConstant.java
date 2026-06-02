@@ -16,7 +16,8 @@ public class ActionTypeConstant {
     public static final String DELETE = "DELETE";
 
     /** 审核 */
-    public static final String REVIEW = "REVIEW";
+    public static final Integer REVIEW_PASS = 1;
+    public static final Integer REVIEW_REJECT = 2;
 
     /** 停用 */
     public static final String DISABLE = "DISABLE";

@@ -1,10 +1,7 @@
 package com.genie.controller.admin;
 
 import com.genie.constant.CodeConstant;
-import com.genie.dto.AdminContributionPageQueryDTO;
-import com.genie.dto.ContributionPageQueryDTO;
-import com.genie.dto.ContributionSubmitDTO;
-import com.genie.dto.KnowledgeDTO;
+import com.genie.dto.*;
 import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.ContributionService;
@@ -12,10 +9,7 @@ import com.genie.vo.UserContributionVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController("adminContributionController")
@@ -31,6 +25,12 @@ public class ContributionController  {
         log.info("分页查询用户贡献信息：{}", adminContributionPageQueryDTO);
         PageResult pageResult = contributionService.pageQueryByAdmin(adminContributionPageQueryDTO);
         return Result.success(pageResult, CodeConstant.SUCCESS, "分页查询成功");
+    }
+    @PutMapping("/{id}/approve")
+    public Result approve(@PathVariable Long id, @Valid @RequestBody ApproveDTO approveDTO) {
+        log.info("审核通过用户贡献信息：{}", id);
+        contributionService.approve(id, approveDTO);
+        return Result.success(null, CodeConstant.SUCCESS, "审核通过成功");
     }
 
 

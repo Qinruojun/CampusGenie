@@ -7,6 +7,41 @@
         insert into user_contribution(user_id, question, answer, category_id, supplement, contact, status, created_time)
         values (#{userId}, #{question}, #{answer}, #{categoryId}, #{supplement}, #{contact}, #{status}, #{createdTime})
     </insert>
+    <update id="update">
+        update user_contribution
+        <set>
+            <if test="question != null">
+                question = #{question},
+            </if>
+            <if test="answer != null">
+                answer = #{answer},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="supplement != null">
+                supplement = #{supplement},
+            </if>
+            <if test="contact != null">
+                contact = #{contact},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="reviewedTime != null">
+                reviewed_time = #{reviewedTime},
+            </if>
+            <if test="reviewedBy != null">
+                reviewed_by = #{reviewedBy},
+            </if>
+            <if test="rejectReason != null">
+                reject_reason = #{rejectReason},
+            </if>
+
+        </set>
+        where id = #{id}
+    </update>
+
     <select id="pageQueryByUser" resultType="com.genie.vo.UserContributionVO">
         select uc.id, question, answer,  c.name as categoryName,
                CASE uc.status
@@ -82,6 +117,9 @@
                 </otherwise>
             </choose>
         </if>
+    </select>
+    <select id="selectById" resultType="com.genie.entity.UserContribution">
+        select id, user_id, question, answer, category_id, status from user_contribution where id = #{id}
     </select>
 
 </mapper>
