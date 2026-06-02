@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.service.LlmService;
+<<<<<<< HEAD
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,3 +50,10 @@ public class LlmServiceImpl implements LlmService {
         return "抱歉，暂时无法获取答案。";
     }
 }
+=======
+import org.springframework.stereotype.Service;
+
+@Service
+public class LlmServiceImpl  implements LlmService {
+}
+>>>>>>> eda670b118d65e13926874e1488fb3cef4e8c49f

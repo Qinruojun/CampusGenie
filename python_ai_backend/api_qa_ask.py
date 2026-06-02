@@ -66,4 +66,8 @@ async def chat_endpoint(request: ChatRequest):
 # 6. 运行服务器
 if __name__ == "__main__":
     # host="0.0.0.0" 允许外部网络访问，port 是端口号
+<<<<<<< HEAD
     uvicorn.run("api_qa_ask:app", host="0.0.0.0", port=8000, reload=True)
+=======
+    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
+>>>>>>> eda670b118d65e13926874e1488fb3cef4e8c49f

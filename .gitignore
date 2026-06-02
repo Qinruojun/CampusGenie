@@ -33,4 +33,5 @@ build/
 ### VS Code ###
 .vscode/
 
-python_ai_backend/.env
+.env
+.venv/
