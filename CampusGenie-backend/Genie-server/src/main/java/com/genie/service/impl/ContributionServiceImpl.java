@@ -4,10 +4,7 @@ import com.genie.constant.ActionTypeConstant;
 import com.genie.constant.StatusConstant;
 import com.genie.constant.TargetTypeConstant;
 import com.genie.context.BaseContext;
-import com.genie.dto.AdminContributionPageQueryDTO;
-import com.genie.dto.ApproveDTO;
-import com.genie.dto.ContributionPageQueryDTO;
-import com.genie.dto.ContributionSubmitDTO;
+import com.genie.dto.*;
 import com.genie.entity.KnowledgeBase;
 import com.genie.entity.ReviewLog;
 import com.genie.entity.UserContribution;
@@ -113,5 +110,37 @@ public class ContributionServiceImpl implements ContributionService {
                 .createdTime(LocalDateTime.now())
                 .build();
         reviewLogMapper.insert(reviewLog);
+    }
+
+    @Override
+    public void reject(Long id, RejectDTO rejectDTO) {
+        //获取并修改用户贡献
+        UserContribution userContribution = userContributionMapper.selectById(id);
+
+        //判断状态是否为待审核
+        if (!userContribution.getStatus().equals(StatusConstant.WAIT_FOR_REVIEW)){
+            throw new ContributionAlreadyReviewedException( "该贡献已审核");
+        }
+        //更新状态及审核人等信息
+        userContribution.setStatus(StatusConstant.REVIEW_REJECT);
+        userContribution.setReviewedBy(BaseContext.getCurrentUsername());
+        userContribution.setReviewedTime(LocalDateTime.now());
+        userContribution.setRejectReason(rejectDTO.getRejectReason());
+        userContributionMapper.update(userContribution);
+
+        //记录审核日志
+        ReviewLog reviewLog=ReviewLog.builder()
+                .contributionType( TargetTypeConstant.Review_TYPE_CONTRIBUTION)
+                .contributionId(id)
+                .reviewer(BaseContext.getCurrentUsername())
+                .action( ActionTypeConstant.REVIEW_REJECT)
+                .originalQuestion(userContribution.getQuestion())
+                .finalQuestion(userContribution.getQuestion())
+                .originalAnswer(userContribution.getAnswer())
+                .finalAnswer(userContribution.getAnswer())
+                .rejectReason(rejectDTO.getRejectReason())
+                .createdTime(LocalDateTime.now())
+                .build();
+                reviewLogMapper.insert(reviewLog);
     }
 }

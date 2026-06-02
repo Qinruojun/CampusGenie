@@ -32,6 +32,11 @@ public class ContributionController  {
         contributionService.approve(id, approveDTO);
         return Result.success(null, CodeConstant.SUCCESS, "审核通过成功");
     }
-
+    @PutMapping("/{id}/reject")
+    public Result reject(@PathVariable Long id, @Valid @RequestBody RejectDTO rejectDTO) {
+        log.info("审核拒绝用户贡献信息：{}", id);
+        contributionService.reject(id, rejectDTO);
+        return Result.success(null, CodeConstant.SUCCESS, "审核拒绝成功");
+    }
 
 }

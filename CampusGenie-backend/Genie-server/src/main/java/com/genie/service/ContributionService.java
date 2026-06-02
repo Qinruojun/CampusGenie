@@ -1,9 +1,6 @@
 package com.genie.service;
 
-import com.genie.dto.AdminContributionPageQueryDTO;
-import com.genie.dto.ApproveDTO;
-import com.genie.dto.ContributionPageQueryDTO;
-import com.genie.dto.ContributionSubmitDTO;
+import com.genie.dto.*;
 import com.genie.result.PageResult;
 import jakarta.validation.Valid;
 
@@ -16,4 +13,6 @@ public interface ContributionService {
     PageResult pageQueryByAdmin(@Valid AdminContributionPageQueryDTO adminContributionPageQueryDTO);
 
     void approve(Long id, @Valid ApproveDTO approveDTO);
+
+    void reject(Long id, @Valid RejectDTO rejectDTO);
 }
