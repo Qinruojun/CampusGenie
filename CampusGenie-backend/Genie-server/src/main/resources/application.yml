@@ -138,8 +138,8 @@ genie:
     user-ttl: 720000000
     
     # 前端传递用户令牌时的请求头名称
-    # 前端需要在请求头中携带：authentication: xxxxx
-    user-token-name: authentication
+    # 前端需要在请求头中携带：: token:xxxxx
+    user-token-name: token
 
 
 

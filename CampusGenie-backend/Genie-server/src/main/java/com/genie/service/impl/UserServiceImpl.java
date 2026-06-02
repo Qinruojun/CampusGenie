@@ -62,7 +62,7 @@ public class UserServiceImpl  implements UserService {
             throw new LoginFailedException(MessageConstant.IDENTITY_ERROR);
         }
         //账号是否正常
-        if (!user.getStatus().equals(StatusConstant.ENABLE)){
+        if (!StatusConstant.ENABLE.equals(user.getStatus())){
             throw new LoginFailedException(MessageConstant.ACCOUNT_LOCKED);
         }
         //创造jwt

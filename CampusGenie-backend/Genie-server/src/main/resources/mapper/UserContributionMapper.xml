@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.UserContributionMapper">
+    <insert id="insert">
+        insert into user_contribution(user_id, question, answer, category_id, supplement, contact, status, created_time)
+        values (#{userId}, #{question}, #{answer}, #{categoryId}, #{supplement}, #{contact}, #{status}, #{createdTime})
+    </insert>
+</mapper>
