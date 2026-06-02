@@ -1,8 +1,0 @@
-package com.genie.mapper;
-
-import org.apache.ibatis.annotations.Mapper;
-
-@Mapper
-public interface CategoryMapper {
-    Integer getIdByName(String name);
-}
