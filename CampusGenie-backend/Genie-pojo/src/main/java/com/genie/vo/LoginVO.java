@@ -1,7 +1,8 @@
 package com.genie.vo;
 
+import lombok.Builder;
 import lombok.Data;
-
+@Builder
 @Data
 public class LoginVO {
 

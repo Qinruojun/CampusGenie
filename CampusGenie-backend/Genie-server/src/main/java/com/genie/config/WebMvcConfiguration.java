@@ -37,8 +37,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/user/**")
                 .excludePathPatterns("/user/user/login")
-                .excludePathPatterns("/user/user/register");//不进行JWT拦截的请求路径
-        log.info("结束注册自定义拦截器...");
+                .excludePathPatterns("/user/user/register");
 
     }
     @Override
@@ -50,5 +49,6 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .allowCredentials(true)
                 .maxAge(3600);
     }
+
 
 }

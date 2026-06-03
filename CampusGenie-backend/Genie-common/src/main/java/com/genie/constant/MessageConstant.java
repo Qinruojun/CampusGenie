@@ -19,6 +19,8 @@ public class MessageConstant {
     public static final String USER_NOT_LOGIN = "用户未登录";
     public static final String LOGIN_FAILED = "登录失败";
     public static final String PASSWORD_FAILED = "密码修改失败";
+    //身份不正确
+    public static final String IDENTITY_ERROR = "身份不匹配";
 
     // 知识库
     public static final String KNOWLEDGE_NOT_FOUND = "知识条目不存在";

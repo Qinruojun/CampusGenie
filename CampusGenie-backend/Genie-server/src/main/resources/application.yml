@@ -65,12 +65,12 @@ spring:
       max-pool-prepared-statement-per-connection-size: 20
   
   # Redis 缓存配置
-#  redis:
-#    # Redis 服务器主机地址
-#    host: ${genie.redis.host}
-#
-#    # Redis 服务器端口号
-#    port: ${genie.redis.port}
+  redis:
+    # Redis 服务器主机地址
+    host: ${genie.redis.host}
+    
+    # Redis 服务器端口号
+    port: ${genie.redis.port}
 
 # ============================================
 # MyBatis 配置（ORM 框架）
@@ -115,7 +115,7 @@ genie:
     
     # 管理员 JWT 签名加密密钥（用于生成和验证 Token）
     # ⚠️ 生产环境应使用更复杂的密钥，并妥善保管
-    admin-secret-key: genie
+    admin-secret-key: genie-admin-secret-key-2026-secure
     
     # 管理员 JWT 过期时间（毫秒）
     # 720000000 毫秒 = 720000 秒 = 12000 分钟 = 200 小时 ≈ 8.33 天
@@ -131,7 +131,7 @@ genie:
     
     # 用户端 JWT 签名加密密钥
     # ⚠️ 生产环境应使用更复杂的密钥
-    user-secret-key: campusGenieUserSecretKey1234567890
+    user-secret-key: genie-user-secret-key-2026-secure
     
     # 用户端 JWT 过期时间（毫秒）
     # 720000000 毫秒 = 200 小时 ≈ 8.33 天
