@@ -1,0 +1,22 @@
+# Java 后端
+.idea/
+*.iml
+*.iws
+*.ipr
+target/
+*.class
+*.jar
+*.war
+*.log
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# 前端
+node_modules/
+dist/
+.vite/
+*.local
+.history

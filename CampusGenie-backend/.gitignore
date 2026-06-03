@@ -3,7 +3,6 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-CampusGenie-frontend/node_modules/
 
 ### STS ###
 .apt_generated
@@ -24,8 +23,6 @@ CampusGenie-frontend/node_modules/
 /nbproject/private/
 /nbbuild/
 /dist/
-
-
 /nbdist/
 /.nb-gradle/
 build/
@@ -34,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+.history

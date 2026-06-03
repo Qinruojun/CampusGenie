@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.UserMapper">
+<!--    namespace=命名空间，表示绑定对应哪个Mapper接口-->
+<!--<insert>代表这是新增语句，id="insert"对应Mapper接口里的方法名-->
+<!--              {username}     ←→  user.getUsername()-->
+
+
+</mapper>
