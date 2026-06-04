@@ -37,8 +37,19 @@ public class QAServiceImpl implements QAService {
         AnswerVO answerVO = new AnswerVO();
         answerVO.setQuestion(question);
         answerVO.setAnswer(aiAnswer);
-        answerVO.setSource("系统知识库");
         answerVO.setUpdatedTime(LocalDateTime.now());
+        // 将知识条目 ID 赋值给 VO
+        answerVO.setKnowledgeId(knowledgeBase.getId());
+        
+        if (answerVO.getKnowledgeId() != null) {
+            // ID 不为空，说明是本地知识库的数据。
+            // 可以优先取数据库原有的 source（如"学生手册"），如果没有再兜底写"系统知识库"
+            String dbSource = result.getDbSource();
+            answerVO.setSource(dbSource != null ? dbSource : "系统知识库");
+        } else {
+            // ID 为空，说明没有走本地知识库
+            answerVO.setSource("搜索引擎");
+        }
         
         return answerVO;
     }
@@ -54,4 +65,3 @@ public class QAServiceImpl implements QAService {
         return null;
     }
 }
->>>>>>> eda670b118d65e13926874e1488fb3cef4e8c49f
