@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getKnowledgeById, updateKnowledge } from '@/api/admin/knowledge'
+import { getKnowledgeById, editKnowledgee } from '@/api/admin/knowledge'
 import { getCategoryList } from '@/api/admin/category'
 
 const router = useRouter()

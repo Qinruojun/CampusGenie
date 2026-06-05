@@ -1,10 +1,46 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { relatedQuestions } from '../../data/mockData'
+import { askQuestion } from '../../api/user/qa' // 引入接口
 
 const route = useRoute()
 const question = computed(() => route.query.q || '图书馆的开放时间是多少？')
+
+
+// 定义响应式状态
+const answerData = ref(null) // 存放后端返回的AnswerVO
+const loading = ref(false)   // 加载状态
+const errorMsg = ref('')     // 错误提示
+
+// 发起后端请求获取答案
+const fetchAnswer = async () => {
+  if (!question.value) return
+  
+  loading.value = true
+  errorMsg.value = ''
+  
+  try {
+    const res = await askQuestion({ question: question.value })
+    // 根据 Result.java 封装的数据结构，成功时 code 通常为 1 或 200
+    if (res.code === 1) { 
+      answerData.value = res.data // 取出 AnswerVO 数据
+    } else {
+      errorMsg.value = res.msg || '获取答案失败，请稍后重试'
+    }
+  } catch (error) {
+    console.error('问答请求失败:', error)
+    errorMsg.value = '网络请求异常，请检查后端服务是否启动'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 页面加载时自动发起提问
+onMounted(() => {
+  fetchAnswer()
+})
+
 </script>
 
 <template>
@@ -17,9 +53,10 @@ const question = computed(() => route.query.q || '图书馆的开放时间是多
     <section class="answer card panel">
       <div class="check">✓</div>
       <div>
-        <p class="muted">系统匹配到的答案</p>
-        <h2>图书馆开放时间为：周一至周日 8:00 - 22:00</h2>
-        <p>寒暑假期间开放时间可能有所调整，请以学校最新通知为准。</p>
+        <p class="muted">
+          来源:{{ answerData.source || '未知' }} 
+        </p>
+        <h2>{{answerData.answer}}</h2>
       </div>
     </section>
 
@@ -38,6 +75,17 @@ const question = computed(() => route.query.q || '图书馆的开放时间是多
 <style scoped>
 .result-page {
   max-width: 760px;
+}
+
+/* 加载和错误提示 */
+.back-link { 
+  display: inline-block; margin-bottom: 40px; color: var(--muted); 
+}
+
+h1 { 
+  margin: 0 0 26px; 
+  font-size: clamp(28px, 5vw, 48px); 
+  letter-spacing: -0.04em; 
 }
 
 .back-link {

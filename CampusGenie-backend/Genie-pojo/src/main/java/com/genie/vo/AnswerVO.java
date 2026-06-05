@@ -10,4 +10,5 @@ public class AnswerVO {//后端传给前端的回答,如果没查到答案就返
     private String categoryName;
     private String source;
     private LocalDateTime updatedTime;
+    private Long knowledgeId;
 }

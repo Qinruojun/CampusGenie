@@ -5,10 +5,20 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const question = ref('')
 
+// 点击搜索/提问按钮触发的函数
+const handleSearch = (userInput) => {
+  if (!userInput.trim()) return
+  router.push({ 
+    path: '/qa-result', // 确保这里的 path 与 router/index.js 中配置的路径一致
+    query: { q: userInput } 
+  })
+}
+
 function search() {
   const query = question.value.trim() || '图书馆的开放时间是多少？'
   router.push({ path: '/qa-result', query: { q: query } })
 }
+
 </script>
 
 <template>

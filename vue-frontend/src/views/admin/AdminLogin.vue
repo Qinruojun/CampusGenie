@@ -16,8 +16,9 @@
   </main>
 </template>
 <script setup>
+
 import { ref } from 'vue'
-import { login } from '@/api/admin'
+import { login } from '@/api/admin/admin'
 
 const isLogin =ref(true)//如果这个是true那么显示登陆界面
 const confirpwd = ref(null)
