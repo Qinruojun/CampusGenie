@@ -1,0 +1,62 @@
+[
+  {
+    "labelId": 0,
+    "intentCode": "calendar_academic",
+    "intent": "校历教务",
+    "description": "放假、开学、考试周、调课、选课、成绩、教学安排"
+  },
+  {
+    "labelId": 1,
+    "intentCode": "canteen_dining",
+    "intent": "食堂餐饮",
+    "description": "食堂营业时间、餐饮地点、菜品、支付、夜宵"
+  },
+  {
+    "labelId": 2,
+    "intentCode": "library_service",
+    "intent": "图书馆服务",
+    "description": "开放时间、借书、还书、自习、入馆规则、座位预约"
+  },
+  {
+    "labelId": 3,
+    "intentCode": "campus_card",
+    "intent": "校园卡事务",
+    "description": "校园卡充值、挂失、补办、余额、消费异常、门禁相关"
+  },
+  {
+    "labelId": 4,
+    "intentCode": "dormitory_life",
+    "intent": "宿舍生活",
+    "description": "宿舍管理、门禁、热水、用电、空调、住宿规则"
+  },
+  {
+    "labelId": 5,
+    "intentCode": "repair_service",
+    "intent": "报修服务",
+    "description": "宿舍设备、网络、水电、空调、公共设施故障报修"
+  },
+  {
+    "labelId": 6,
+    "intentCode": "express_print",
+    "intent": "快递打印",
+    "description": "快递站、取件、寄件、打印、复印、扫描"
+  },
+  {
+    "labelId": 7,
+    "intentCode": "campus_transport",
+    "intent": "校园交通",
+    "description": "校车、公交、地铁、校区通勤、停车、路线"
+  },
+  {
+    "labelId": 8,
+    "intentCode": "club_activity",
+    "intent": "社团活动",
+    "description": "社团报名、活动信息、讲座、比赛、联系方式"
+  },
+  {
+    "labelId": 9,
+    "intentCode": "other_unknown",
+    "intent": "其他未知",
+    "description": "不属于以上类别或模型无法判断的问题"
+  }
+]
