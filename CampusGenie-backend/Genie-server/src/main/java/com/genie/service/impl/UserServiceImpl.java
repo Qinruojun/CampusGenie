@@ -1,0 +1,87 @@
+package com.genie.service.impl;
+
+import com.genie.constant.JwtClaimsConstant;
+import com.genie.constant.StatusConstant;
+import com.genie.dto.RegisterDTO;
+import com.genie.entity.User;
+import com.genie.exception.LoginFailedException;
+import com.genie.exception.RegisterFailedException;
+import com.genie.mapper.UserMapper;
+import com.genie.properties.JwtProperties;
+import com.genie.service.UserService;
+import com.genie.utils.JwtUtil;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.genie.dto.LoginDTO;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.genie.constant.MessageConstant;
+import com.genie.vo.LoginVO;
+@Service
+public class UserServiceImpl  implements UserService {
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private JwtProperties jwtProperties;
+
+    @Override
+    public void register(RegisterDTO registerDTO) {
+        if(userMapper.selectByEmail(registerDTO.getEmail())!=null){
+            throw new RegisterFailedException("邮箱已存在");
+        }
+        if (userMapper.selectByPhone(registerDTO.getPhone())!=null){
+            throw new RegisterFailedException("手机号已存在");
+        }
+        if (userMapper.selectByUserName(registerDTO.getUsername())!=null){
+            throw new RegisterFailedException("用户名已存在");
+        }
+        User user=new User();
+        BeanUtils.copyProperties(registerDTO,user);
+        user.setRole(0);
+        user.setStatus(1);
+        user.setCreatedTime(LocalDateTime.now());
+        user.setUpdatedTime(LocalDateTime.now());
+        userMapper.insert(user);
+    }
+    @Override
+    public LoginVO login(LoginDTO loginDTO) {
+        //进行用户查找获得用户信息，找不到报错
+        User user=userMapper.selectByUserName(loginDTO.getUsername());
+        if (user==null){
+            throw new LoginFailedException(MessageConstant.ACCOUNT_NOT_FOUND);
+        }
+        //密码不正确
+        if (!user.getPassword().equals(loginDTO.getPassword())){
+            throw new LoginFailedException(MessageConstant.PASSWORD_ERROR);
+        }
+        //身份是否正确
+        if(!user.getRole().equals(0)){
+            throw new LoginFailedException(MessageConstant.IDENTITY_ERROR);
+        }
+        //账号是否正常
+        if (!user.getStatus().equals(StatusConstant.ENABLE)){
+            throw new LoginFailedException(MessageConstant.ACCOUNT_LOCKED);
+        }
+        //创造jwt
+        Map<String,Object> claims=new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID,user.getId());
+        claims.put(JwtClaimsConstant.USERNAME,user.getUsername());
+        claims.put(JwtClaimsConstant.ROLE,user.getRole());
+        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
+        //构造视图对象并返回给前端
+        LoginVO loginVO = LoginVO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .token(token)
+                .build();
+        //修改最后登陆时间
+        userMapper.updateLastLoginTime(user.getId(),LocalDateTime.now());
+        return  loginVO;
+    }
+}
