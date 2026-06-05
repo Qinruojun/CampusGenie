@@ -2,7 +2,7 @@ package com.genie.service.impl;
 
 import com.genie.dto.AskRequestDTO;
 import com.genie.service.QAService;
-<<<<<<< HEAD
+
 import com.genie.service.KnowledgeSearchService;
 import com.genie.service.LlmService;
 import com.genie.vo.AnswerVO;
@@ -43,15 +43,4 @@ public class QAServiceImpl implements QAService {
         return answerVO;
     }
 }
-=======
-import com.genie.vo.AnswerVO;
-import org.springframework.stereotype.Service;
 
-@Service
-public class QAServiceImpl implements QAService {
-    @Override
-    public AnswerVO getAnswer(AskRequestDTO askRequestDTO){
-        return null;
-    }
-}
->>>>>>> eda670b118d65e13926874e1488fb3cef4e8c49f
