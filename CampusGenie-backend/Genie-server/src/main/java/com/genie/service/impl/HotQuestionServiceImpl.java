@@ -51,7 +51,7 @@ public class HotQuestionServiceImpl  implements HotQuestionService {
             if (knowledge != null) {
                 hotQuestion.setNormalizedAnswer(knowledge.getAnswer());
             } else {
-                hotQuestion.setNormalizedAnswer("暂无标准答案");
+                hotQuestion.setNormalizedAnswer("暂无答案");
                 log.warn("知识库ID {} 未找到对应答案", hotQuestion.getKnowledgeId());
             }
 
@@ -77,6 +77,7 @@ public class HotQuestionServiceImpl  implements HotQuestionService {
             hotQuestionVO.setQuestion(hotQuestion.getDisplayQuestion());
             hotQuestionVO.setRank(hotQuestion.getRankNo());
             hotQuestionVO.setQueryCount(hotQuestion.getQueryCount());
+            hotQuestionVO.setAnswer(hotQuestion.getNormalizedAnswer());
             //趋势判断，先获取上个版本是否有这条热点
             Integer  lastRank = hotQuestionMapper.selectByKnowledgeId_hitPlace_version( hotQuestion.getKnowledgeId(), hotQuestion.getHitPlace(), hotQuestion.getVersion() - 1);
             if (lastRank == null|| lastRank < hotQuestion.getRankNo()) {

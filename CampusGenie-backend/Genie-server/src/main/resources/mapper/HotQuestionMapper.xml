@@ -8,7 +8,7 @@
         SELECT IFNULL(MAX(version), 0) FROM hot_question
     </select>
     <select id="selectList" resultType="com.genie.entity.HotQuestion">
-SELECT id, display_question, query_count,rank_no, version, updated_time, knowledge_id, hit_place
+SELECT id, display_question, query_count,rank_no, version, updated_time, knowledge_id, hit_place, normalized_answer
 FROM hot_question
 WHERE version = #{maxVersion}
 
