@@ -18,7 +18,7 @@ public class HotQuestionTask {
     @Autowired
     private HotQuestionService hotQuestionService;
 
-    @Scheduled(cron = "0 0 1 * * *")
+    @Scheduled(cron = "0 0/10 * * * *")
     public void buildHotQuestion() {
         log.info("定时任务开始执行");
         hotQuestionService.buildHotQuestions();
