@@ -18,6 +18,7 @@
   - 如果本地已经存在 FAISS 索引文件，则直接加载（节省启动时间）；如果没有，则重新创建并保存到本地磁盘。
 """
 import os
+import json
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["TRANSFORMERS_OFFLINE"] = "0"
 import sys
@@ -61,7 +62,7 @@ CONFIG = {
     "model_name": "deepseek-v4-pro",
     "temperature": 0.1,
     "max_tokens": 800,
-    "vectorstore_path": os.path.join(os.path.expanduser("~"), ".scut_rag", "faiss_index")
+    "vectorstore_path": os.path.join(os.path.expanduser("~"), ".scut_rag_vector", "faiss_index")
 }
 
 class ModelScopeEmbeddings(Embeddings):
@@ -235,10 +236,15 @@ def initialize_rag_system():
 
     # 8. 定义请求本地意图识别小模型的 API 函数
     def get_category_from_api(question):
-        API_URL = "http://127.0.0.1:15000/classify"
+        API_URL = "http://127.0.0.1:8088/classify" # 在服务器运行时需要改为http://127.0.0.1:15000/classify
+        headers = {
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": "Bearer 122333444455555"
+        }
+        payload_string = json.dumps({"question": question})
         try:
             start_time = time.time()
-            response = requests.post(API_URL, json={"question": question}, timeout=3)
+            response = requests.post(API_URL, data=payload_string, headers=headers, timeout=0.5)
             data = response.json()
             return data.get("category_id")
         except Exception as e:
@@ -285,6 +291,8 @@ def initialize_rag_system():
             
             raw_docs = vectorstore.similarity_search_with_score(question, k=3)
             docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
+
+        print(f"[DEBUG] 数据库检索耗时: {time.time() - total_start_time:.2f}s")     
 
         # 3. 本地库有靠谱结果，交由大模型生成
         if docs_with_scores:
