@@ -66,4 +66,18 @@
             </otherwise>
         </choose>
     </select>
+    <select id="selectByKeyword_CategoryId_Status" resultType="com.genie.entity.KnowledgeBase">
+        select  question, answer, category_id, source from knowledge_base
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and question like concat('%', #{keyword}, '%')
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
 </mapper>

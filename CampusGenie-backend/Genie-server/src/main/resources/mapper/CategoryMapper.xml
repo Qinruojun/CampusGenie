@@ -7,4 +7,7 @@
     <select id="getIdByName" resultType="java.lang.Integer">
         select id from category where name = #{name}
     </select>
+    <select id="selectById" resultType="com.genie.entity.Category">
+select name from category where id = #{id}
+    </select>
 </mapper>

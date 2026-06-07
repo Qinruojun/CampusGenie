@@ -9,13 +9,18 @@ import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.KnowledgeImportService;
 import com.genie.service.KnowledgeService;
+import com.genie.vo.BatchDeleteVO;
 import com.genie.vo.ImportResultVO;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -90,5 +95,34 @@ public class KnowledgeController {
                 lowerName.endsWith(".xls") ||
                 lowerName.endsWith(".json");
     }
+
+    @DeleteMapping("/batch")
+    public Result batchDelete(@RequestParam List<Long> ids) {
+        log.info("批量删除知识条目{}", ids);
+        BatchDeleteVO batchDeleteVO = knowledgeService.batchDelete(ids);
+        return Result.success(batchDeleteVO, CodeConstant.SUCCESS, "批量删除成功");
+    }
+    @GetMapping("/export")
+    public void exportExcel(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Integer status,
+            HttpServletResponse response) throws IOException {
+
+        knowledgeService.exportToExcel(keyword, categoryId, status, response);
+    }
+    @GetMapping("/template/exceldownload")
+    public void downloadTemplate(HttpServletResponse response) throws IOException {
+        knowledgeService.downloadExcelTemplate(response);
+        log.info("下载excel模板成功");
+        return;
+    }
+    @GetMapping("/template/jsondownload")
+    public void downloadJsonTemplate(HttpServletResponse response) throws IOException {
+        knowledgeService.downloadJsonTemplate(response);
+        log.info("下载json模板成功");
+        return;
+    }
+
 
 }
