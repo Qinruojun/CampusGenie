@@ -198,6 +198,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
 
     }
+    @Transactional
     public void exportToExcel(String keyword, Integer categoryId, Integer status,
                               HttpServletResponse response) throws IOException {
 
@@ -238,6 +239,15 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         // 7. 写入响应流
         workbook.write(response.getOutputStream());
         workbook.close();
+        //创建管理员操作日志
+        AdminLog adminLog = AdminLog.builder()
+                .adminName(BaseContext.getCurrentUsername())
+                .actionType(ActionTypeConstant.EXPORT)
+                .targetType(TargetTypeConstant.KNOWLEDGE_BASE)
+                .detail("{\"keyword\":\"" + keyword + "\",\"categoryId\":" + categoryId + ",\"status\":" + status + "}")
+                .createdTime(LocalDateTime.now())
+                .build();
+                adminLogMapper.insert(adminLog);
     }
 
     @Override

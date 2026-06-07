@@ -29,4 +29,6 @@ public class ActionTypeConstant {
     public static final String BATCH_IMPORT = "BATCH_IMPORT";
     //批量删除
     public static  final String BATCH_DELETE="BATCH_DELETE";
+
+    public static final String EXPORT="EXPORT";
 }
