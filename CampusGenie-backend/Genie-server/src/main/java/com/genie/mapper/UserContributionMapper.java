@@ -22,4 +22,6 @@ public interface UserContributionMapper {
     UserContribution selectById(Long id);
 
     void update(UserContribution userContribution);
+
+    void deleteById(Long id);
 }

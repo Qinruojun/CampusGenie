@@ -37,5 +37,11 @@ public class ContributionController {
             PageResult pageResult = contributionService.pageQueryByUser(contributionPageQueryDTO);
             return Result.success(pageResult,CodeConstant.SUCCESS,"分页查询成功");
     }
+    @DeleteMapping("contributions/{id}/delete")
+    public Result delete(@PathVariable Long id) {
+        log.info("删除用户自己未审核贡献{}", id);
+        contributionService.delete(id);
+        return Result.success(null,CodeConstant.SUCCESS,"删除成功");
+    }
 
 }

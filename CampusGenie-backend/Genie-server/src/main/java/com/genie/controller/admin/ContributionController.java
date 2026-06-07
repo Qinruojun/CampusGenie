@@ -5,6 +5,7 @@ import com.genie.dto.*;
 import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.ContributionService;
+import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,18 @@ public class ContributionController  {
         log.info("审核拒绝用户贡献信息：{}", id);
         contributionService.reject(id, rejectDTO);
         return Result.success(null, CodeConstant.SUCCESS, "审核拒绝成功");
+    }
+    @PostMapping("/review/batch")
+    public Result batchReview(@Valid @RequestBody BatchReviewDTO batchReviewDTO) {
+        log.info("批量审核用户贡献信息：{}", batchReviewDTO);
+        BatchReviewVO result = contributionService.batchReview(batchReviewDTO);
+        if (result.getFailCount() == 0) {
+            return Result.success(result, "批量审核完成");
+        } else {
+            return Result.success(result, String.format("批量审核完成，成功%d条，失败%d条",
+                    result.getSuccessCount(), result.getFailCount()));
+        }
+
     }
 
 }

@@ -9,12 +9,16 @@ import com.genie.entity.KnowledgeBase;
 import com.genie.entity.ReviewLog;
 import com.genie.entity.UserContribution;
 import com.genie.exception.ContributionAlreadyReviewedException;
+import com.genie.exception.EmptyContributionListException;
+import com.genie.exception.InvalidActionException;
+import com.genie.exception.RejectReasonRequiredException;
 import com.genie.mapper.KnowledgeBaseMapper;
 import com.genie.mapper.ReviewLogMapper;
 import com.genie.mapper.UserContributionMapper;
 import com.genie.result.PageResult;
 import com.genie.service.ContributionService;
 import com.genie.vo.AdminContributionVO;
+import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -24,8 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
 @Service
 public class ContributionServiceImpl implements ContributionService {
     @Autowired
@@ -143,4 +149,63 @@ public class ContributionServiceImpl implements ContributionService {
                 .build();
                 reviewLogMapper.insert(reviewLog);
     }
+
+    @Override
+    public void delete(Long id) {
+        //获得这个贡献并判断状态是否为未审核
+        UserContribution userContribution = userContributionMapper.selectById(id);
+        if (!StatusConstant.WAIT_FOR_REVIEW.equals(userContribution.getStatus()))
+            throw new ContributionAlreadyReviewedException( "该贡献已审核");
+            userContributionMapper.deleteById(id);
+
+    }
+
+    @Override
+    @Transactional
+
+    public BatchReviewVO batchReview(BatchReviewDTO dto) {
+        /**
+         * 批量审核用户贡献
+         */
+            List<Long> ids = dto.getContributionIds();
+            Integer action = dto.getAction();
+            String rejectReason = dto.getRejectReason();
+            // 参数校验
+            if (ids == null || ids.isEmpty()) {
+                throw new EmptyContributionListException("请选择要审核的贡献");
+            }
+            if (action == 2 && (rejectReason == null || rejectReason.trim().isEmpty())) {
+                throw new RejectReasonRequiredException("驳回理由不能为空");
+            }
+
+            int successCount = 0;
+            List<Long> failIds = new ArrayList<>();
+            Map<Long, String> failReasons = new HashMap<>();
+            //构建空ApproveDTO对象
+            ApproveDTO approveDTO = new ApproveDTO();
+            //构建RejectDTO对象
+            RejectDTO rejectDTO = new RejectDTO();
+            rejectDTO.setRejectReason(rejectReason);
+
+            for (Long id : ids) {
+                try {
+                    if (action == 1) {
+                        // 批量通过
+                        approve(id, approveDTO);
+                    } else if (action == 2) {
+                        // 批量驳回
+                        reject(id, rejectDTO);
+                    } else {
+                        throw new InvalidActionException("审核动作无效");
+                    }
+                    successCount++;
+                } catch (ContributionAlreadyReviewedException e) {
+                    failIds.add(id);
+                    failReasons.put(id, e.getMessage());
+                }
+            }
+
+            return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
+        }
+
 }

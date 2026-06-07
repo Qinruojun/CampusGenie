@@ -41,6 +41,9 @@
         </set>
         where id = #{id}
     </update>
+    <delete id="deleteById">
+        delete from user_contribution where id = #{id}
+    </delete>
 
     <select id="pageQueryByUser" resultType="com.genie.vo.UserContributionVO">
         select uc.id, question, answer,  c.name as categoryName,
