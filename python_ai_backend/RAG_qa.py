@@ -18,6 +18,7 @@
   - 如果本地已经存在 FAISS 索引文件，则直接加载（节省启动时间）；如果没有，则重新创建并保存到本地磁盘。
 """
 import os
+import json
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["TRANSFORMERS_OFFLINE"] = "0"
 import sys
@@ -33,8 +34,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.chat_models import ChatOpenAI
 from typing import List
 from sentence_transformers import SentenceTransformer
-from langchain_community.tools import DuckDuckGoSearchResults
-from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 import pymysql
 from langchain_core.documents import Document
 import requests
@@ -61,7 +60,7 @@ CONFIG = {
     "model_name": "deepseek-v4-pro",
     "temperature": 0.1,
     "max_tokens": 800,
-    "vectorstore_path": os.path.join(os.path.expanduser("~"), ".scut_rag", "faiss_index")
+    "vectorstore_path": os.path.join(os.path.expanduser("~"), ".scut_rag_vector", "faiss_index")
 }
 
 class ModelScopeEmbeddings(Embeddings):
@@ -85,6 +84,66 @@ class ModelScopeEmbeddings(Embeddings):
         if DEBUG_MODE:
             print(f"[DEBUG] 完成查询向量化，耗时: {time.time()-start_time:.2f}s")
         return embedding
+
+def bocha_ai_search(question: str) -> str:
+    """
+    直连博查 AI-Search 接口，直接获取大模型生成的答案
+    """
+    api_key = os.getenv("BOCHA_API_KEY")
+    if not api_key:
+        return "错误：未找到 BOCHA_API_KEY！"
+
+    # 注意这里的接口地址变成了 ai-search
+    url = "https://api.bochaai.com/v1/ai-search"
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        # 为了提高准确率，我们可以把用户的提问稍微包装一下，加上“华南理工大学”的限定
+        "query": f"关于华南理工大学：{question}",
+        "stream": False,  # 如果你的前端不支持流式输出，设置为 False 直接拿完整回答
+        "model": "bocha-glm-4" # 博查支持的可选模型参数，具体可查阅其最新文档
+    }
+    
+    try:
+        start_time = time.time()
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        
+        # if DEBUG_MODE:
+        #     print("\n" + "-"*30)
+        #     print(f"[DEBUG] 博查 API HTTP状态码: {response.status_code}")
+        #     print(f"[DEBUG] 博查 API 原始返回 JSON: {response.text}")
+        #     print("-"  *30 + "\n")
+
+        response.raise_for_status()
+        data = response.json()
+        
+        # 检查博查的业务状态码（通常 200 代表成功）
+        if data.get("code") != 200:
+            return f"博查API业务报错: {data.get('msg')} (错误码: {data.get('code')})"
+            
+        # 🔥 正确解析博查的 messages 列表结构
+        ai_answer = ""
+        messages = data.get("messages", [])
+        for msg in messages:
+            # 遍历列表，找到类型为 'answer' 的那一条
+            if msg.get("type") == "answer":
+                ai_answer = msg.get("content", "")
+                break
+        
+        if not ai_answer:
+            return "博查接口请求成功，但在返回的 messages 中未找到 answer 类型的回答。"
+            
+        if DEBUG_MODE:
+            print(f"[DEBUG] 博查 AI 搜索耗时: {time.time()-start_time:.2f}s")
+            
+        return ai_answer
+        
+    except Exception as e:
+        return f"博查 AI 搜索调用失败: {str(e)}"
 
 def initialize_rag_system():
     # 1 & 2. 直连数据库读取并按QA对切分
@@ -190,63 +249,28 @@ def initialize_rag_system():
         temperature=CONFIG["temperature"],
         max_tokens=CONFIG["max_tokens"],
         openai_api_key=deepseek_api_key, # 这里直接使用刚才拿到的变量
-        openai_api_base="https://api.deepseek.com/v1"
+        openai_api_base="https://api.deepseek.com/v1",
     )
     print("大模型初始化完成")
     
-    # 7. 初始化搜索引擎
-    print("正在初始化搜索引擎...")
-    # 配置搜索参数，设定区域和最大结果数
-    search_wrapper = DuckDuckGoSearchAPIWrapper(region="cn-zh", max_results=3)
-    web_search = DuckDuckGoSearchResults(api_wrapper=search_wrapper)
-    
-    # 专门为网络搜索设计的 Prompt 
-    web_prompt_template = """
-    你是华南理工大学校园百事通的智能助手。关于用户的问题，本地数据库中没有找到记录。
-    以下是通过互联网搜索引擎检索到的最新相关信息。
-    
-    请根据这些网络信息，综合、客观地回答用户的问题。
-    注意，你只回答与华南理工大学有关的问题，因为你是专门为华南理工大学服务的智能助手。不要回答与华南理工大学无关的内容。
-    如果网络信息中依然无法找到答案，请回答："抱歉，通过本地库和全网搜索，未能找到相关确切信息。"
-
-    网络搜索结果：
-    {context}
-
-    问题：{question}
-
-    回答：
-    """
-    web_prompt = ChatPromptTemplate.from_template(web_prompt_template)
-    print("搜索引擎初始化完成")
-
-    rewrite_prompt_template = """
-    你是一个搜索引擎关键词提取专家。你的任务是将用户的口语化提问转化为最高效的搜索关键词。
-    
-    规则：
-    1. 必须包含“华南理工大学”。
-    2. 如果用户是在询问一个集合或完整名单（例如“有哪些学院”、“有什么专业”、“几个校区”），请在关键词末尾加上“列表”、“汇总”或“设置”等词。
-    3. 如果用户问如何做某件事（例如“怎么申请入学”、“如何预约图书馆座位”），请在关键词末尾加上“方法”、“步骤”或“指南”等词。
-    3. 去掉代词和疑问词，只返回关键词本身，用空格分隔。
-
-    用户提问：{question}
-    搜索关键词：
-        """
-    rewrite_prompt = ChatPromptTemplate.from_template(rewrite_prompt_template)
-
     # 8. 定义请求本地意图识别小模型的 API 函数
     def get_category_from_api(question):
-        API_URL = "http://127.0.0.1:15000/classify"
+        API_URL = "http://127.0.0.1:8088/classify" # 在服务器运行时需要改为http://127.0.0.1:15000/classify
+        headers = {
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": "Bearer 122333444455555"
+        }
+        payload_string = json.dumps({"question": question})
         try:
             start_time = time.time()
-            response = requests.post(API_URL, json={"question": question}, timeout=3)
+            response = requests.post(API_URL, data=payload_string, headers=headers, timeout=0.5)
             data = response.json()
-            if DEBUG_MODE:
-                print(f"[DEBUG] 远程意图识别耗时: {time.time()-start_time:.2f}s, 返回结果: {data}")
             return data.get("category_id")
         except Exception as e:
+            # 明确打印警告，但返回 None 触发系统降级逻辑
             if DEBUG_MODE:
-                print(f"[WARNING] 无法连接到本地意图识别服务，已降级处理。错误: {e}")
-            return None
+                print(f"[WARNING] 意图识别服务未运行，已跳过。错误: {e}")
+            return None 
 
     # 9. 构建新的多级 RAG 链
     def format_docs(docs):
@@ -287,6 +311,8 @@ def initialize_rag_system():
             raw_docs = vectorstore.similarity_search_with_score(question, k=3)
             docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
 
+        print(f"[DEBUG] 数据库检索耗时: {time.time() - total_start_time:.2f}s")     
+
         # 3. 本地库有靠谱结果，交由大模型生成
         if docs_with_scores:
             if DEBUG_MODE:
@@ -300,32 +326,23 @@ def initialize_rag_system():
             if "抱歉，我在数据库中没有找到相关信息" not in response.content:
                 if DEBUG_MODE:
                     print(f"[DEBUG] 本地检索总耗时: {time.time() - total_start_time:.2f}s")
-                return f"📚【本地知识库】\n{response.content}"
+                # 提取最匹配的第一条知识块的 kb_id
+                matched_kb_id = docs_with_scores[0][0].metadata.get("kb_id")
+                return {
+                    "answer": f"📚【本地知识库】\n{response.content}",
+                    "kb_id": matched_kb_id  # 把 ID 传出去
+                }
 
-        # 4. 本地全面溃败，启动搜索引擎兜底 
-        print("\n[INFO] 本地知识库全面未命中，正在触发全网搜索引擎...")
+        # 4. 本地全面溃败，启动博查 AI 搜索兜底 
+        print("\n[INFO] 本地知识库未命中，触发博查 AI 搜索引擎直连...")
         
-        rewrite_start = time.time()
-        rewrite_messages = rewrite_prompt.format_messages(question=question)
-        rewrite_response = llm.invoke(rewrite_messages) 
-        search_query = rewrite_response.content.strip() 
+        # 直接把用户的原始问题扔给博查，无需提取关键词
+        ai_search_answer = bocha_ai_search(question)
         
-        if DEBUG_MODE:
-            print(f"[DEBUG] 提取搜索关键词耗时: {time.time()-rewrite_start:.2f}s -> 🔍 [{search_query}]")
-        
-        web_search_start = time.time()
-        try:
-            web_context = web_search.run(search_query) 
-        except Exception as e:
-            web_context = f"搜索引擎调用失败: {e}"
-        
-        if DEBUG_MODE:
-            print(f"[DEBUG] 网络搜索耗时: {time.time()-web_search_start:.2f}s")
-            
-        web_messages = web_prompt.format_messages(context=web_context, question=question)
-        web_response = llm.invoke(web_messages)
-        
-        return f"【联网搜索结果】\n{web_response.content}"
+        return {
+                "answer": f"【全网 AI 搜索总结】\n{ai_search_answer}",
+                "kb_id": None
+        }
     
     print("RAG系统初始化完成！")
     return rag_chain

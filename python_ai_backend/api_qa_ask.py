@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 import time
+from typing import Optional
 
 # 导入你写好的 RAG_qa.py 里的函数
 from RAG_qa import initialize_rag_system, answer_question
@@ -36,6 +37,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     cost_time: float
+    knowledge_id: Optional[int] = None  # 知识条目 ID 字段
 
 # 4. 在后端启动时，只执行一次初始化（加载大模型、向量库）
 @app.on_event("startup")
@@ -56,11 +58,21 @@ async def chat_endpoint(request: ChatRequest):
     try:
         # 调用 qa.py 中的回答函数
         answer = answer_question(request.question, global_rag_chain)
+        print(f"[DEBUG] Python RAG 返回结果: {answer}")
         cost_time = round(time.time() - start_time, 2)
-        
-        return ChatResponse(answer=answer, cost_time=cost_time)
+
+        if isinstance(answer, dict):
+            return ChatResponse(
+                answer=answer["answer"],
+                cost_time=cost_time,
+                knowledge_id=answer.get("kb_id")
+            )
+        else:
+            return ChatResponse(answer=str(answer), cost_time=cost_time)
         
     except Exception as e:
+        import traceback
+        traceback.print_exc() 
         raise HTTPException(status_code=500, detail=f"推理出错: {str(e)}")
 
 # 6. 运行服务器

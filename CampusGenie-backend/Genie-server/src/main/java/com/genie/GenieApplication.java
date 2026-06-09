@@ -5,11 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-//<<<<<<< HEAD
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
-//=======
-//>>>>>>> eda670b118d65e13926874e1488fb3cef4e8c49f
 
 @SpringBootApplication
 @EnableScheduling
@@ -20,6 +17,10 @@ public class GenieApplication {
     public static void main(String[] args) {
         SpringApplication.run(GenieApplication.class, args);
         log.info("server started");
+    }
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
 
