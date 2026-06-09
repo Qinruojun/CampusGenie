@@ -59,6 +59,15 @@ public class QAServiceImpl implements QAService {
             answerVO.setAnswer("抱歉，后端 AI 服务响应异常。");
             answerVO.setSource("系统错误");
         }
+
+        int hit=0;
+        int hit_place=-1;
+        String source=answerVO.getSource();
+        if("系统知识库".equals( source)||"搜索引擎".equals(source))
+        {
+            hit=1;
+            hit_place= "系统知识库".equals(source)? 0:1;
+        }
         
         long endTime = System.currentTimeMillis();
         log.info("耗时: {}ms", endTime - startTime);
