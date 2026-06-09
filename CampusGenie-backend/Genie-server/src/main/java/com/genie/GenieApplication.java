@@ -18,9 +18,5 @@ public class GenieApplication {
         SpringApplication.run(GenieApplication.class, args);
         log.info("server started");
     }
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 }
 
