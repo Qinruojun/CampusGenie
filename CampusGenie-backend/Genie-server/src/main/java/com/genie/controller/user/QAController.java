@@ -24,6 +24,6 @@ public class QAController {
     public Result ask(@Valid @RequestBody AskRequestDTO askRequestDTO) {
         AnswerVO answerVO=qaService.getAnswer(askRequestDTO);
 
-        return Result.success(answerVO, CodeConstant.SUCCESS, "获取答案成功");
+        return Result.success(answerVO.getAnswer(), CodeConstant.SUCCESS, "获取答案成功");
     }
 }
