@@ -9,10 +9,7 @@ import com.genie.vo.AnswerVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -24,6 +21,6 @@ public class QAController {
     public Result ask(@Valid @RequestBody AskRequestDTO askRequestDTO) {
         AnswerVO answerVO=qaService.getAnswer(askRequestDTO);
 
-        return Result.success(answerVO.getAnswer(), CodeConstant.SUCCESS, "获取答案成功");
+        return Result.success(answerVO, CodeConstant.SUCCESS, "获取答案成功");
     }
 }

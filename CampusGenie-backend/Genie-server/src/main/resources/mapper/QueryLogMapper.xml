@@ -17,7 +17,7 @@
         WHERE hit = 1
           AND knowledge_id IS NOT NULL
           AND query_time BETWEEN #{startDate} AND #{endDate}
-        GROUP BY knowledge_id, hit_place
+        GROUP BY knowledge_id, hit_place,normalized_query
         ORDER BY queryCount DESC
         LIMIT 10
     </select>

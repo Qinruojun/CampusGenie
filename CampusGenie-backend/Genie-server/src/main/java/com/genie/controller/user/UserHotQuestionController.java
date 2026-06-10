@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @Slf4j
-@RestController("userHotQuestionController")
-@RequestMapping("/user/hotquestions")
-public class HotQuestionController {
+@RestController
+@RequestMapping("/user")
+public class UserHotQuestionController {
     @Autowired
     private HotQuestionService hotQuestionService;
-    @GetMapping
+    @GetMapping( "/hotquestions")
     public Result  getHotQuestions(){
         List<HotQuestionVO> list=hotQuestionService.getHotQuestions();
         return Result.success(list, CodeConstant.SUCCESS,"查询成功");

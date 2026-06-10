@@ -1,4 +1,4 @@
-package com.genie.controller.admin;
+package com.genie.controller;
 
 import com.genie.constant.CodeConstant;
 import com.genie.constant.MessageConstant;
@@ -15,11 +15,11 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/category")
 public class CategoryController {
     @Autowired
     CategoryService categoryService;
-    @GetMapping("/categories")
+    @GetMapping("/list")
     public Result getCategoryList() {
       List<CategoryVO> list = categoryService.getCategoryList();
       if(list!=null){
