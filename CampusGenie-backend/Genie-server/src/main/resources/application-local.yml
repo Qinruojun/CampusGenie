@@ -1,0 +1,5 @@
+genie:
+  intent:
+    service-url: http://127.0.0.1:5000/classify
+    token: 122333444455555
+    timeout: 10000
