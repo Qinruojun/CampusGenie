@@ -32,3 +32,20 @@
      */
     export const USER_ROLE = 0;
     export const ADMIN_ROLE = 1;
+
+    /**
+    * 知识条目排序
+    * */
+    export const SORT_ORDER_ASC = 'ASC';
+    export const SORT_ORDER_DESC = 'DESC';
+    /**
+     * 用户贡献状态
+     **/
+//审核表三种状态，待审核，通过，驳回
+export const  WAIT_FOR_REVIEW = 0;
+export const REVIEW_PASS = 1;
+export const  REVIEW_REJECT = 2;
+
+export const  WAIT_FOR_REVIEW_MSG = '待审核';
+export const REVIEW_PASS_MSG = '已通过';
+export const  REVIEW_REJECT_MSG = '已驳回';

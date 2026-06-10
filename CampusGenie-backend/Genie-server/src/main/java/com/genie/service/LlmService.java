@@ -1,6 +1,6 @@
 package com.genie.service;
+import java.util.Map;
 
 public interface LlmService {
-    String askWithContext(String question, String context);
+    Map<String, Object> ask(String question);
 }
-

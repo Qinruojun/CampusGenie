@@ -11,57 +11,230 @@ const  UserLogin =()=> import( '../views/user/UserLogin.vue')
 const Welcome=() => import ( '../views/Welcome.vue')
 const AddKnowledge =()=>import('../views/admin/KnowledgeAdd.vue')
 const EditKnowledge=()=>import('../views/admin/KnowledgeEdit.vue')
+const ImportKnowledge =()=>import('../views/admin/KnowledgeImport.vue')
+const AdminHotQuestion =()=>import('@/views/admin/HotQuestion.vue')
+const AdminHome =()=>import('@/views/admin/AdminHome.vue')
+const AdminProfile  =()=>import('@/views/admin/AdminProfile.vue')
+const AdminLayout =()=>import('@/layouts/AdminLayout.vue')
+const UserQAChat =()=>import('@/views/user/QAChat.vue')
 import {USER_ROLE ,USERNAME_KEY} from '../constants/storage'
 import {TOKEN_KEY,ADMIN_ROLE,ROLE_KEY} from '../constants/storage'
 //把页面改成懒加载
 const router = createRouter({
   history: createWebHashHistory(),
+
+//TODO:当前为了debug把一些界面需要认证的改为requireAuth:false了，后面记得改回来
   routes: [
-    {path: '/', name: 'welcome', component:Welcome,meta:{ hideNav:true} },//hideNav决定导航栏会不会隐藏
-    {path: '/admin/addKnowledge', name:'add-knowledge', component:AddKnowledge, meta:{hideNav:true  , requiresAuth: true,
-        role: USER_ROLE}},
-     {path: '/admin/editKnowledge', name:'edit-knowledge', component:EditKnowledge, meta:{hideNav:true,    requiresAuth: true,
-         role: ADMIN_ROLE}},
-    { path: '/user/login',  name: 'user-login',component: UserLogin,meta:{ hideNav:true} },//根地址/对应哪个组件，哪个组件就是首页
-    { path: '/qa-result', name: 'qa-result', component: QAResult },
-    { path: '/contribute', name: 'contribute', component: UserContribution, meta: { hideNav: true, requiresAuth:  true,role: USER_ROLE} },
-    { path: '/hot', name: 'hot', component: HotQuestions,meta: { hideNav: true} },
-    { path: '/admin/login', name: 'admin-login', component: AdminLogin, meta: { hideNav: true } },
-    { path: '/admin/knowledge', name: 'admin-knowledge', component: KnowledgeManage, meta: { hideNav: true , requiresAuth: true,role : ADMIN_ROLE} },
-    { path: '/admin/audit', name: 'admin-audit', component: AuditManage, meta: { hideNav: true , requiresAuth: true,role : ADMIN_ROLE} },
-    {path: '/user/home',name: 'user-home',component: UserHome,meta:{ hideNav:true, requiresAuth: true,role: USER_ROLE}},
+    {
+      path: '/',
+      name: 'welcome',
+      component: Welcome,
+      meta: {
+        hideNav: true
+      }
+    },
+
+    {
+      path: '/user/home',
+      name: 'user-home',
+      component: UserHome,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
+    {
+      path: '/user/login',
+      name: 'user-login',
+      component: UserLogin,
+      meta: {
+        hideNav: true
+      }
+    },
+    {
+      path: '/user/qa',
+      name: 'user-qa',
+      component: UserQAChat,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE,
+      }
+    },
+    {
+      path: '/qa-result',
+      name: 'qa-result',
+      component: QAResult,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE,
+      }
+    },
+    {
+      path: '/user/hot',
+      name: 'hot',
+      component: HotQuestions,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE,
+      }
+    },
+    {
+      path: '/user/contribute',
+      name: 'contribute',
+      component: UserContribution,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
     {
       path: '/user/contributionlist',
       name: 'my-contributions',
-      component: UserContributionList
+      component: UserContributionList,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
+
+    {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: AdminLogin,
+      meta: {
+        hideNav: true
+      }
+    },
+
+    {
+      path: '/admin',
+      component: AdminLayout,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: ADMIN_ROLE
+      },
+      children: [
+        {
+          path: '',
+          redirect: '/admin/home'
+        },
+        {
+          path: 'home',
+          name: 'admin-home',
+          component: AdminHome,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'knowledge',
+          name: 'admin-knowledge',
+          component: KnowledgeManage,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'addKnowledge',
+          name: 'add-knowledge',
+          component: AddKnowledge,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+
+        },
+        {
+          path: 'editKnowledge/:id',
+          name: 'edit-knowledge',
+          component: EditKnowledge,
+          meta:{
+          requiresAuth: true,
+          role: ADMIN_ROLE
+        }}
+        ,
+        {
+          path: 'importKnowledge',
+          name: 'import-knowledge',
+          component: ImportKnowledge,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE,
+          }
+
+        },
+        {
+          path: 'audit',
+          name: 'admin-audit',
+          component: AuditManage,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE,
+          }
+        },
+        {
+          path: 'hotQuestion',
+          name: 'admin-hot-question',
+          component: AdminHotQuestion,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE,
+          }
+        },
+        {
+          path: 'profile',
+          name: 'admin-profile',
+          component: AdminProfile,
+          meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE,
+          }
+
+        }
+      ]
     }
   ]
+}
+
 //还要进行路由守卫，拦截未登陆的访问
 
 
 
-})
-router.beforeEach((to, from, next) => {
+)
+router.beforeEach((to) => {
   const token = localStorage.getItem(TOKEN_KEY)
   const role = localStorage.getItem(ROLE_KEY)
 
-  if (to.meta.requiresAuth && !token ) {
-    if(to.meta.role === USER_ROLE)
-    next('/user/login')//如果是用户专用页面则跳转到用户登录页面
-    else
-    next('/admin/login')//如果是管理员专用页面则跳转到管理员登录页面
-  } else {
-    if(to.meta.role === ADMIN_ROLE &&  role !== ADMIN_ROLE){
-      alert('无权限访问管理员页面')
-      next('/user/home')
+  if (to.meta.requiresAuth && !token) {
+    if (to.meta.role === USER_ROLE) {
+      return '/user/login'
     }
-    else if(to.meta.role === USER_ROLE && role !== USER_ROLE){
-      alert('无权限访问用户页面')
-      next('/admin/knowledge')
-    }
+
+    return '/admin/login'
   }
-  next()
+
+  if (to.meta.requiresAuth && to.meta.role === ADMIN_ROLE && role !== ADMIN_ROLE) {
+    alert('无权限访问管理员页面')
+    return '/user/home'
+  }
+
+  if (to.meta.requiresAuth && to.meta.role === USER_ROLE && role !== USER_ROLE) {
+    alert('无权限访问用户页面')
+    return '/admin/login'
+  }
+
+  return true
 })
 
 export default router
+
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.ReviewLogMapper">
+    <insert id="insert">
+        insert into review_log(contribution_type, contribution_id, reviewer, action, original_question, final_question, original_answer, final_answer, reject_reason, created_time)
+        values (#{contributionType}, #{contributionId}, #{reviewer}, #{action}, #{originalQuestion}, #{finalQuestion}, #{originalAnswer}, #{finalAnswer}, #{rejectReason}, #{createdTime})
+    </insert>
+</mapper>

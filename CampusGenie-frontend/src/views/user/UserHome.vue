@@ -2,12 +2,25 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import {SUCCESS} from "@/constants/code.js";
+
 const router = useRouter()
 const question = ref('')
 
 function search() {
-  const query = question.value.trim() || '图书馆的开放时间是多少？'
-  router.push({ path: '/qa-result', query: { q: query } })
+  const query = question.value.trim()
+  if(!query){
+    alert('请输入问题')
+    return
+  }
+  router.push({
+    path: '/user/qa',
+    query: {
+      // 这里写你要传的参数
+      question: query
+    }
+  })
+
 }
 </script>
 
@@ -25,17 +38,17 @@ function search() {
       </form>
 
       <div class="shortcut-grid">
-        <RouterLink class="shortcut card" to="/hot">
+        <RouterLink class="shortcut card" to="/user/hot">
           <span class="shortcut-icon">□</span>
           <strong>热点问题</strong>
           <small>查看大家常问的问题</small>
         </RouterLink>
-        <RouterLink class="shortcut card" to="/qa-result?q=校园卡如何补办？">
+        <RouterLink class="shortcut card" to="/user/qa">
           <span class="shortcut-icon">◇</span>
           <strong>快速问答</strong>
           <small>输入问题获得答案</small>
         </RouterLink>
-        <RouterLink class="shortcut card" to="/contribute">
+        <RouterLink class="shortcut card" to="/user/contribute">
           <span class="shortcut-icon">△</span>
           <strong>我要贡献</strong>
           <small>补充新的校园知识</small>
@@ -93,6 +106,11 @@ function search() {
   color: var(--green);
   border: 1px solid rgba(35, 157, 83, 0.22);
   background: rgba(35, 157, 83, 0.06);
+}
+.page {
+  width: min(980px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 70px 0 96px;
 }
 
 .shortcut small {

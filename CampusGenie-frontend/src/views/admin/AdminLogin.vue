@@ -11,37 +11,31 @@
 
       </form>
 
-      <RouterLink class="forgot" to="/">返回</RouterLink>
+      <RouterLink class="forgot" to ="/">返回</RouterLink>
     </section>
   </main>
 </template>
 <script setup>
 import { ref } from 'vue'
 import { SUCCESS } from '@/constants/code'
-import { login } from '@/api/user/user'
-import { register } from '@/api/user/user'
+import { login } from '@/api/admin/admin.js'
+
 import { useRouter } from 'vue-router'
 import {ROLE_KEY, TOKEN_KEY,USERNAME_KEY} from '@/constants/storage'
 const router = useRouter()
-const isLogin =ref(true)//如果这个是true那么显示登陆界面
-const confirpwd = ref(null)
 const loginForm = ref({
   username:'',
   password:''
 })
-const registerForm = ref({
-  username:'',
-  password:'',
-  email:''
-})
+
 //定义点击了登录按钮之后的函数
 async function Login(){
   const login_res = await login(loginForm.value)
-  if(login_res.code ==SUCCESS){
+  if(login_res.code ===SUCCESS){
     localStorage.setItem(TOKEN_KEY,login_res.data.token)
     localStorage.setItem(USERNAME_KEY,login_res.data.username)
    localStorage.setItem(ROLE_KEY,login_res.data.role)
-    router.push('/user/home')//跳转到提问页
+    router.push('/admin/knowledge')//跳转到提问页
   }
 }
 

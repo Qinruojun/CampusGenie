@@ -30,5 +30,5 @@ public class CodeConstant {
     /** 系统内部错误（未预期的异常） */
     public static final Integer INTERNAL_SERVER_ERROR = 500;
 
-    public static final Integer  EXTERNAL_SERVER_ERROR = 502;
+
 }

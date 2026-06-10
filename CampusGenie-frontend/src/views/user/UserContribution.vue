@@ -1,17 +1,44 @@
 <script setup>
-import { ref } from 'vue'
-
+import {onMounted, ref} from 'vue'
+import {contribute } from '@/api/user/contribution.js'
+import { useCategoryOptions } from '@/composables/useCategoryOptions'
+import CategorySelect from '@/components/CategorySelect.vue'
+import {SUCCESS } from '@/constants/code.js'
+const {
+  categoryOptions,
+  categoryLoading,
+  categoryError,
+  loadCategoryList
+} = useCategoryOptions()
+const result =ref(false)
 const submitted = ref(false)
-const registerForm = ref({
+const contributionForm = ref({
   question:'',
   answer:'',
   categoryId:'',
   supplement:'',
   contact:''
 })
-function submit() {
+const  submit=async()=>{
   submitted.value = true
+  try {
+    const res = await contribute(contributionForm)
+    if(res.code === SUCCESS){
+      result.value=true
+    }
+    else{
+     alert(res.msg || '服务器异常，提交失败！')
+    }
+  }catch(error){
+    console.error(error)
+  }
+
+
 }
+onMounted(()=>{
+  loadCategoryList()
+
+})
 </script>
 
 <template>
@@ -24,36 +51,38 @@ function submit() {
       <form class="card panel form" @submit.prevent="submit">
         <label>
           问题标题
-          <input class="input" v-model =" question" placeholder="例如：体育馆周末开放吗？" required />
+          <input class="input" v-model =" contributionForm.question" placeholder="例如：体育馆周末开放吗？" required />
         </label>
         <label>
           答案
-          <textarea class="textarea" v-model="answer"  placeholder="请输入答案" ></textarea>
+          <textarea v-model="contributionForm.answer" class="textarea" placeholder="请输入答案" ></textarea>
           <label>
             补充
             <textarea
+              v-model="contributionForm.supplement"
               class="textarea"
-              v-model="supplement"
               placeholder="请输入补充内容"
             ></textarea>
           </label>
         </label>
         <label>
           分类
-          <select class="select">
-            <option>生活服务</option>
-            <option>学习资源</option>
-            <option>住宿管理</option>
-            <option>教务相关</option>
-          </select>
+          <CategorySelect
+              v-model="contributionForm.categoryId"
+          :options="categoryOptions"
+          :loading="categoryLoading"
+          :error-message="categoryError"
+          placeholder="全部分类"
+          />
         </label>
-        <button class="primary-btn"  type="submit" >提交问题</button>
+        <button class="primary-btn"
+@click ="submit" >提交问题</button>
       </form>
 
       <aside class="card panel status">
         <div class="status-mark">✓</div>
         <h2>{{ submitted ? '已提交' : '等待提交' }}</h2>
-        <p class="muted">{{ submitted ? '感谢你的贡献，我们会尽快审核。' : '填写左侧表单后，这里会显示提交状态。' }}</p>
+        <p class="muted">{{  result? '感谢你的贡献，我们会尽快审核。' : '填写左侧表单后，这里会显示提交状态。' }}</p>
       </aside>
     </div>
   </main>
@@ -112,7 +141,11 @@ label {
 .status h2 {
   margin: 0 0 8px;
 }
-
+.page {
+ width: min(980px, calc(100% - 48px));
+ margin: 0 auto;
+ padding: 70px 0 96px;
+}
 @media (max-width: 720px) {
   .content-grid {
     grid-template-columns: 1fr;

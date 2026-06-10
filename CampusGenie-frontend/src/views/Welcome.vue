@@ -7,7 +7,7 @@ const router = useRouter()
 
 </script>
 <template>
-<!--  <main class="home page">-->
+  <main class="home page">
     <section class="hero-center">
       <p class="eyebrow">CampusGenie</p>
       <h1 class="page-title">Welcome to CampusGenie</h1>
@@ -17,7 +17,7 @@ const router = useRouter()
         <RouterLink to="/user/login">用户登录</RouterLink>
       </nav>
     </section>
-<!--  </main>-->
+  </main>
 </template>
 
 <style scoped>

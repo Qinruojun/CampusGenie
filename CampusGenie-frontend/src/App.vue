@@ -14,8 +14,8 @@ const hideNav = computed(() => route.meta.hideNav)
       
       <nav class="nav-links">
         <RouterLink to="/">首页</RouterLink>
-        <RouterLink to="/hot">热点问题</RouterLink>
-        <RouterLink to="/contribute">用户贡献</RouterLink>
+        <RouterLink to="/user/hot">热点问题</RouterLink>
+        <RouterLink to="/user/contribute">用户贡献</RouterLink>
         <RouterLink to="/admin/login">管理员</RouterLink>
         <RouterLink to="/user/login">用户登录</RouterLink>
         <RouterLink to="/user/contributionlist">我的贡献</RouterLink>

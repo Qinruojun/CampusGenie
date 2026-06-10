@@ -20,4 +20,9 @@ public class HotQuestion {
     private Integer rankNo;
     private Integer version;
     private LocalDateTime updatedTime;
+    private Long knowledgeId;       // 命中的知识库ID或草稿ID
+    private Integer hitPlace;       // 0-知识库，1-知识草稿
+
+    public void setAnswer(String answer) {
+    }
 }

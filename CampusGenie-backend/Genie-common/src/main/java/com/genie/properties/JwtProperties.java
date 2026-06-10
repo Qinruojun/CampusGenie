@@ -41,5 +41,4 @@ public class JwtProperties {
      * 普通用户端 Token 名称
      */
     private String userTokenName;
-    /*存用户heder token的key*/
 }

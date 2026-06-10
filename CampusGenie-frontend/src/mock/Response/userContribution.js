@@ -1,0 +1,30 @@
+export const UserContributionList=[{
+    "id": 1001,
+    "question": "图书馆假期开放时间是什么？",
+    "answer": "假期期间图书馆开放时间为9:00-17:00",
+    "categoryName": "图书馆服务",
+    "statusDesc": "待审核",
+    "createdTime": "2026-06-02 10:30:00",
+    "reviewedTime": null,
+    "rejectReason": null
+},
+    {
+        "id": 1000,
+        "question": "食堂几点关门？",
+        "answer": "晚上8点",
+        "categoryName": "食堂餐饮",
+        "statusDesc": "已通过",
+        "createdTime": "2026-06-01 15:20:00",
+        "reviewedTime": "2026-06-02 09:00:00",
+        "rejectReason": null
+    },
+    {
+        "id": 999,
+        "question": "宿舍热水供应时间？",
+        "answer": "晚上6点到12点",
+        "categoryName": "宿舍生活",
+        "statusDesc": "已驳回",
+        "createdTime": "2026-05-31 14:00:00",
+        "reviewedTime": "2026-06-01 10:30:00",
+        "rejectReason": "信息不准确，请提供官方来源"
+}]

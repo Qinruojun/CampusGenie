@@ -8,4 +8,5 @@ public class HotQuestionVO {
     private String question;      // 问题文本
     private Integer queryCount;   // 查询次数
     private String trend;         // 趋势：up / down / flat
+    private String answer;
 }

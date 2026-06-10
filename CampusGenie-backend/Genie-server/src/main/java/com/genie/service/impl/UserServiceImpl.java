@@ -17,19 +17,17 @@ import com.genie.dto.LoginDTO;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import com.genie.constant.MessageConstant;
 import com.genie.vo.LoginVO;
-import org.springframework.transaction.annotation.Transactional;
-
 @Service
 public class UserServiceImpl  implements UserService {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private JwtProperties jwtProperties;
 
     @Override
-    @Transactional//任何一步报错就撤销所有操作
     public void register(RegisterDTO registerDTO) {
         if(userMapper.selectByEmail(registerDTO.getEmail())!=null){
             throw new RegisterFailedException("邮箱已存在");
@@ -41,64 +39,49 @@ public class UserServiceImpl  implements UserService {
             throw new RegisterFailedException("用户名已存在");
         }
         User user=new User();
-//将registerDTO中的数据复制到User entity实例user中
         BeanUtils.copyProperties(registerDTO,user);
-        user.setRole(StatusConstant.USER_ROLE);
-        user.setStatus(StatusConstant.USER_NORMAL);
+        user.setRole(0);
+        user.setStatus(1);
         user.setCreatedTime(LocalDateTime.now());
         user.setUpdatedTime(LocalDateTime.now());
-        userMapper.insert(user);//插入数据库
+        userMapper.insert(user);
     }
-
-
-    @Autowired
-    private JwtProperties jwtProperties;
     @Override
-    @Transactional
     public LoginVO login(LoginDTO loginDTO) {
-
-        User user=userMapper.selectLoginUserByUsername(loginDTO.getUsername());
-        //查询用户名，判断账号是否存在
+        //进行用户查找获得用户信息，找不到报错
+        User user=userMapper.selectByUserName(loginDTO.getUsername());
         if (user==null){
             throw new LoginFailedException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
-        //校验密码是否匹配
+        //密码不正确
         if (!user.getPassword().equals(loginDTO.getPassword())){
             throw new LoginFailedException(MessageConstant.PASSWORD_ERROR);
         }
-        //判断用户是否被禁用
-        if (Objects.equals(user.getStatus(), StatusConstant.USER_BANNED)){
+        //身份是否正确
+        if(!user.getRole().equals(0)){
+            throw new LoginFailedException(MessageConstant.IDENTITY_ERROR);
+        }
+        //账号是否正常
+        if (!StatusConstant.ENABLE.equals(user.getStatus())){
             throw new LoginFailedException(MessageConstant.ACCOUNT_LOCKED);
         }
-        LoginVO loginVO=new LoginVO();
-        // 4. 生成 JWT claims
-        Map<String, Object> claims = new HashMap<>();
-        claims.put(JwtClaimsConstant.USER_ID, user.getId());
-        claims.put(JwtClaimsConstant.USERNAME, user.getUsername());
-        claims.put(JwtClaimsConstant.ROLE, user.getRole());
-
-        // 5. 生成 token
-        String token = JwtUtil.createJWT(
-                jwtProperties.getUserSecretKey(),
-                jwtProperties.getUserTtl(),
-                claims
-        );
-        // 6. 更新最后登录时间
-        LocalDateTime now = LocalDateTime.now();
-        user.setLastLoginTime(now);
-        user.setUpdatedTime(now);
-        userMapper.updateLoginTime(user);
-
-        // 7. 封装返回结果
-
-        loginVO.setId(user.getId());
-        loginVO.setUsername(user.getUsername());
-        loginVO.setEmail(user.getEmail());
-        loginVO.setPhone(user.getPhone());
-        loginVO.setRole(user.getRole());
-        loginVO.setToken(token);
-
-        return loginVO;
-
+        //创造jwt
+        Map<String,Object> claims=new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID,user.getId());
+        claims.put(JwtClaimsConstant.USERNAME,user.getUsername());
+        claims.put(JwtClaimsConstant.ROLE,user.getRole());
+        String token = JwtUtil.createJWT(jwtProperties.getUserSecretKey(), jwtProperties.getUserTtl(), claims);
+        //构造视图对象并返回给前端
+        LoginVO loginVO = LoginVO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .token(token)
+                .build();
+        //修改最后登陆时间
+        userMapper.updateLastLoginTime(user.getId(),LocalDateTime.now());
+        return  loginVO;
     }
 }

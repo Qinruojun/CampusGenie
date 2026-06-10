@@ -1,75 +1,48 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, reactive} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getKnowledgeById, updateKnowledge } from '@/api/admin/knowledge'
-import { getCategoryList } from '@/api/category.js'
+import { useKnowledgeEditStore } from '@/stores/knowledgeEditStore'
+import CategorySelect from '@/components/CategorySelect.vue'
+import {ENABLE,DISABLE } from '@/constants/status.js'
+import { SUCCESS } from '@/constants/code.js'
 
+import {edit } from "@/api/admin/knowledge.js"
+import {useCategoryOptions} from "@/composables/useCategoryOptions.js";
+
+const knowledgeEditStore = useKnowledgeEditStore()
+
+const {
+  categoryOptions,
+  categoryLoading,
+  categoryError,
+  loadCategoryList
+} = useCategoryOptions()
 const router = useRouter()
-const route = useRoute()
-
-const id = route.params.id
-
-const form = ref({
+useRoute();
+const form = reactive({
   id: '',
   question: '',
   answer: '',
   categoryId: '',
   source: '',
-  status: 1
+  status: ENABLE,//默认修改后的知识条目应该是启用的
 })
+function fillForm(data){
+  form.id = data.id || ''
+  form.question = data.question || ''
+  form.answer = data.answer || ''
+  form.categoryId = data.categoryId || ''
+  form.source = data.source || ''
+  form.status = data.status ?? ENABLE
+}
 
-const categoryList = ref([])
+
+
+
+
+
 const loading = ref(false)
-const pageLoading = ref(false)
 
-const loadCategoryList = async () => {
-  try {
-    const res = await getCategoryList()
-
-    if (res.code === 1 || res.code === 200) {
-      categoryList.value = res.data || []
-    } else {
-      alert(res.msg || '分类列表加载失败')
-    }
-  } catch (error) {
-    console.error(error)
-    alert('分类列表加载失败')
-  }
-}
-
-const loadKnowledgeDetail = async () => {
-  if (!id) {
-    alert('缺少知识条目 ID')
-    router.back()
-    return
-  }
-
-  pageLoading.value = true
-
-  try {
-    const res = await getKnowledgeById(id)
-
-    if (res.code === 1 || res.code === 200) {
-      const data = res.data
-
-      form.value = {
-        id: data.id,
-        question: data.question || '',
-        answer: data.answer || '',
-        categoryId: data.categoryId || '',
-        source: data.source || '',
-        status: data.status ?? 1
-      }
-    } else {
-      alert(res.msg || '知识条目加载失败')
-    }
-  } catch (error) {
-    console.error(error)
-    alert('服务器异常，知识条目加载失败')
-  } finally {
-    pageLoading.value = false
-  }
-}
 
 const validateForm = () => {
   if (!form.value.question.trim()) {
@@ -117,9 +90,9 @@ const handleSubmit = async () => {
       status: Number(form.value.status)
     }
 
-    const res = await updateKnowledge(data)
+    const res = await edit(data)
 
-    if (res.code === 1 || res.code === 200) {
+    if ( res.code === SUCCESS) {
       alert(res.msg || '修改成功')
       router.push('/admin/knowledge')
     } else {
@@ -139,8 +112,18 @@ const handleCancel = () => {
 
 onMounted(async () => {
   await loadCategoryList()
-  await loadKnowledgeDetail()
+  const id= router.params.id
+  const cachedKnowledge = knowledgeEditStore.getKnowledge(id)
+  if (cachedKnowledge) {
+    fillForm(cachedKnowledge)
+  } else {
+    alert('没有找到缓存数据，请从知识库列表重新进入编辑页')
+    router.push('/admin/knowledge')
+  }
+
+
 })
+
 </script>
 
 <template>
@@ -177,13 +160,13 @@ onMounted(async () => {
         <label>所属分类</label>
         <select v-model="form.categoryId">
           <option value="">请选择分类</option>
-          <option
-            v-for="item in categoryList"
-            :key="item.id"
-            :value="item.id"
-          >
-            {{ item.name }}
-          </option>
+          <CategorySelect
+              v-model="form.categoryId"
+              :options="categoryOptions"
+              :loading="categoryLoading"
+              :error-message="categoryError"
+              placeholder="全部分类"
+          />
         </select>
       </div>
 

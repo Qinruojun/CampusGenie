@@ -1,342 +1,235 @@
-<!-- 
-
-<template>
-  <main class="admin-shell">
-    <aside class="admin-sidebar">
-      <RouterLink class="brand" to="/">CampusGenie</RouterLink>
-      <nav class="admin-menu">
-        <RouterLink to="/admin/knowledge">知识库管理</RouterLink>
-        <RouterLink to="/admin/audit">审核管理</RouterLink>
-        <RouterLink to="/">返回首页</RouterLink>
-      </nav>
-    </aside>
-
-    <section class="admin-main">
-      <div class="admin-titlebar">
-        <div>
-          <p class="eyebrow">Admin</p>
-          <h1>知识库列表</h1>
-        </div>
-        <button class="primary-btn">+ 新增知识</button>
-      </div>
-
-      <div class="card panel">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>标题</th>
-              <th>分类</th>
-              <th>更新时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in knowledgeItems" :key="item.id">
-              <td>{{ item.title }}</td>
-              <td>{{ item.category }}</td>
-              <td>{{ item.updatedAt }}</td>
-              <td><a href="#">编辑</a></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-</template>
-<script setup>
-import { knowledgeItems } from '../../data/mockData'
-</script> -->
-
-
 <template>
   <div class="page">
-    <div class="page-header">
-      <h2>知识库管理</h2>
-      <button class="primary-btn" @click="handleAdd">新增知识</button>
-    </div>
+    <main class="main">
 
-    <div class="search-card">
-      <input
-        v-model="queryForm.keyword"
-        placeholder="请输入问题关键词"
-        @keyup.enter="handleSearch"
-      />
+      <section class="content">
+        <div class="page-head">
+          <div>
+            <h1>知识库管理</h1>
+            <p>管理和维护校园知识库，支持知识条目的增删改查与发布状态管理。</p>
+          </div>
 
-      <select v-model="queryForm.categoryId">
-        <option value="">全部分类</option>
-        <option
-          v-for="item in categoryList"
-          :key="item.id"
-          :value="item.id"
-        >
-          {{ item.name }}
-        </option>
-      </select>
+          <div class="head-actions">
+            <button class="btn ghost" @click="handleImport">⇧ 批量导入</button>
+            <button class="btn primary" @click="handleAdd">＋ 新增知识</button>
+          </div>
+        </div>
+        <div class="filter-panel">
+          <div class="search">
+            <span>⌕</span>
+            <input
+                v-model="queryForm.keyword"
+                placeholder="请输入问题关键词"
+                @keyup.enter="handleSearch"
+            />
+          </div>
 
-      <select v-model="queryForm.status">
-        <option value="">全部状态</option>
-        <option :value="1">已发布</option>
-        <option :value="0">已停用</option>
-      </select>
+          <CategorySelect
+              v-model="queryForm.categoryId"
+              :options="categoryOptions"
+              :loading="categoryLoading"
+              :error-message="categoryError"
+              placeholder="全部分类"
+          />
 
-      <button @click="handleSearch">搜索</button>
-      <button @click="handleReset">重置</button>
-    </div>
+          <select class="filter-select" v-model="queryForm.status">
+            <option value="">全部状态</option>
+            <option :value="1">已发布</option>
+            <option :value="0">已停用</option>
+          </select>
 
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>问题</th>
-            <th>分类</th>
-            <th>来源</th>
-            <th>状态</th>
-            <th>更新时间</th>
-            <th width="180">操作</th>
-          </tr>
-        </thead>
+          <button class="sort-btn" @click="handleToggleSortOrder">
+            更新时间
+            <span class="sort-arrow">
+      {{ queryForm.sortOrder === SORT_ORDER_DESC ? '↓' : '↑' }}
+    </span>
+          </button>
 
-        <tbody>
-          <tr v-if="loading">
-            <td colspan="7">加载中...</td>
-          </tr>
+          <button class="btn primary small" @click="handleSearch">搜索</button>
+          <button class="btn ghost small" @click="handleReset">重置</button>
+        </div>
 
-          <tr v-else-if="list.length === 0">
-            <td colspan="7">暂无数据</td>
-          </tr>
 
-          <tr v-for="item in list" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td class="question-cell">{{ item.question }}</td>
-            <td>{{ item.categoryName }}</td>
-            <td>{{ item.source }}</td>
-            <td>
-              <span v-if="item.status === 1">已发布</span>
-              <span v-else>已停用</span>
-            </td>
-            <td>{{ item.updatedTime }}</td>
-            <td>
-              <button @click="handleEdit(item.id)">编辑</button>
-              <button class="danger-btn" @click="handleDelete(item.id)">删除</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
 
-      <div class="pagination">
-        <button :disabled="page <= 1" @click="handlePrevPage">上一页</button>
+        <div class="stats">
+          <StatCard
+              v-for="item in statList"
+              :key="item.title"
+              :title="item.title"
+              :value="item.value"
+              :unit="item.unit"
+              :icon="item.icon"
+              :tone="item.tone"
+              :extra="item.extra"
+          />
+        </div>
 
-        <span>第 {{ page }} 页</span>
-        <span>共 {{ total }} 条</span>
 
-        <button :disabled="page >= Math.ceil(total / pageSize)" @click="handleNextPage">
-          下一页
-        </button>
-      </div>
-    </div>
+        <div class="card-list">
+          <KnowledgeCard
+              v-for="item in list"
+              :key="item.id"
+              :item="item"
+              @view="handleView"
+              @edit="handleEdit"
+              @toggle="handleToggleStatus"
+              @delete="handleDelete"
+          />
+        </div>
+
+        <div class="pagination">
+          <button @click="handlePrevPage">上一页</button>
+          <button class="current" @click="page = 1" >1</button>
+          <button @click="page = 2">2</button>
+          <button @click="page = 3">3</button>
+          <button @click="handleNextPage">下一页</button>
+        </div>
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { } from '@/api/admin/knowledge'
-import { getCategory } from '@/api/category.js'
-
+import { useKnowledgeEditStore } from '@/stores/knowledgeEditStore'
+import CategorySelect from '@/components/CategorySelect.vue'
+import { useCategoryOptions } from '@/composables/useCategoryOptions'
+import {useKnowledgeList} from "@/composables/admin/useKnowledgeList.js";
+import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
+import KnowledgeCard from '@/components/admin/Card/KnowledgeCard.vue'
+import StatCard from "@/components/StatCard.vue";
+const knowledgeEditStore = useKnowledgeEditStore()
 const router = useRouter()
 
-const queryForm = ref({
-  keyword: '',
-  categoryId: '',
-  status: ''
-})
+const {
+  categoryOptions,
+  categoryLoading,
+  categoryError,
+  loadCategoryList
+} = useCategoryOptions()
 
-const page = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-const list = ref([])
-const categoryList = ref([])
-const loading = ref(false)
 
-const loadCategoryList = async () => {
-  const res = await getCategoryList()
-  if (res.code === 1 || res.code === 200) {
-    categoryList.value = res.data || []
-  }
-}
+const {
+  queryForm,
+  page,
+  pageSize,
+  total,
+  list,
+  loading,
+  loadKnowledgeList,
+  handleSearch,
+  handleReset,
+  handlePrevPage,
+  handleNextPage,
+  handleToggleSortOrder,
+  handleDelete,
+  handleToggleStatus,
 
-const loadKnowledgeList = async () => {
-  loading.value = true
-
-  try {
-    const res = await pageKnowledge({
-      page: page.value,
-      pageSize: pageSize.value,
-      keyword: queryForm.value.keyword,
-      categoryId: queryForm.value.categoryId || null,
-      status: queryForm.value.status === '' ? null : queryForm.value.status
-    })
-
-    if (res.code === 1 || res.code === 200) {
-      list.value = res.data.records || []
-      total.value = res.data.total || 0
-    } else {
-      alert(res.msg || '查询失败')
-    }
-  } catch (error) {
-    console.error(error)
-    alert('服务器异常，查询失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleSearch = () => {
-  page.value = 1
-  loadKnowledgeList()
-}
-
-const handleReset = () => {
-  queryForm.value = {
-    keyword: '',
-    categoryId: '',
-    status: ''
-  }
-  page.value = 1
-  loadKnowledgeList()
-}
-
+} = useKnowledgeList()
 const handleAdd = () => {
-  router.push('/admin/knowledge/add')
+  router.push('/admin/addKnowledge')
 }
-
-const handleEdit = (id) => {
-  router.push(`/admin/knowledge/edit/${id}`)
+const handleEdit = (item) => {
+  knowledgeEditStore.setKnowledge(item)
+  router.push(`/admin/editKnowledge/${item.id}`)
 }
-
-const handleDelete = async (id) => {
-  const ok = confirm('确定要删除这条知识吗？')
-  if (!ok) return
-
-  const res = await deleteKnowledge(id)
-
-  if (res.code === 1 || res.code === 200) {
-    alert(res.msg || '删除成功')
-    loadKnowledgeList()
-  } else {
-    alert(res.msg || '删除失败')
-  }
+const handleImport = () => {
+  router.push('/admin/importKnowledge')
 }
-
-const handlePrevPage = () => {
-  if (page.value > 1) {
-    page.value--
-    loadKnowledgeList()
-  }
-}
-
-const handleNextPage = () => {
-  const maxPage = Math.ceil(total.value / pageSize.value)
-
-  if (page.value < maxPage) {
-    page.value++
-    loadKnowledgeList()
-  }
-}
-
-onMounted(() => {
+onMounted(()=>{
   loadCategoryList()
   loadKnowledgeList()
 })
+const handleView = item => {
+  console.log('查看详情', item)//TODO：显示知识卡片详情
+}
+//TODO: 还要后端返回统计信息
+const statList = computed(() => [
+  {
+    title: '知识总数',
+    value: total.value,
+    unit: '条',
+    icon: '▧',
+    tone: 'green'
+  },
+  {
+    title: '已发布',
+    value: '1,102',//HACK
+    unit: '条',
+    icon: '➤',
+    tone: 'green'
+  },
+  {
+    title: '待审核/已停用',
+    value: 154, //HACK
+    unit: '条',
+    icon: '◷',
+    tone: 'orange'
+  },
+  {
+    title: '本周更新',
+    value: 32,//HACK
+    unit: '条',
+    icon: '↗',
+    tone: 'green',
+    extra: '较上周 ↑18%'
+  }
+])
+
 </script>
-<style scoped>
-.page {
-  padding: 24px;
-}
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
+<style scoped src="@/styles/card-list.css"></style>
+<style>
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
+  gap: 16px;
   align-items: center;
-  margin-bottom: 18px;
-}
-
-.page-header h2 {
-  margin: 0;
-}
-
-.search-card {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
+  padding: 20px;
   margin-bottom: 18px;
   background: #fff;
-  border: 1px solid #eee;
   border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
-
-.search-card input,
-.search-card select {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-.search-card input {
-  width: 260px;
-}
-
-button {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.primary-btn {
-  background: #1677ff;
-  color: white;
-  border-color: #1677ff;
-}
-
-.danger-btn {
-  margin-left: 8px;
-  color: #d93025;
-}
-
-.table-card {
-  padding: 16px;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-}
-
-table {
+.filter-select {
   width: 100%;
-  border-collapse: collapse;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
 }
 
-th,
-td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
+.filter-select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
-.question-cell {
-  max-width: 360px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.sort-btn {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
-.pagination {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+.sort-btn:hover {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.sort-arrow {
+  margin-left: 4px;
 }
 </style>

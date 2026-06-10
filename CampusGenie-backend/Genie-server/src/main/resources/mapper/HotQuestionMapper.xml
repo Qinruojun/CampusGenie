@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.HotQuestionMapper">
+
+    <select id="getMaxVersion" resultType="java.lang.Integer">
+        SELECT IFNULL(MAX(version), 0) FROM hot_question
+    </select>
+    <select id="selectList" resultType="com.genie.entity.HotQuestion">
+SELECT id, display_question, query_count,rank_no, version, updated_time, knowledge_id, hit_place, normalized_answer
+FROM hot_question
+WHERE version = #{maxVersion}
+
+    </select>
+    <select id="selectByKnowledgeId_hitPlace_version" resultType="java.lang.Integer">
+        SELECT rank_no
+        FROM hot_question
+        WHERE knowledge_id = #{knowledgeId}
+          AND hit_place = #{hitPlace}
+          AND version = #{version}
+    </select>
+
+    <insert id="insertBatch">
+        INSERT INTO hot_question
+        (normalized_question, normalized_answer, display_question, query_count,
+         stat_start_date, stat_end_date, rank_no, version, updated_time)
+        VALUES
+        <foreach collection="hotQuestions" item="item" separator=",">
+            (#{item.normalizedQuestion}, #{item.normalizedAnswer}, #{item.displayQuestion},
+             #{item.queryCount}, #{item.statStartDate}, #{item.statEndDate},
+             #{item.rankNo}, #{item.version}, #{item.updatedTime})
+        </foreach>
+    </insert>
+</mapper>

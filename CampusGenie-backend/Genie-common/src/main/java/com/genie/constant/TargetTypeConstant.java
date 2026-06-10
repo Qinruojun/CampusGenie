@@ -2,7 +2,7 @@ package com.genie.constant;
 
 /**
  * 目标类型常量
- * 用于 admin_log 表的 target_type 字段
+ * 用于 admin_log和review_log 表的 target_type 字段
  */
 public class TargetTypeConstant {
 
@@ -17,4 +17,7 @@ public class TargetTypeConstant {
 
     /** 用户贡献 */
     public static final String CONTRIBUTION = "contribution";
+    //review_log记录  用户贡献为0 知识草稿为1
+    public static final Integer Review_TYPE_CONTRIBUTION = 1;
+    public static final Integer Review_TYPE_KNOWLEDGE_DRAFT = 2;
 }

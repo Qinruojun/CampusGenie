@@ -12,6 +12,8 @@
   "dependencies": {
     "@vitejs/plugin-vue": "latest",
     "axios": "^1.16.1",
+    "element-plus": "^2.14.1",
+    "pinia": "^3.0.4",
     "vite": "latest",
     "vue": "latest",
     "vue-router": "latest"

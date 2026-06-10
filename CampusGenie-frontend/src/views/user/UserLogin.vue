@@ -2,21 +2,21 @@
   <main class="center-page login-page">
     <section class="login-card card panel">
      <div class="login-box">
-     <div v-if ="isLogin">
+        <div v-if ="isLogin">
       <RouterLink class="login-brand" to="/">CampusGenie</RouterLink>
-       <h1>用户登录</h1>
+          <h1>用户登录</h1>
         <form class="login-form">
-         <input class="input" v-model="loginForm.username" placeholder="用户账号" />
-         <input class="input" type="password" v-model="loginForm.password" placeholder="密码" />
-         <button @click="Login" type="button" class="primary-btn">登录</button>
+            <input class="input" v-model="loginForm.username" placeholder="用户账号" />
+            <input class="input" type="password" v-model="loginForm.password" placeholder="密码" />
+            <button @click="Login" type="button" class="primary-btn">登录</button>
          <p @click="isLogin =false">没有账号?去注册</p>
-        </form>
-       </div>
+          </form>
+        </div>
      
-     <div v-else>
-        <RouterLink class="login-brand" to="/">CampusGenie</RouterLink>
-        <h1>用户注册</h1>
-        <form class="login-form">
+        <div v-else>
+          <RouterLink class="login-brand" to="/">CampusGenie</RouterLink>
+          <h1>用户注册</h1>
+          <form class="login-form">
             <input class="input" v-model="registerForm.username" placeholder="用户账号">  
             <input class ="input" type="password" v-model="registerForm.password" placeholder="用户密码">
             <input class =  "input" type="password" v-model="confirpwd" placeholder="再次输入密码">  
@@ -27,7 +27,7 @@
 <!--@click表示监听点击事件，监听到就会执行Register函数或者isLogin=true赋值语句-->
           </form>
      </div>
-     </div>
+      </div>
       <RouterLink class="forgot" to="/">返回首页</RouterLink>
     </section>
   </main>

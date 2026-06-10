@@ -1,10 +1,12 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { relatedQuestions } from '../../data/mockData'
-
 const route = useRoute()
-const question = computed(() => route.query.q || '图书馆的开放时间是多少？')
+const question = route.query.q
+const answer = route.query.answer
+
+
+
 </script>
 
 <template>
@@ -18,8 +20,8 @@ const question = computed(() => route.query.q || '图书馆的开放时间是多
       <div class="check">✓</div>
       <div>
         <p class="muted">系统匹配到的答案</p>
-        <h2>图书馆开放时间为：周一至周日 8:00 - 22:00</h2>
-        <p>寒暑假期间开放时间可能有所调整，请以学校最新通知为准。</p>
+        <h2>{{ answer }}</h2>
+
       </div>
     </section>
 
@@ -37,9 +39,12 @@ const question = computed(() => route.query.q || '图书馆的开放时间是多
 
 <style scoped>
 .result-page {
-  max-width: 760px;
+  margin: 0 auto;
+  max-width: 900px;
 }
-
+.eyebrow{
+  margin: 0 auto;
+}
 .back-link {
   display: inline-block;
   margin-bottom: 40px;
@@ -76,5 +81,10 @@ h1 {
 
 .related h3 {
   margin: 0 0 16px;
+}
+page {
+  width: min(980px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 70px 0 96px;
 }
 </style>

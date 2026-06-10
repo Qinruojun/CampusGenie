@@ -37,14 +37,21 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/user/**")
                 .excludePathPatterns("/user/user/login")
-                .excludePathPatterns("/user/user/register");
+                .excludePathPatterns("/user/user/register")
+                // 新增这一行，暂时放行问答接口方便测试
+                .excludePathPatterns("/user/qa");
 
     }
+
+    /**
+     *
+     * 跨域放行，记得别删掉
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")// 对后端所有接口如：/user/user/login等都开启跨域支持：跨域指的是端口不通，如一个是5173，后端是8080
-                .allowedOriginPatterns("*")//所有来源都可以,后面可以改成指定的前端地址
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")//允许跨域的请求方法
+        registry.addMapping("/**")
+                .allowedOrigins( "http://localhost:5173")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);

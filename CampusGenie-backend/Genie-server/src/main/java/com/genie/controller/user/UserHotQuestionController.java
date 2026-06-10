@@ -6,6 +6,7 @@ import com.genie.service.HotQuestionService;
 import com.genie.vo.HotQuestionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,7 @@ import java.util.List;
 public class UserHotQuestionController {
     @Autowired
     private HotQuestionService hotQuestionService;
-    @PostMapping( "/hotquestions")
+    @GetMapping( "/hotquestions")
     public Result  getHotQuestions(){
         List<HotQuestionVO> list=hotQuestionService.getHotQuestions();
         return Result.success(list, CodeConstant.SUCCESS,"查询成功");

@@ -1,7 +1,6 @@
 package com.genie.service.impl;
 
 import com.genie.service.LlmService;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ public class LlmServiceImpl implements LlmService {
     private final String PYTHON_AI_API_URL = "http://localhost:8000/api/qa/ask";
 
     @Override
-    public String askWithContext(String question, String context) {
+    public Map<String, Object> ask(String question) {
         // 1. 构造请求头
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -34,20 +33,17 @@ public class LlmServiceImpl implements LlmService {
 
         // 3. 发送 POST 请求到 Python 后端
         HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
-        
+
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(PYTHON_AI_API_URL, request, Map.class);
-            
-            // 4. 解析 Python 返回的结果 (假设 Python 返回 {"answer": "xxxx"})
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return (String) response.getBody().get("answer");
+                // 直接返回 Python 的完整 JSON 数据（包含 answer, cost_time, knowledge_id）
+                return response.getBody();
             }
         } catch (Exception e) {
             log.error("调用 Python AI 接口失败: ", e);
-            return "抱歉，AI 思考时遇到了问题（可能 Python 后端未启动）。";
         }
         
-        return "抱歉，暂时无法获取答案。";
+        return null;
     }
 }
-

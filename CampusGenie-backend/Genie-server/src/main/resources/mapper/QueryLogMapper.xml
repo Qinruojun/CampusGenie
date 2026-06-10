@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.QueryLogMapper">
+    <insert id="insert" >
+        insert into query_log(query_text, normalized_query, hit, hit_place, knowledge_id, session_id, response_time, query_time)
+        values(#{queryText}, #{normalizedQuery}, #{hit}, #{hitPlace}, #{knowledgeId},#{sessionId}, #{responseTime}, #{queryTime})
+    </insert>
+    <select id="getQueryLogsByTime_to_HotQuestion" resultType="com.genie.entity.HotQuestion">
+        SELECT
+            knowledge_id,
+            hit_place,
+            normalized_query AS normalizedQuestion,
+            COUNT(*) AS queryCount
+        FROM query_log
+        WHERE hit = 1
+          AND knowledge_id IS NOT NULL
+          AND query_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY knowledge_id, hit_place,normalized_query
+        ORDER BY queryCount DESC
+        LIMIT 10
+    </select>
+</mapper>

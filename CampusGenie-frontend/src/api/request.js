@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const request = axios.create({
     baseURL: 'http://localhost:8080',
-    timeout: 10000
+    timeout: 100000
 })
 
 request.interceptors.request.use(
@@ -10,7 +10,7 @@ request.interceptors.request.use(
         const token = localStorage.getItem('token')
 
         if (token) {
-            config.headers.authentication = token
+            config.headers.token = token
         }
 
         return config

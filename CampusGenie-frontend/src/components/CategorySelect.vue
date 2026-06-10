@@ -1,40 +1,42 @@
-<!--分类卡片组件-->
+
 <template>
   <div class="category-select">
     <select
-        class="category-input"
-        :value="modelValue"
-        :disabled="disabled || loading"
-        @change="handleChange"
+      class="category-input"
+      :value="currentValue"
+      :disabled="disabled || loading"
+      @change="handleChange"
     >
+<!--      下拉框默认提示选项-->
       <option value="">
         {{ loading ? '分类加载中...' : placeholder }}
       </option>
-
       <option
-          v-for="item in categoryList"
-          :key="item.id"
-          :value="item.id"
+        v-for="item in options"
+        :key="String(item[valueKey])"
+        :value="String(item[valueKey])"
       >
-        {{ item.name }}
+        {{ item[labelKey]}}
       </option>
     </select>
-
     <p v-if="errorMessage" class="category-error">
       {{ errorMessage }}
     </p>
   </div>
 </template>
-
 <script setup>
-import { onMounted, ref } from 'vue'
-import { getCategoryList } from '@/api/category'
-import {SUCCESS} from "@/constants/code.js";
+import {computed } from 'vue'
+//构造template里面用到的参数表
+//父组件给子组件传递的参数
 
 const props = defineProps({
   modelValue: {
     type: [String, Number],
     default: ''
+  },
+  options: {
+    type: Array,
+    default: () => []
   },
   placeholder: {
     type: String,
@@ -43,86 +45,93 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  errorMessage: {
+    type: String,
+    default: ''
+  },
+  valueKey: {
+    type: String,
+    default: 'id'
+  },
+  labelKey: {
+    type: String,
+    default: 'name'
   }
 })
-
-const emit = defineEmits(['update:modelValue', 'change', 'loaded'])
-
-const categoryList = ref([])
-const loading = ref(false)
-const errorMessage = ref('')
-
-async function loadCategoryList() {
-  loading.value = true
-  errorMessage.value = ''
-
-  try {
-    const response = await getCategoryList()
-    const result = response
-
-    if (result?.code !== SUCCESS) {
-      throw new Error(result?.msg || '分类加载失败')
-    }
-
-    categoryList.value = result.data || []
-
-    emit('loaded', categoryList.value)// 触发 loaded 事件
-  } catch (error) {
-    console.error(error)
-    errorMessage.value = '分类加载失败'
-  } finally {
-    loading.value = false
+//定义这个组件能触发的事件,向父组件触发
+const emit = defineEmits(['update:modelValue', 'change'])
+//computed 是计算属性
+const currentValue = computed(()=>{
+  if(props.modelValue===null|| props.modelValue === undefined){
+    return ''
   }
-}
-
+  return String(props.modelValue)
+})
 function handleChange(event) {
   const value = event.target.value
 
-  const finalValue = value === '' ? '' : Number(value)
+  if (value === '') {
+    emit('update:modelValue', '')
+    emit('change', null)
+    return
+  }
 
-  const selectedCategory = categoryList.value.find((item) => {
-    return Number(item.id) === Number(finalValue)
+  const selectedCategory = props.options.find((item) => {
+    return String(item[props.valueKey]) === value
   })
+const finalValue = selectedCategory
+    ? selectedCategory[props.valueKey]
+    : value
 
-  emit('update:modelValue', finalValue)
-  emit('change', selectedCategory || null)
+emit('update:modelValue', finalValue)
+emit('change', selectedCategory || null)
 }
-
-onMounted(() => {
-  loadCategoryList()
-})
 </script>
 
 <style scoped>
 .category-select {
   width: 100%;
+  min-width: 0;
+  position: relative;
 }
 
 .category-input {
   width: 100%;
   height: 44px;
-  padding: 0 14px;
-  border: 1px solid #d8d6cf;
-  border-radius: 10px;
+  padding: 0 16px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
   background: #ffffff;
-  color: #1c241c;
+  color: #374151;
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
 }
 
 .category-input:focus {
-  border-color: #219c55;
-  box-shadow: 0 0 0 3px rgba(33, 156, 85, 0.12);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
 .category-input:disabled {
   cursor: not-allowed;
   opacity: 0.65;
+  background: #f9fafb;
 }
 
 .category-error {
-  margin: 8px 0 0;
+  position: absolute;
+  left: 0;
+  top: 48px;
+  margin: 0;
   color: #b94848;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 </style>

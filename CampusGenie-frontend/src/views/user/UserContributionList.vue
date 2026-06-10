@@ -1,186 +1,274 @@
 <!--用户贡献页，查看自己的贡献-->
 <template>
-  <main class="contribution-page">
+  <div class="contribution-page">
     <section class="page-head">
-      <p class="eyebrow">CampusGenie</p>
+      <p class="eyebrow">
+        CampusGenie
+      </p>
       <h1>我的贡献</h1>
       <p class="desc">
         查看你提交过的校园问答内容，按提交时间从近到远排列。
       </p>
     </section>
 
-    <section class="toolbar">
-      <div>
-        <strong>{{ total }}</strong>
-        <span> 条贡献记录</span>
-      </div>
 
-      <button class="refresh-btn" @click="fetchContributions">
-        刷新
-      </button>
-    </section>
+    <div class="page">
+      <main class="main">
+        <section class="content">
+          <div class="page-head">
 
-    <section class="content-card">
-      <div v-if="loading" class="state">
-        正在加载你的贡献记录...
-      </div>
 
-      <div v-else-if="errorMessage" class="state error">
-        {{ errorMessage }}
-      </div>
+            <div class="head-actions">
 
-      <div v-else-if="contributions.length === 0" class="state">
-        暂时还没有提交过贡献。
-      </div>
-
-      <div v-else class="contribution-list">
-        <article
-            v-for="item in contributions"
-            :key="item.id"
-            class="contribution-item"
-        >
-          <div class="item-top">
-            <div>
-              <h3>{{ item.question }}</h3>
-              <p class="time">提交时间：{{ item.createdTime }}</p>
+            </div>
+          </div>
+          <div class="filter-panel">
+            <div class="search">
+              <span>⌕</span>
+              <input
+                v-model="queryForm.keyword"
+                placeholder="请输入问题关键词"
+                @keyup.enter="handleSearch"
+              >
             </div>
 
-            <span :class="['status', getStatusClass(item.statusDesc)]">
-              {{ item.statusDesc }}
-            </span>
+            <CategorySelect
+              v-model="queryForm.categoryId"
+              :options="categoryOptions"
+              :loading="categoryLoading"
+              :error-message="categoryError"
+              placeholder="全部分类"
+            />
+
+            <select
+              v-model="queryForm.status"
+              class="filter-select"
+            >
+              <option value="">
+                全部状态
+              </option>
+              <option :value="REVIEW_PASS">
+                已通过
+              </option>
+              <option :value="REVIEW_REJECT">
+                已驳回
+              </option>
+            </select>
+
+            <button
+              class="sort-btn"
+              @click="handleToggleSortOrder"
+            >
+              更新时间
+              <span class="sort-arrow">
+                {{ queryForm.sortOrder === SORT_ORDER_DESC ? '↓' : '↑' }}
+              </span>
+            </button>
+
+            <button
+              class="btn primary small"
+              @click="handleSearch"
+            >
+              搜索
+            </button>
+            <button
+              class="btn ghost small"
+              @click="handleReset"
+            >
+              重置
+            </button>
           </div>
 
-          <p class="answer">
-            {{ item.answer }}
-          </p>
 
-          <div class="meta">
-            <span>所属类别：{{ item.categoryName || '未分类' }}</span>
 
-            <span v-if="item.reviewedTime">
-              审核时间：{{ item.reviewedTime }}
-            </span>
+          <div class="stats">
+            <StatCard
+              v-for="item in statList"
+              :key="item.title"
+              :title="item.title"
+              :value="item.value"
+              :unit="item.unit"
+              :icon="item.icon"
+              :tone="item.tone"
+              :extra="item.extra"
+            />
           </div>
 
-          <p v-if="item.rejectReason" class="reject-reason">
-            驳回原因：{{ item.rejectReason }}
-          </p>
-        </article>
-      </div>
-    </section>
 
-    <section class="pagination" v-if="totalPages > 1">
-      <button :disabled="page <= 1" @click="changePage(page - 1)">
-        上一页
-      </button>
+          <div class="card-list">
+            <UserContributionCard
+              v-for="item in list"
+              :key="item.id"
+              :item="item"
+              @view="handleView"
+              @delete="handleDelete"
+            />
+          </div>
 
-      <span>
-        第 {{ page }} / {{ totalPages }} 页
-      </span>
-
-      <button :disabled="page >= totalPages" @click="changePage(page + 1)">
-        下一页
-      </button>
-    </section>
-  </main>
+          <div class="pagination">
+            <button @click="handlePrevPage">
+              上一页
+            </button>
+            <button
+              class="current"
+              @click="page = 1"
+            >
+              1
+            </button>
+            <button @click="page = 2">
+              2
+            </button>
+            <button @click="page = 3">
+              3
+            </button>
+            <button @click="handleNextPage">
+              下一页
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from 'vue'
+    <script setup>
+      import { computed,ref, onMounted } from 'vue'
+      import { useRouter } from 'vue-router'
 
-const contributions = ref([])
-const total = ref(0)
+      import CategorySelect from '@/components/CategorySelect.vue'
+      import { useCategoryOptions } from '@/composables/useCategoryOptions'
+      import UserContributionCard from '@/components/user/ContributionCard.vue'
+      import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
+      import { WAIT_FOR_REVIEW,REVIEW_PASS,REVIEW_REJECT} from "@/constants/status.js";
+      import StatCard from "@/components/StatCard.vue";
+      import {useContributionList} from "@/composables/user/useContributionList.js";
 
-const page = ref(1)
-const pageSize = ref(6)
+      const router = useRouter()
 
-const loading = ref(false)
-const errorMessage = ref('')
+      const {
+        categoryOptions,
+        categoryLoading,
+        categoryError,
+        loadCategoryList
+      } = useCategoryOptions()
 
-const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(total.value / pageSize.value))
-})
 
-function getToken() {
-  return localStorage.getItem('token') || localStorage.getItem('userToken') || ''
-}
+      const {
+        queryForm,
+        page,
+        pageSize,
+        total,
+        list,
+        loading,
+        loadList,
+        handleSearch,
+        handleReset,
+        handlePrevPage,
+        handleNextPage,
+        handleToggleSortOrder,
+        loadContributionList,
 
-function parseTime(timeText) {
-  if (!timeText) return 0
+      } = useContributionList()
 
-  // 兼容 "2026-06-02 10:30:00" 这种格式
-  return new Date(String(timeText).replace(' ', 'T')).getTime()
-}
 
-function sortByNewest(records) {
-  return [...records].sort((a, b) => {
-    return parseTime(b.createdTime) - parseTime(a.createdTime)
-  })
-}
 
-function getStatusClass(statusDesc) {
-  if (statusDesc === '已通过') return 'approved'
-  if (statusDesc === '已驳回') return 'rejected'
-  return 'pending'
-}
+      onMounted(()=>{
+        loadCategoryList()
+        loadContributionList()
+      })
+      const handleView = item => {
+        console.log('查看详情', item)//TODO
+      }
+      //TODO: 还要后端返回统计信息
+      const statList = computed(() => [
+        {
+          title: '贡献总数',
+          value: total.value,
+          unit: '条',
+          icon: '▧',
+          tone: 'green'
+        },
+        {
+          title: '已通过',
+          value: '1,102',//HACK
+          unit: '条',
+          icon: '➤',
+          tone: 'green'
+        },
+        {
+          title: '待审核',
+          value: 154, //HACK
+          unit: '条',
+          icon: '◷',
+          tone: 'orange'
+        },
+        {
+          title: '已驳回',
+          value: 32,//HACK
+          unit: '条',
+          icon: '↗',
+          tone: 'green',
+          extra: '较上周 ↑18%'
+        }
+      ])
 
-async function fetchContributions() {
-  loading.value = true
-  errorMessage.value = ''
+    </script>
 
-  try {
-    const token = getToken()
+    <style scoped src="@/styles/card-list.css"></style>
+    <style>
+    /* TODO  */
+      .filter-panel {
+        display: grid;
+        grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
+        gap: 16px;
+        align-items: center;
+        padding: 20px;
+        margin-bottom: 18px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      }
+      .filter-select {
+        width: 100%;
+        height: 44px;
+        padding: 0 16px;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        background: #fff;
+        color: #374151;
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+      }
 
-    const params = new URLSearchParams({
-      page: String(page.value),
-      pageSize: String(pageSize.value),
-      sortOrder: 'desc'
-    })
+      .filter-select:focus {
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+      }
 
-    const response = await fetch(`/user/contributions/page?${params}`, {
-      method: 'GET',
-      headers: token
-          ? {
-            token
-          }
-          : {}
-    })
+      .sort-btn {
+        width: 100%;
+        height: 44px;
+        padding: 0 12px;
+        border: 1px solid #dfe3e8;
+        border-radius: 8px;
+        background: #fff;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
 
-    if (!response.ok) {
-      throw new Error(`请求失败：${response.status}`)
-    }
+      .sort-btn:hover {
+        color: #16a34a;
+        border-color: #16a34a;
+      }
 
-    const result = await response.json()
-
-    if (result.code !== 1) {
-      throw new Error(result.msg || '查询失败')
-    }
-
-    const records = result.data?.records || []
-
-    // 后端如果已经按时间倒序返回，这里不会改变结果；
-    // 如果后端没有排序，这里前端再兜底排序一次。
-    contributions.value = sortByNewest(records)
-    total.value = Number(result.data?.total || 0)
-  } catch (error) {
-    console.error(error)
-    errorMessage.value = '贡献记录加载失败，请稍后重试。'
-  } finally {
-    loading.value = false
-  }
-}
-
-function changePage(targetPage) {
-  if (targetPage < 1 || targetPage > totalPages.value) return
-
-  page.value = targetPage
-  fetchContributions()
-}
-
-onMounted(() => {
-  fetchContributions()
-})
-</script>
+      .sort-arrow {
+        margin-left: 4px;
+      }
+    </style>
 
 <style scoped>
 .contribution-page {

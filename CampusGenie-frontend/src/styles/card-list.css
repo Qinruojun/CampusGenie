@@ -1,0 +1,287 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    background: #f5f7fa;
+    color: #1f2937;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+}
+
+.sidebar {
+    width: 260px;
+    background: #fff;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #16a34a;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.menu {
+    padding: 32px 16px;
+}
+
+.menu-item {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: #4b5563;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.menu-item.active {
+    color: #16a34a;
+    background: #eaf8ef;
+    border-left: 4px solid #16a34a;
+}
+
+.tip {
+    margin: auto 20px 32px;
+    padding: 22px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #eefaf2, #f7fbf7);
+    color: #4b5563;
+}
+
+.tip-title {
+    color: #16a34a;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.tip p {
+    margin: 0;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.main {
+    flex: 1;
+    min-width: 0;
+}
+
+.topbar {
+    height: 72px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 36px;
+}
+
+.icon-btn {
+    border: 0;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bell {
+    position: relative;
+    font-size: 22px;
+}
+
+.bell span {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 11px;
+    text-align: center;
+    line-height: 16px;
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #dcfce7;
+}
+
+.user-name {
+    font-weight: 700;
+}
+
+.role {
+    margin-top: 2px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.arrow {
+    color: #6b7280;
+    font-size: 18px;
+}
+
+.content {
+    padding: 28px 36px;
+}
+
+.page-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.page-head h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.page-head p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.head-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn {
+    height: 44px;
+    padding: 0 24px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn.primary {
+    color: #fff;
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.btn.ghost {
+    color: #374151;
+}
+
+.btn.small {
+    min-width: 88px;
+}
+.btn {
+
+}
+
+.filter-panel {
+    display: grid;
+    grid-template-columns: minmax(280px, 1.7fr) 220px 220px 90px 90px;
+    gap: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.search {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+}
+
+.search input,
+.filter-panel select {
+    width: 100%;
+    height: 44px;
+    border: 0;
+    outline: none;
+    color: #374151;
+    font-size: 14px;
+    background: transparent;
+}
+
+.filter-panel select {
+    padding: 0 16px;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+
+
+.card-list {
+    display: flex;
+    width:100%;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pagination {
+    display: flex;
+    width:100%;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 24px;
+}
+
+.pagination button {
+    height: 40px;
+    min-width: 48px;
+    padding: 0 18px;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+    background: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pagination .current {
+    color: #fff;
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+@media (max-width: 1200px) {
+    .filter-panel,
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .page-head {
+        flex-direction: column;
+    }
+}
