@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/intent")
 @RequiredArgsConstructor
-public class IntentController {
+public class AdminIntentController {
     private final IntentService intentService;
 
     @PostMapping("/batch-recognize")

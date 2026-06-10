@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/user/intent")
 @RequiredArgsConstructor
-public class IntentController {
+public class UserIntentController {
     private final IntentService intentService;
 
     @PostMapping("/recognize")
