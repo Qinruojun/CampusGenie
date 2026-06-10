@@ -35,3 +35,4 @@ build/
 
 .env
 .venv/
+__pycache__/

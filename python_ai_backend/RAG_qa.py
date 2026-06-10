@@ -37,6 +37,7 @@ from sentence_transformers import SentenceTransformer
 import pymysql
 from langchain_core.documents import Document
 import requests
+from sentence_transformers import SentenceTransformer, CrossEncoder
 
 # 调试开关：设置为False可一键关闭所有调试信息
 DEBUG_MODE = True
@@ -193,9 +194,20 @@ def initialize_rag_system():
     print(f"成功从数据库读取并转化为 {len(chunks)} 个问答对（知识块）")
     
     # 3. 加载嵌入模型
-    print("正在加载嵌入模型...")
+    print("正在加载嵌入模型(双编码器)...")
     embeddings = ModelScopeEmbeddings(model_name=CONFIG["embedding_model"])
     
+    # 加载重排模型 (交叉编码器)
+    print("正在初始化重排模型环境...")
+    # 检查当前环境是否支持 GPU 加速
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"[INFO] 正在使用 {device} 运行重排模型...")
+    torch.cuda.empty_cache()  # 清理显存
+    
+    # 初始化时强制指定设备
+    reranker = CrossEncoder("BAAI/bge-reranker-base", device=device)
+    print("重排模型加载完成")
+
     # 4. 创建向量数据库
     index_file = os.path.join(CONFIG["vectorstore_path"], "index.faiss")
     print(f"向量数据库路径: {CONFIG['vectorstore_path']}")
@@ -279,61 +291,98 @@ def initialize_rag_system():
     
     def rag_chain(question):
         total_start_time = time.time()
+
+        raw_docs_with_scores = []
         
-        # [配置项] 距离阈值设定 (FAISS 默认 L2 距离，越小越相似)
-        # 对于 bge-small-zh，一般 1.0 ~ 1.2 是分水岭。如果发现找不准，可以把这个值调小(要求更严格)。
-        DISTANCE_THRESHOLD = 1.1 
-        
-        docs_with_scores = []
-        
-        # 1. 调用远程 API 获取分类并精准检索 
-        print("\n[INFO] 正在分析问题意图...")
+        # 1. 粗排召回 (Retrieve) - 召回 12 条候选
+        print("\n[INFO] 正在分析问题意图并执行全局粗排召回...")
         target_category_id = get_category_from_api(question)
+        
+        # 统一设置召回数量为 12
+        RECALL_K = 12
         
         if target_category_id is not None:
             if DEBUG_MODE:
-                print(f"[INFO] 锁定分类 ID: {target_category_id}，正在执行精确检索...")
-            # 利用 metadata filter 进行精准搜索
-            raw_docs = vectorstore.similarity_search_with_score(
+                print(f"[INFO] 锁定分类 ID: {target_category_id}，进行精准分类召回...")
+            raw_docs_with_scores = vectorstore.similarity_search_with_score(
                 question, 
-                k=3, 
+                k=RECALL_K, 
                 filter={"category_id": target_category_id}
             )
-            # 过滤掉分数过高的（距离太远，不相关）
-            docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
-            
-        # 2. 分类库未命中，降级为全局检索 
-        if not docs_with_scores:
+        
+        # 如果未识别出明确分类，或精准分类召回失败，降级触发全局向量库召回
+        if not raw_docs_with_scores:
             if DEBUG_MODE:
-                reason = "未识别出明确分类" if target_category_id is None else "对应分类库中无高匹配度答案"
-                print(f"[INFO] {reason}，触发全局向量检索...")
-            
-            raw_docs = vectorstore.similarity_search_with_score(question, k=3)
-            docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
+                print(f"[INFO] 未识别出明确分类，触发全局向量库召回...")
+            raw_docs_with_scores = vectorstore.similarity_search_with_score(question, k=RECALL_K)
 
-        print(f"[DEBUG] 数据库检索耗时: {time.time() - total_start_time:.2f}s")     
+        # # 如果连最基础的文档都没召回，直接走兜底
+        # if not raw_docs_with_scores:
+        #     print("[INFO] 本地完全未命中，触发 AI 搜索引擎...")
+        #     return {
+        #         "answer": f"【全网搜索总结】\n{bocha_ai_search(question)}",
+        #         "kb_id": None
+        #     }
 
-        # 3. 本地库有靠谱结果，交由大模型生成
-        if docs_with_scores:
+        # 2. 如果粗召回成功，开始精细重排
+        if raw_docs_with_scores:
             if DEBUG_MODE:
-                print(f"[DEBUG] 本地库检索成功，最佳相似度得分: {docs_with_scores[0][1]:.4f}")
+                print(f"[INFO] 开始进行交叉编码器重排，候选文档数: {len(raw_docs_with_scores)}")
             
-            context = format_docs(docs_with_scores)
-            messages = prompt.format_messages(context=context, question=question)
-            response = llm.invoke(messages)
+            # 提取候选文档并拼接成 [问题, 答案] 对
+            # raw_docs_with_scores 的结构是 [(Document, faiss_score), ...]
+            cross_encoder_pairs = [[question, doc.page_content] for doc, _ in raw_docs_with_scores]
             
-            # 检查大模型是否依然认为上下文不足以回答
-            if "抱歉，我在数据库中没有找到相关信息" not in response.content:
-                if DEBUG_MODE:
-                    print(f"[DEBUG] 本地检索总耗时: {time.time() - total_start_time:.2f}s")
-                # 提取最匹配的第一条知识块的 kb_id
-                matched_kb_id = docs_with_scores[0][0].metadata.get("kb_id")
-                return {
-                    "answer": f"📚【本地知识库】\n{response.content}",
-                    "kb_id": matched_kb_id  # 把 ID 传出去
-                }
+            # 使用重排模型打分 (这部分计算稍微耗时，但因为只有 12 条，通常只需几百毫秒)
+            rerank_start_time = time.time()
+            rerank_scores = reranker.predict(cross_encoder_pairs)
+            if DEBUG_MODE:
+                print(f"[DEBUG] 重排计算耗时: {time.time() - rerank_start_time:.2f}s")
 
-        # 4. 本地全面溃败，启动博查 AI 搜索兜底 
+            # 将原文档、FAISS原距离、交叉编码器新得分打包在一起
+            reranked_results = []
+            for i in range(len(raw_docs_with_scores)):
+                doc = raw_docs_with_scores[i][0]
+                faiss_dist = raw_docs_with_scores[i][1]
+                ce_score = rerank_scores[i]
+                reranked_results.append((doc, faiss_dist, ce_score))
+
+            # 根据交叉编码器的得分进行降序排序 (得分越高越匹配！)
+            reranked_results.sort(key=lambda x: x[2], reverse=True)
+
+            if DEBUG_MODE:
+                print(f"[DEBUG] 重排后 Top-1 得分: {reranked_results[0][2]:.4f}")
+
+            # [配置项] 重排得分阈值过滤
+            # Cross-encoder 通常得分如果小于 0 (甚至是负数)，说明逻辑完全不匹配
+            # 你可以根据实际测试调整这个 RERANK_THRESHOLD (比如设为 0.0 或更严的 2.0)
+            RERANK_THRESHOLD = 0.0 
+            final_valid_results = [item for item in reranked_results if item[2] > RERANK_THRESHOLD]
+
+            # 3. 截取最终的 Top-3 喂给大模型
+            TOP_N = 3
+            top_docs = final_valid_results[:TOP_N]
+
+            # 4. 本地库有靠谱结果，交由大模型生成
+            if top_docs:
+                context_docs = [(item[0], item[2]) for item in top_docs] 
+                context = format_docs(context_docs)
+                
+                messages = prompt.format_messages(context=context, question=question)
+                response = llm.invoke(messages)
+
+                # 检查大模型是否依然认为上下文不足以回答
+                if "抱歉，我在数据库中没有找到相关信息" not in response.content:
+                    if DEBUG_MODE:
+                        print(f"[DEBUG] 本地检索总耗时: {time.time() - total_start_time:.2f}s")
+                    # 提取最匹配的第一条知识块的 kb_id
+                    matched_kb_id = top_docs[0][0].metadata.get("kb_id")
+                    return {
+                        "answer": f"📚【本地知识库】\n{response.content}",
+                        "kb_id": matched_kb_id  # 把 ID 传出去
+                    }
+
+        # 5. 本地全面溃败，启动博查 AI 搜索兜底 
         print("\n[INFO] 本地知识库未命中，触发博查 AI 搜索引擎直连...")
         
         # 直接把用户的原始问题扔给博查，无需提取关键词
@@ -343,6 +392,41 @@ def initialize_rag_system():
                 "answer": f"【全网 AI 搜索总结】\n{ai_search_answer}",
                 "kb_id": None
         }
+        # if target_category_id is not None:
+        #     if DEBUG_MODE:
+        #         print(f"[INFO] 锁定分类 ID: {target_category_id}，正在执行精确检索...")
+        #     # 利用 metadata filter 进行精准搜索
+        #     raw_docs = vectorstore.similarity_search_with_score(
+        #         question, 
+        #         k=RECALL_K,
+        #         filter={"category_id": target_category_id}
+        #     )
+        #     # 过滤掉分数过高的（距离太远，不相关）
+        #     docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
+            
+        # # 2. 分类库未命中，降级为全局检索 
+        # if not docs_with_scores:
+        #     if DEBUG_MODE:
+        #         reason = "未识别出明确分类" if target_category_id is None else "对应分类库中无高匹配度答案"
+        #         print(f"[INFO] {reason}，触发全局向量检索...")
+            
+        #     raw_docs = vectorstore.similarity_search_with_score(question, k=3)
+        #     docs_with_scores = [(doc, score) for doc, score in raw_docs if score < DISTANCE_THRESHOLD]
+
+        # print(f"[DEBUG] 数据库检索耗时: {time.time() - total_start_time:.2f}s")     
+
+        # # 3. 本地库有靠谱结果，交由大模型生成
+        # context_docs = [(item[0], item[2]) for item in top_docs] 
+        # context = format_docs(context_docs)
+        
+        # messages = prompt.format_messages(context=context, question=question)
+        # response = llm.invoke(messages)
+
+        # matched_kb_id = top_docs[0][0].metadata.get("kb_id")
+        # return {
+        #     "answer": f"📚【本地知识库】\n{response.content}",
+        #     "kb_id": matched_kb_id
+        # }
     
     print("RAG系统初始化完成！")
     return rag_chain
