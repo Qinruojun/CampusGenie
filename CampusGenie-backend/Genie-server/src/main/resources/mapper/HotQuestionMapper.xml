@@ -16,9 +16,18 @@ WHERE version = #{maxVersion}
     <select id="selectByKnowledgeId_hitPlace_version" resultType="java.lang.Integer">
         SELECT rank_no
         FROM hot_question
-        WHERE knowledge_id = #{knowledgeId}
-          AND hit_place = #{hitPlace}
-          AND version = #{version}
+        <where>
+            <if test="knowledgeId != null">
+                knowledge_id = #{knowledgeId}
+            </if>
+            <if test="hitPlace != null">
+                AND hit_place = #{hitPlace}
+            </if>
+            <if test="version != null">
+                AND version = #{version}
+            </if>
+        </where>
+
     </select>
 
     <insert id="insertBatch">

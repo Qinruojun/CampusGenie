@@ -14,5 +14,5 @@ public interface HotQuestionMapper {
 
     List<HotQuestion> selectList(Integer maxVersion);
 
-    Integer selectByKnowledgeId_hitPlace_version(Long knowledgeId, Integer hitPlace, int i);
+    Integer selectByKnowledgeId_hitPlace_version(Long knowledgeId, Integer hitPlace, int version);
 }
