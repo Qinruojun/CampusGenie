@@ -76,7 +76,7 @@ export const useCategoryStore = defineStore('category', {
         },
 //可以决定是否通过刷新方式即重新从后端获取分类表
         async loadCategoryList(options = {}) {//表示options是可选参数对象
-            const { force = false } = options//从option里解构出force, 如果options没有force属性，则默认为false
+            const {force = false} = options//从option里解构出force, 如果options没有force属性，则默认为false
 
             if (!force && this.hasCategoryCache) {
                 return this.categoryOptions
@@ -86,7 +86,15 @@ export const useCategoryStore = defineStore('category', {
             this.categoryError = ''
 
             try {
+                debugger
+
                 const result = await getCategoryList()
+
+                console.log('分类接口返回 result：', result)
+                console.log('result.code：', result?.code)
+                console.log('SUCCESS：', SUCCESS)
+
+                debugger
 
                 if (!isSuccessCode(result?.code)) {
                     throw new Error(result?.msg || '分类加载失败')
@@ -96,7 +104,7 @@ export const useCategoryStore = defineStore('category', {
 
                 return this.categoryOptions
             } catch (error) {
-                console.error(error)
+                console.error('分类加载异常：', error)
                 this.categoryError = '分类加载失败'
 
                 return []
@@ -104,6 +112,7 @@ export const useCategoryStore = defineStore('category', {
                 this.categoryLoading = false
             }
         },
+
 
         refreshCategoryList() {
             return this.loadCategoryList({

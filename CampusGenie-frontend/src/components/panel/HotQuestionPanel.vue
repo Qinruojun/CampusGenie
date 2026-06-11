@@ -57,7 +57,7 @@ const props = defineProps({
   // 轮询间隔，默认 5 分钟
   pollingInterval: {
     type: Number,
-    default: 5 * 60 * 1000
+    default: 10 * 60 * 1000
   }
 })
 

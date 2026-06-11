@@ -79,9 +79,9 @@
 
         <div class="pagination">
           <button @click="handlePrevPage">上一页</button>
-          <button class="current" @click="page = 1" >1</button>
-          <button @click="page = 2">2</button>
-          <button @click="page = 3">3</button>
+          <button   :class="{ current: page === 1 }" @click="page = 1" >1</button>
+          <button :class="{ current: page === 2 }" @click="page = 2">2</button>
+          <button    :class="{ current: page === 3 }" @click="page = 3">3</button>
           <button @click="handleNextPage">下一页</button>
         </div>
       </section>

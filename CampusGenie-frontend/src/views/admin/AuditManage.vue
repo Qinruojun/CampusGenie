@@ -153,6 +153,9 @@
           <span class="page-info">
             共 {{ total }} 条，每页 {{ pageSize }} 条
           </span>
+          <button @click="loadContributionList">
+            刷新
+          </button>
         </div>
       </section>
     </main>
@@ -279,10 +282,12 @@ onMounted(() => {
     minmax(220px, 1.4fr)
     minmax(180px, 1fr)
     180px
-    140px
-    220px
-    220px
+    120px
+    200px
+    200px
     110px
+    90px
+    90px
     90px
     90px;
   align-items: center;

@@ -2,8 +2,6 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import AdminUserCard from '@/components/admin/Card/AdminUserCard.vue'
 import { Import} from '@/api/admin/knowledge'
 import {SUCCESS } from '@/constants/code.js'
 const router = useRouter()
@@ -359,10 +357,8 @@ function formatImportTime(value) {
 </script>
 
 <template>
-  <div class="app-shell">
-    <AdminSidebar v-model:collapsed="sidebarCollapsed" />
-
-    <div class="workspace" :class="{ collapsed: sidebarCollapsed }">
+  <div class="import-page-shell">
+    <div class="import-page-content">
       <header class="topbar">
         <div class="breadcrumb">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -371,26 +367,6 @@ function formatImportTime(value) {
           <span>知识库管理</span>
           <strong>/</strong>
           <span class="current">批量导入</span>
-        </div>
-
-        <div class="top-actions">
-          <button
-              class="icon-button"
-              aria-label="通知"
-              @click="getNotifications"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-              <path d="M10 21h4" />
-            </svg>
-            <span class="badge">12</span>
-          </button>
-
-          <AdminUserCard
-              username="管理员"
-              role-name="超级管理员"
-              to="/admin/profile"
-          />
         </div>
       </header>
 
@@ -714,10 +690,15 @@ svg {
   stroke-width: 2;
 }
 
-.app-shell {
-  display: flex;
-  min-height: 100vh;
+.import-page-shell {
+  width: 100%;
+  min-height: 100%;
   background: #f5f7fb;
+}
+
+.import-page-content {
+  width: 100%;
+  min-width: 0;
 }
 
 .workspace {

@@ -15,4 +15,6 @@ public interface HotQuestionMapper {
     List<HotQuestion> selectList(Integer maxVersion);
 
     Integer selectByKnowledgeId_hitPlace_version(Long knowledgeId, Integer hitPlace, int version);
+    Integer selectByNormalized_question_version( @Param("normalizedQuestion") String normalizedQuestion,
+                                                 @Param("version") Integer version);
 }

@@ -68,8 +68,7 @@ const router = createRouter({
       component: QAResult,
       meta: {
         hideNav: true,
-        requiresAuth: true,
-        role: USER_ROLE,
+        requiresAuth: false//TODO:因为管理员目前也要用到这个页面，所以先这样设置，后面再改
       }
     },
     {
