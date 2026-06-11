@@ -35,6 +35,7 @@ public class HotQuestionServiceImpl  implements HotQuestionService {
         LocalDateTime endDate = LocalDateTime.now();
         
         List<HotQuestion> hotQuestions = queryLogMapper.getQueryLogsByTime_to_HotQuestion(startDate, endDate);
+
         
         if (hotQuestions == null || hotQuestions.isEmpty()) {
             log.info("没有生成热点问题");

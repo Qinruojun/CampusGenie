@@ -14,10 +14,9 @@
             normalized_query AS normalizedQuestion,
             COUNT(*) AS queryCount
         FROM query_log
-        WHERE hit = 1
-          AND knowledge_id IS NOT NULL
-          AND query_time BETWEEN #{startDate} AND #{endDate}
-        GROUP BY knowledge_id, hit_place,normalized_query
+
+        WHERE  query_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY normalized_query
         ORDER BY queryCount DESC
         LIMIT 10
     </select>
