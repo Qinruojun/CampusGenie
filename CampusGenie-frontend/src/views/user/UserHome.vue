@@ -53,6 +53,11 @@ function search() {
           <strong>我要贡献</strong>
           <small>补充新的校园知识</small>
         </RouterLink>
+        <RouterLink class="shortcut card" to="/user/contributionlist">
+          <span class="shortcut-icon">☆</span>
+          <strong>我的贡献</strong>
+          <small>查看已有贡献</small>
+        </RouterLink>
       </div>
     </section>
   </main>
@@ -79,7 +84,7 @@ function search() {
 .shortcut-grid {
   width: min(640px, 100%);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
 

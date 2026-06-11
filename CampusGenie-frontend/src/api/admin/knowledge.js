@@ -99,7 +99,7 @@ export function Import(FormData){
     return request({
         url:'/admin/knowledge/import',
         method: 'post',
-        FormData
+        data:FormData
     })
 }
 //----已实现版本

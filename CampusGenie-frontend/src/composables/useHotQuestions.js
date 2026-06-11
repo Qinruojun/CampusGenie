@@ -1,11 +1,15 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { getHotlist } from '@/api/user/hotQuestion'
+import {adminGetHotlist} from "@/api/admin/hotQuestion.js";
 import {SUCCESS} from '@/constants/code.js'
+
+import {USER_ROLE ,USERNAME_KEY} from '../constants/storage'
+import {TOKEN_KEY,ADMIN_ROLE,ROLE_KEY} from '../constants/storage'
 export function useHotQuestions(options = {}) {
     const {
         autoLoad = true,//决定是不是要页面一挂载就自动加载hotquestions
         polling = true,
-        pollingInterval = 5 * 60 * 1000
+        pollingInterval =10* 60 * 1000
     } = options
 
     const list = ref([])//存的是热点问题数据
@@ -33,12 +37,9 @@ export function useHotQuestions(options = {}) {
         errorMessage.value = ''
 
         try {
-            const res = await getHotlist()
+            const role = localStorage.getItem(ROLE_KEY)
 
-            if (res.code === SUCCESS) {
-                list.value = res.data || []
-                return list.value
-            }
+            const res = role === ADMIN_ROLE ? await adminGetHotlist() : await getHotlist()
 
             errorMessage.value = res.msg || res.message || '热点问题加载失败'
             return []

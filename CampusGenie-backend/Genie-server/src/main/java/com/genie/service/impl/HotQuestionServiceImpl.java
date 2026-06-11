@@ -79,8 +79,10 @@ public class HotQuestionServiceImpl  implements HotQuestionService {
             hotQuestionVO.setRank(hotQuestion.getRankNo());
             hotQuestionVO.setQueryCount(hotQuestion.getQueryCount());
             hotQuestionVO.setAnswer(hotQuestion.getNormalizedAnswer());
+
             //趋势判断，先获取上个版本是否有这条热点
-            Integer  lastRank = hotQuestionMapper.selectByKnowledgeId_hitPlace_version( hotQuestion.getKnowledgeId(), hotQuestion.getHitPlace(), hotQuestion.getVersion() - 1);
+            //Integer  lastRank = hotQuestionMapper.selectByKnowledgeId_hitPlace_version( hotQuestion.getKnowledgeId(), hotQuestion.getHitPlace(), hotQuestion.getVersion() - 1);
+            Integer lastRank =hotQuestionMapper.selectByNormalized_question_version(hotQuestion.getNormalizedQuestion(),hotQuestion.getVersion()-1);
             if (lastRank == null|| lastRank < hotQuestion.getRankNo()) {
                 hotQuestionVO.setTrend("up");
             } else if (lastRank.equals(hotQuestion.getRankNo())) {

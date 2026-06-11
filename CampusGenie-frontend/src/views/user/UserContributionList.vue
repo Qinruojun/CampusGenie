@@ -1,15 +1,15 @@
 <!--用户贡献页，查看自己的贡献-->
 <template>
   <div class="contribution-page">
-    <section class="page-head">
-      <p class="eyebrow">
-        CampusGenie
-      </p>
-      <h1>我的贡献</h1>
-      <p class="desc">
-        查看你提交过的校园问答内容，按提交时间从近到远排列。
-      </p>
-    </section>
+<!--    <section class="page-head">-->
+<!--      <p class="eyebrow">-->
+<!--        CampusGenie-->
+<!--      </p>-->
+<!--      <h1>我的贡献</h1>-->
+<!--      <p class="desc">-->
+<!--        查看你提交过的校园问答内容，按提交时间从近到远排列。-->
+<!--      </p>-->
+<!--    </section>-->
 
 
     <div class="page">
@@ -104,25 +104,26 @@
               @delete="handleDelete"
             />
           </div>
-
-          <div class="pagination">
-            <button @click="handlePrevPage">
-              上一页
-            </button>
-            <button
-              class="current"
-              @click="page = 1"
-            >
-              1
-            </button>
-            <button @click="page = 2">
-              2
-            </button>
-            <button @click="page = 3">
-              3
-            </button>
-            <button @click="handleNextPage">
-              下一页
+          <>
+            <div class="pagination">
+              <button @click="handlePrevPage">
+                上一页
+              </button>
+              <button
+                  class="current"
+                  @click="page = 1"
+              >
+                1
+              </button>
+              <button @click="page = 2">
+                2
+              </button>
+              <button @click="page = 3">
+                3
+              </button>
+              <button @click="handleNextPage">
+                下一页
+          </>
             </button>
           </div>
         </section>
@@ -177,7 +178,8 @@
         loadContributionList()
       })
       const handleView = item => {
-        console.log('查看详情', item)//TODO
+        alert("hhh,什么都没写")
+        //TODO
       }
       //TODO: 还要后端返回统计信息
       const statList = computed(() => [
@@ -275,10 +277,15 @@
   width: 100%;
   min-height: calc(100vh - 72px);
   padding: 72px 10vw 96px;
-  background: #f8f7f2;
-  color: #1c241c;
-}
+  /*background: #f8f7f2;*/
+  /*color: #1c241c;*/
 
+}
+.page {
+ width: 100%;
+  margin: 0 auto;
+ padding: 70px 0 96px;
+}
 .page-head {
   text-align: center;
   margin-bottom: 48px;

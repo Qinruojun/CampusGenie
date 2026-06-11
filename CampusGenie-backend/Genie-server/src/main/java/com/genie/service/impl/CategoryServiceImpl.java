@@ -1,5 +1,6 @@
 package com.genie.service.impl;
 
+import com.genie.entity.Category;
 import com.genie.mapper.CategoryMapper;
 import com.genie.service.CategoryService;
 import com.genie.vo.CategoryVO;
@@ -14,7 +15,7 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryMapper categoryMapper;
     @Override
     public List<CategoryVO> getCategoryList() {
-        return null;
+        return categoryMapper.getCategoryList();
     }
 
     @Override
