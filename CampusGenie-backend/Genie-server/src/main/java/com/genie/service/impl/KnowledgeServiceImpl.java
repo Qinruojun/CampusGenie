@@ -114,6 +114,11 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
+    public KnowledgeBase getKnowledgeById(Long id) {
+        return knowledgeBaseMapper.selectById(id);
+    }
+
+    @Override
     @Transactional
     public void deleteKnowledge(Long id) {
         //删除知识条目并调用mapper更新

@@ -12,25 +12,42 @@ const {
 } = useCategoryOptions()
 const result =ref(false)
 const submitted = ref(false)
-const contributionForm = ref({
-  question:'',
-  answer:'',
-  categoryId:'',
-  supplement:'',
-  contact:''
-})
+const submitting = ref(false)
+
+function createEmptyContributionForm() {
+  return {
+    question: '',
+    answer: '',
+    categoryId: '',
+    supplement: '',
+    contact: ''
+  }
+}
+
+const contributionForm = ref(createEmptyContributionForm())
 const  submit=async()=>{
-  submitted.value = true
+  if (submitting.value) return
+
+  submitting.value = true
   try {
-    const res = await contribute(contributionForm)
+    const res = await contribute(contributionForm.value)
     if(res.code === SUCCESS){
-      result.value=true
+      result.value = true
+      submitted.value = true
+      contributionForm.value = createEmptyContributionForm()
     }
     else{
+     submitted.value = false
+     result.value = false
      alert(res.msg || '服务器异常，提交失败！')
     }
   }catch(error){
     console.error(error)
+    submitted.value = false
+    result.value = false
+    alert('服务器异常，提交失败！')
+  } finally {
+    submitting.value = false
   }
 
 
@@ -43,6 +60,8 @@ onMounted(()=>{
 
 <template>
   <main class="page contribute-page">
+    <RouterLink class="back-link" to="/user/home">← 返回首页</RouterLink>
+
     <p class="eyebrow">用户贡献</p>
     <h1 class="page-title">补充一条校园知识</h1>
     <p class="page-desc">你提交的内容会进入审核队列，通过后加入知识库。</p>
@@ -75,8 +94,13 @@ onMounted(()=>{
           placeholder="全部分类"
           />
         </label>
-        <button class="primary-btn"
-@click ="submit" >提交问题</button>
+        <button
+          class="primary-btn"
+          type="submit"
+          :disabled="submitting"
+        >
+          {{ submitting ? '提交中...' : '提交问题' }}
+        </button>
       </form>
 
       <aside class="card panel status">
@@ -91,6 +115,17 @@ onMounted(()=>{
 <style scoped>
 .contribute-page {
   max-width: 900px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.back-link:hover {
+  color: var(--green);
 }
 
 .contribute-page > .eyebrow,

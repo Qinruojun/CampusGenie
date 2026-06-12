@@ -2,13 +2,12 @@ package com.genie.service.impl;
 
 import com.genie.context.BaseContext;
 import com.genie.dto.AskRequestDTO;
-import com.genie.entity.KnowledgeDraft;
 import com.genie.entity.QueryLog;
 import com.genie.mapper.KnowledgeDraftMapper;
 import com.genie.mapper.QueryLogMapper;
 import com.genie.service.LlmService;
 import com.genie.service.QAService;
-import com.genie.service.KnowledgeSearchService;
+import com.genie.service.QueryLogService;
 import com.genie.vo.AnswerVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +27,8 @@ public class QAServiceImpl implements QAService {
     @Autowired
     private LlmService llmService; // 负责调用 Python AI 接口
     @Autowired
-    private QueryLogMapper queryLogMapper;
+    private QueryLogService queryLogService;
+
     @Autowired
     private KnowledgeDraftMapper knowledgeDraftMapper;
 
@@ -36,7 +36,7 @@ public class QAServiceImpl implements QAService {
     @Transactional
     public AnswerVO getAnswer(AskRequestDTO askRequestDTO) {
         long startTime = System.currentTimeMillis();
-        String question = askRequestDTO.getQuestion();
+        String question = askRequestDTO.getQuestion().trim();
         log.info("接收到用户提问: {}", question);
         
         // 构造测试数据用于前后端联调
@@ -104,33 +104,16 @@ public class QAServiceImpl implements QAService {
         else knowledgeId=answerVO.getKnowledgeId();
 
 
-        saveQueryLogAsync(question, question, hit, hit_place, 
+        saveQueryLogAsync(question, question, hit, hit_place,
                          knowledgeId,
                          Math.toIntExact(endTime - startTime));
+        Long currentUserId = BaseContext.getCurrentUserId();
+        String sessionId = currentUserId == null ? "anonymous" : currentUserId.toString();
+        queryLogService.saveQueryLogAsync(question, question, hit, hit_place,
+                answerVO.getKnowledgeId(),
+                Math.toIntExact(endTime - startTime),
+                sessionId);
 
         return answerVO;
-    }
-
-    @Async("queryLogExecutor")
-    public void saveQueryLogAsync(String queryText, String normalizedQuery, 
-                                  int hit, int hitPlace, 
-                                  Long knowledgeId, Integer responseTime) {
-        try {
-            QueryLog queryLog = new QueryLog();
-            queryLog.setQueryText(queryText);
-            queryLog.setNormalizedQuery(normalizedQuery);
-            queryLog.setHit(hit);
-            if(hitPlace != -1) {
-                queryLog.setHitPlace(hitPlace);
-                queryLog.setKnowledgeId(knowledgeId);
-            }
-            queryLog.setSessionId(BaseContext.getCurrentUserId().toString());
-            queryLog.setResponseTime(responseTime);
-            queryLog.setQueryTime(LocalDateTime.now());
-            queryLogMapper.insert(queryLog);
-            log.debug("查询日志异步保存成功");
-        } catch (Exception e) {
-            log.error("查询日志异步保存失败: {}", e.getMessage(), e);
-        }
     }
 }

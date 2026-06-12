@@ -12,5 +12,5 @@ public class UserContributionVO {
     private String statusDesc;        // 待审核 / 已通过 / 已驳回
     private LocalDateTime createdTime;
     private LocalDateTime reviewedTime;
-    private LocalDateTime rejectReason;
+    private String rejectReason;
 }

@@ -3,10 +3,10 @@ import {ref, onMounted, reactive} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useKnowledgeEditStore } from '@/stores/knowledgeEditStore'
 import CategorySelect from '@/components/CategorySelect.vue'
-import {ENABLE,DISABLE } from '@/constants/status.js'
+import {ENABLE } from '@/constants/status.js'
 import { SUCCESS } from '@/constants/code.js'
 
-import {edit } from "@/api/admin/knowledge.js"
+import {edit, getKnowledgeById } from "@/api/admin/knowledge.js"
 import {useCategoryOptions} from "@/composables/useCategoryOptions.js";
 
 const knowledgeEditStore = useKnowledgeEditStore()
@@ -18,7 +18,7 @@ const {
   loadCategoryList
 } = useCategoryOptions()
 const router = useRouter()
-useRoute();
+const route = useRoute()
 const form = reactive({
   id: '',
   question: '',
@@ -42,30 +42,31 @@ function fillForm(data){
 
 
 const loading = ref(false)
+const pageLoading = ref(false)
 
 
 const validateForm = () => {
-  if (!form.value.question.trim()) {
+  if (!form.question.trim()) {
     alert('请输入问题')
     return false
   }
 
-  if (form.value.question.length > 200) {
+  if (form.question.length > 200) {
     alert('问题长度不能超过 200 个字符')
     return false
   }
 
-  if (!form.value.answer.trim()) {
+  if (!form.answer.trim()) {
     alert('请输入答案')
     return false
   }
 
-  if (form.value.answer.length > 5000) {
+  if (form.answer.length > 5000) {
     alert('答案长度不能超过 5000 个字符')
     return false
   }
 
-  if (!form.value.categoryId) {
+  if (!form.categoryId) {
     alert('请选择分类')
     return false
   }
@@ -82,12 +83,12 @@ const handleSubmit = async () => {
 
   try {
     const data = {
-      id: Number(form.value.id),
-      question: form.value.question,
-      answer: form.value.answer,
-      categoryId: Number(form.value.categoryId),
-      source: form.value.source,
-      status: Number(form.value.status)
+      id: Number(form.id),
+      question: form.question,
+      answer: form.answer,
+      categoryId: Number(form.categoryId),
+      source: form.source,
+      status: Number(form.status)
     }
 
     const res = await edit(data)
@@ -111,17 +112,31 @@ const handleCancel = () => {
 }
 
 onMounted(async () => {
+  pageLoading.value = true
   await loadCategoryList()
-  const id= router.params.id
-  const cachedKnowledge = knowledgeEditStore.getKnowledge(id)
-  if (cachedKnowledge) {
-    fillForm(cachedKnowledge)
-  } else {
-    alert('没有找到缓存数据，请从知识库列表重新进入编辑页')
+  const id = route.params.id
+
+  try {
+    const cachedKnowledge = knowledgeEditStore.getKnowledge(id)
+    if (cachedKnowledge) {
+      fillForm(cachedKnowledge)
+    }
+
+    const res = await getKnowledgeById(id)
+    if (res.code === SUCCESS && res.data) {
+      fillForm(res.data)
+      knowledgeEditStore.setKnowledge(res.data)
+    } else {
+      alert(res.msg || '知识条目不存在')
+      router.push('/admin/knowledge')
+    }
+  } catch (error) {
+    console.error(error)
+    alert('服务器异常，知识条目加载失败')
     router.push('/admin/knowledge')
+  } finally {
+    pageLoading.value = false
   }
-
-
 })
 
 </script>
@@ -158,16 +173,13 @@ onMounted(async () => {
 
       <div class="form-item">
         <label>所属分类</label>
-        <select v-model="form.categoryId">
-          <option value="">请选择分类</option>
-          <CategorySelect
-              v-model="form.categoryId"
-              :options="categoryOptions"
-              :loading="categoryLoading"
-              :error-message="categoryError"
-              placeholder="全部分类"
-          />
-        </select>
+        <CategorySelect
+            v-model="form.categoryId"
+            :options="categoryOptions"
+            :loading="categoryLoading"
+            :error-message="categoryError"
+            placeholder="请选择分类"
+        />
       </div>
 
       <div class="form-item">

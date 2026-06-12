@@ -7,7 +7,9 @@ function readStorage(){
     if(!raw){
         return {}
     }
-    try {JSON.parse(raw)}
+    try {
+        return JSON.parse(raw)
+    }
     catch(error){
         console.error(error)
         return {}
@@ -31,6 +33,7 @@ export const useKnowledgeEditStore = defineStore('knowledgeEdit',{
 
             this.knowledgeMap = {
                 ...this.knowledgeMap,//扩展运算符，将原来的数据全都粘进来，就是{ ...old, [id]: item }
+                [id]: item,
             }
 
             writeStorage(this.knowledgeMap)

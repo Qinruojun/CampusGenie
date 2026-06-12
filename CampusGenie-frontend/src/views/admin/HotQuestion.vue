@@ -8,7 +8,7 @@ import HotQuestionPanel from '@/components/panel/HotQuestionPanel.vue'
       eyebrow="Admin Analytics"
       :show-refresh="true"
       :show-stats="true"
-      :show-trend-text="true"
+      :show-trend-text="false"
       :show-hot-mark="false"
       :polling="true"
   />
