@@ -2,16 +2,14 @@ package com.genie.service.impl;
 
 import com.genie.context.BaseContext;
 import com.genie.dto.AskRequestDTO;
-import com.genie.entity.QueryLog;
 import com.genie.mapper.KnowledgeDraftMapper;
-import com.genie.mapper.QueryLogMapper;
 import com.genie.service.LlmService;
 import com.genie.service.QAService;
 import com.genie.service.QueryLogService;
 import com.genie.vo.AnswerVO;
+import com.genie.entity.KnowledgeDraft;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,9 +102,6 @@ public class QAServiceImpl implements QAService {
         else knowledgeId=answerVO.getKnowledgeId();
 
 
-        saveQueryLogAsync(question, question, hit, hit_place,
-                         knowledgeId,
-                         Math.toIntExact(endTime - startTime));
         Long currentUserId = BaseContext.getCurrentUserId();
         String sessionId = currentUserId == null ? "anonymous" : currentUserId.toString();
         queryLogService.saveQueryLogAsync(question, question, hit, hit_place,
