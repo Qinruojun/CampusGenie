@@ -26,3 +26,34 @@ export function askQuestion(question){
         }//前端传给后端的内容
     })
 }
+
+export function getConversations() {
+    return request({
+        url: '/user/qa/conversations',
+        method: 'get'
+    })
+}
+
+export function createConversation() {
+    return request({
+        url: '/user/qa/conversations',
+        method: 'post'
+    })
+}
+
+export function getConversationMessages(id) {
+    return request({
+        url: `/user/qa/conversations/${id}/messages`,
+        method: 'get'
+    })
+}
+
+export function sendConversationMessage(id, question) {
+    return request({
+        url: `/user/qa/conversations/${id}/messages`,
+        method: 'post',
+        data: {
+            question
+        }
+    })
+}

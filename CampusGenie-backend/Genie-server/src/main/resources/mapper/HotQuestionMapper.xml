@@ -11,6 +11,7 @@
 SELECT id, display_question, query_count,rank_no, version, updated_time, knowledge_id, hit_place, normalized_answer,normalized_question
 FROM hot_question
 WHERE version = #{maxVersion}
+ORDER BY rank_no ASC
 
     </select>
     <select id="selectByKnowledgeId_hitPlace_version" resultType="java.lang.Integer">
@@ -44,12 +45,14 @@ WHERE version = #{maxVersion}
     <insert id="insertBatch">
         INSERT INTO hot_question
         (normalized_question, normalized_answer, display_question, query_count,
-         stat_start_date, stat_end_date, rank_no, version, updated_time)
+         stat_start_date, stat_end_date, rank_no, version, updated_time,
+         knowledge_id, hit_place)
         VALUES
         <foreach collection="hotQuestions" item="item" separator=",">
             (#{item.normalizedQuestion}, #{item.normalizedAnswer}, #{item.displayQuestion},
              #{item.queryCount}, #{item.statStartDate}, #{item.statEndDate},
-             #{item.rankNo}, #{item.version}, #{item.updatedTime})
+             #{item.rankNo}, #{item.version}, #{item.updatedTime},
+             #{item.knowledgeId}, #{item.hitPlace})
         </foreach>
     </insert>
 </mapper>

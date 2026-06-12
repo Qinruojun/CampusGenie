@@ -9,6 +9,7 @@ import com.genie.entity.AdminLog;
 import com.genie.entity.Category;
 import com.genie.entity.KnowledgeBase;
 import com.genie.exception.KnowledgeBaseStatusException;
+import com.genie.exception.KnowledgeNotFoundException;
 import com.genie.mapper.AdminLogMapper;
 import com.genie.mapper.CategoryMapper;
 import com.genie.mapper.KnowledgeBaseMapper;
@@ -114,6 +115,11 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
+    public KnowledgeBase getKnowledgeById(Long id) {
+        return knowledgeBaseMapper.selectById(id);
+    }
+
+    @Override
     @Transactional
     public void deleteKnowledge(Long id) {
         //删除知识条目并调用mapper更新
@@ -130,27 +136,32 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
+    @Transactional
     public void changeStatus(Long id, Integer status) {
-        //获取要修改的知识条目的状态并判断是否与知识库存储状态一致，不一致报错，一致修改
-        KnowledgeBase knowledgeBase = knowledgeBaseMapper.selectByIdAndStatus(id,status);
-        if(knowledgeBase== null){
-            throw new KnowledgeBaseStatusException("知识条目状态异常");
+        KnowledgeBase knowledgeBase = knowledgeBaseMapper.selectById(id);
+        if(knowledgeBase == null){
+            throw new KnowledgeNotFoundException("知识条目不存在");
         }
-        //修改状态
-        knowledgeBase.setStatus(1-status);
+        
+        Integer oldStatus = knowledgeBase.getStatus();
+        if(oldStatus.equals(status)){
+            throw new KnowledgeBaseStatusException("知识条目当前已是该状态，无需切换");
+        }
+        
+        knowledgeBase.setStatus(status);
+        knowledgeBase.setUpdatedBy(BaseContext.getCurrentUsername());
+        knowledgeBase.setUpdatedTime(LocalDateTime.now());
         knowledgeBaseMapper.update(knowledgeBase);
-        //创建管理员操作日志
+        
         AdminLog adminLog = AdminLog.builder()
                 .adminName(BaseContext.getCurrentUsername())
                 .actionType(ActionTypeConstant.UPDATE)
                 .targetType(TargetTypeConstant.KNOWLEDGE_BASE)
                 .targetId(knowledgeBase.getId())
-                .detail("{\"before\":{\"status\":" + status + "},\"after\":{\"status\":" + (1-status) + "}}")
+                .detail("{\"before\":{\"status\":" + oldStatus + "},\"after\":{\"status\":" + status + "}}")
                 .createdTime(LocalDateTime.now())
                 .build();
         adminLogMapper.insert(adminLog);
-
-
     }
 
     @Override

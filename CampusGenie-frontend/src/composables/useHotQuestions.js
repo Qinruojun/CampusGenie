@@ -1,10 +1,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { getHotlist } from '@/api/user/hotQuestion'
-import {adminGetHotlist} from "@/api/admin/hotQuestion.js";
-import {SUCCESS} from '@/constants/code.js'
-
-import {USER_ROLE ,USERNAME_KEY} from '../constants/storage'
-import {TOKEN_KEY,ADMIN_ROLE,ROLE_KEY} from '../constants/storage'
+import { adminGetHotlist, adminRefreshHotlist } from '@/api/admin/hotQuestion.js'
+import { SUCCESS } from '@/constants/code.js'
+import { ADMIN_ROLE, ROLE_KEY } from '../constants/storage'
 export function useHotQuestions(options = {}) {
     const {
         autoLoad = true,//决定是不是要页面一挂载就自动加载hotquestions
@@ -41,10 +39,17 @@ export function useHotQuestions(options = {}) {
 
             const res = role === ADMIN_ROLE ? await adminGetHotlist() : await getHotlist()
 
-            errorMessage.value = res.msg || res.message || '热点问题加载失败'
-            return []
+            if (res.code !== SUCCESS) {
+                list.value = []
+                errorMessage.value = res.msg || res.message || '热点问题加载失败'
+                return []
+            }
+
+            list.value = Array.isArray(res.data) ? res.data : []
+            return list.value
         } catch (error) {
             console.error(error)
+            list.value = []
             errorMessage.value = '服务器异常，热点问题加载失败'
             return []
         } finally {
@@ -52,7 +57,29 @@ export function useHotQuestions(options = {}) {
         }
     }
 
-    function refreshHotQuestions() {
+    async function refreshHotQuestions() {
+        const role = localStorage.getItem(ROLE_KEY)
+        if (role !== ADMIN_ROLE) {
+            return loadHotQuestions()
+        }
+
+        loading.value = true
+        errorMessage.value = ''
+
+        try {
+            const res = await adminRefreshHotlist()
+            if (res.code !== SUCCESS) {
+                errorMessage.value = res.msg || res.message || '热点问题刷新失败'
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            errorMessage.value = '服务器异常，热点问题刷新失败'
+            return []
+        } finally {
+            loading.value = false
+        }
+
         return loadHotQuestions()
     }
 

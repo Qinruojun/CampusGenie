@@ -9,7 +9,19 @@ import { morkImportKnowledge} from"@/mock/Response/importKnowledge.js"
 import {USE_MORK} from "@/constants/test.js"
 //新增知识条目
 export function getKnowledgeById(id){
+    if(USE_MORK){
+        const item = mockKnowledgeList.find(item => String(item.id) === String(id))
 
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "查询知识条目成功",
+            "data": item || null
+        })
+    }
+    return request({
+        url:`/admin/knowledge/${id}`,
+        method: 'get'
+    })
 }
 export function add(data){
     if(USE_MORK){
@@ -52,8 +64,7 @@ export function changeStatus(id,status){
     return request({
         url:`/admin/knowledge/${id}/status`,//后端接口地址
         method: 'put',
-        "status":status,
-
+        data: { status }
     })
 }
 //删除知识条目

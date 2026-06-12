@@ -17,7 +17,7 @@ public class TargetTypeConstant {
 
     /** 用户贡献 */
     public static final String CONTRIBUTION = "contribution";
-    //review_log记录  用户贡献为0 知识草稿为1
+    //review_log记录  用户贡献为1 知识草稿为2
     public static final Integer Review_TYPE_CONTRIBUTION = 1;
     public static final Integer Review_TYPE_KNOWLEDGE_DRAFT = 2;
 }

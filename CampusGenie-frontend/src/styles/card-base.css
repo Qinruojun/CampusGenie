@@ -101,8 +101,7 @@
 }
 
 .btn.toggle {
-    color: #16a34a;
-    border: 1px solid #74d19a;
+    border: 1px solid;
 }
 
 .btn.edit {

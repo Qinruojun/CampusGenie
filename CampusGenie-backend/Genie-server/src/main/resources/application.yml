@@ -18,6 +18,14 @@ spring:
     # 允许循环依赖（当Bean之间相互引用时不报错）
     allow-circular-references: true
   
+  jackson:
+    # 日期时间格式化配置
+    date-format: yyyy/MM/dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      # 格式化日期输出
+      write-dates-as-timestamps: false
+  
   # 数据源配置（数据库连接）
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

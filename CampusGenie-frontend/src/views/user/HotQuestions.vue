@@ -3,5 +3,5 @@ import HotQuestionPanel from '@/components/panel/HotQuestionPanel.vue'
 </script>
 
 <template>
-  <HotQuestionPanel />
+  <HotQuestionPanel home-link-to="/user/home" />
 </template>

@@ -1,9 +1,6 @@
 <script setup>
 import { useHotQuestions } from '@/composables/useHotQuestions.js'
 
-import {onMounted, ref} from "vue";
-import { computed } from 'vue'
-
 const props = defineProps({
   title: {
     type: String,
@@ -12,6 +9,14 @@ const props = defineProps({
   desc: {
     type: String,
     default: '根据近期查询频次整理，帮助你快速找到常见答案。'
+  },
+  homeLinkTo: {
+    type: String,
+    default: ''
+  },
+  homeLinkText: {
+    type: String,
+    default: '← 返回首页'
   },
   eyebrow: {
     type: String,
@@ -75,32 +80,35 @@ const {
   pollingInterval: props.pollingInterval
 })
 
-
-function getTrendText(trend) {
-  if (trend === 'up') return '上升'
-  if (trend === 'down') return '下降'
-  if (trend === 'flat') return '持平'
-  return '-'
-}
-
-function getTrendClass(trend) {
-  if (trend === 'up') return 'trend-up'
-  if (trend === 'down') return 'trend-down'
-  if (trend === 'flat') return 'trend-flat'
-  return ''
-}
-
-
-
 </script>
 
 <template>
   <main class="page hot-page">
+    <RouterLink v-if="homeLinkTo" class="back-link" :to="homeLinkTo">
+      {{ homeLinkText }}
+    </RouterLink>
+
     <p class="eyebrow">{{ eyebrow }}</p>
     <h1 class="page-title">
-      <span class="title-icon">🔥</span>
-      {{ title }}</h1>
+      <span v-if="showTitleIcon" class="title-icon">🔥</span>
+      {{ title }}
+    </h1>
     <p class="page-desc">{{ desc }}</p>
+
+    <section v-if="showStats" class="stats-grid" aria-label="热点问题统计">
+      <article class="stat-card">
+        <span>热点问题数</span>
+        <strong>{{ list.length }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>总浏览次数</span>
+        <strong>{{ totalQueryCount }}</strong>
+      </article>
+      <article class="stat-card">
+        <span>最高频问题</span>
+        <strong>{{ topQuestion?.question || '-' }}</strong>
+      </article>
+    </section>
 
     <button
         v-if="showRefresh"
@@ -115,8 +123,11 @@ function getTrendClass(trend) {
       {{ loading ? '刷新中...' : '刷新榜单' }}
     </button>
     <section class="card panel hot-card">
-      <ol class="hot-list">
-        <li v-for="item in list" :key="item.id">
+      <p v-if="loading" class="state-text">热点问题加载中...</p>
+      <p v-else-if="errorMessage" class="state-text error-text">{{ errorMessage }}</p>
+      <p v-else-if="!hasData" class="state-text">暂无热点问题数据</p>
+      <ol v-else class="hot-list">
+        <li v-for="item in list" :key="`${item.rank}-${item.question}`">
           <RouterLink :to="{name: 'qa-result',
                             query:{
                               q:item.question,
@@ -125,31 +136,14 @@ function getTrendClass(trend) {
           }"
           >
             <span class="rank">{{ item.rank }}</span>
-            <strong>{{ item.question }}</strong>
+            <span class="hot-content">
+              <strong>
+                <span v-if="showHotMark && item.rank <= 3" class="hot-mark">🔥</span>
+                {{ item.question }}
+              </strong>
+              <span class="hot-answer">{{ item.answer || '暂无答案' }}</span>
+            </span>
             <small>{{ item.queryCount }} 次浏览</small>
-            <span
-class="trend-tag"
-:class="getTrendClass(item.trend)">
-              <svg
-v-if="item.trend === 'up'"
-viewBox="0 0 24 24"
-aria-hidden="true">
-                <path d="M7 17 17 7" />
-                <path d="M9 7h8v8" />
-              </svg>
-
-  <svg v-else-if="item.trend === 'down'"
-viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M7 7 17 17" />
-    <path d="M9 17h8V9" />
-  </svg>
-
-  <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M5 12h14" />
-  </svg>
-
-  <span>{{ getTrendText(item.trend) }}</span>
-</span>
           </RouterLink>
         </li>
       </ol>
@@ -170,9 +164,62 @@ viewBox="0 0 24 24" aria-hidden="true">
   text-align: center;
 }
 
+.back-link {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.back-link:hover {
+  color: var(--green);
+}
+
 .hot-card {
   margin-top: 42px;
   text-align: left;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.stat-card {
+  padding: 18px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  text-align: left;
+}
+
+.stat-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.stat-card strong {
+  display: block;
+  color: var(--text);
+  font-size: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.state-text {
+  margin: 0;
+  padding: 24px 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.error-text {
+  color: #c2410c;
 }
 
 .hot-list {
@@ -207,11 +254,37 @@ viewBox="0 0 24 24" aria-hidden="true">
   font-weight: 800;
 }
 
+.hot-content {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.hot-content strong,
+.hot-answer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hot-answer {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 small {
   color: var(--muted);
 }
 
+.hot-mark {
+  margin-right: 6px;
+}
+
 @media (max-width: 560px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hot-list a {
     grid-template-columns: 34px 1fr;
   }
@@ -221,12 +294,8 @@ small {
   }
 }
 
-/* 按钮右上角定位 */
 .refresh-btn.primary-btn {
-  position: fixed;
-  top: 20px;    /* 距离顶部距离 */
-  right: 20px;  /* 距离右侧距离 */
-  z-index: 999; /* 确保在最上层，不被挡住 */
+  margin-top: 24px;
 }
 
 .refresh-btn:disabled {

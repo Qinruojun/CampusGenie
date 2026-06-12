@@ -20,17 +20,24 @@
       </button>
 
       <AdminUserCard
-          :username="username"
+          :username="displayUsername"
           :role-name="roleName"
       />
+
+      <button class="logout-btn" type="button" @click="logout">
+        退出
+      </button>
     </div>
   </header>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import AdminUserCard from '@/components/admin/Card/AdminUserCard.vue'
+import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     default: '后台管理'
@@ -54,6 +61,21 @@ defineProps({
 })
 
 const emit = defineEmits(['toggle-sidebar'])
+const router = useRouter()
+
+const displayUsername = computed(() => {
+  return localStorage.getItem(USERNAME_KEY) || props.username
+})
+
+function logout() {
+  const ok = confirm('确定要退出管理员登录吗？')
+  if (!ok) return
+
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(ROLE_KEY)
+  localStorage.removeItem(USERNAME_KEY)
+  router.replace('/')
+}
 </script>
 
 <style scoped>
@@ -155,5 +177,22 @@ const emit = defineEmits(['toggle-sidebar'])
   font-weight: 800;
   line-height: 18px;
   box-sizing: border-box;
+}
+
+.logout-btn {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
 }
 </style>

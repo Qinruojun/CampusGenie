@@ -37,13 +37,20 @@
         delete from knowledge_base where id = #{id}
     </delete>
     <select id="selectById" resultType="com.genie.entity.KnowledgeBase">
-        select  question, answer, category_id, source, status from knowledge_base where id = #{id}
+        select id,
+               question,
+               answer,
+               category_id as categoryId,
+               source,
+               status
+        from knowledge_base
+        where id = #{id}
     </select>
     <select id="selectByIdAndStatus" resultType="com.genie.entity.KnowledgeBase">
         select  id, status from knowledge_base where id = #{id} and status = #{status}
     </select>
     <select id="pageQuery" resultType="com.genie.vo.KnowledgeVO">
-        select k.id, k.question, k.answer, c.name as category_name, k.source, k.updated_time from knowledge_base k
+        select k.id, k.question, k.answer, COALESCE(c.name, '未分类') as category, k.source, k.status, k.updated_by as updatedBy, k.updated_time as updatedAt from knowledge_base k
         left join category c on k.category_id = c.id
         <where>
             <if test="keyword != null and keyword != ''">

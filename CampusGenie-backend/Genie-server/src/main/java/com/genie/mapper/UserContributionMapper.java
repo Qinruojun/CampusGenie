@@ -15,6 +15,8 @@ import java.util.List;
 public interface UserContributionMapper {
     void insert(UserContribution userContribution);
 
+    Integer countByUserIdAndQuestion(@Param("userId") Long userId, @Param("question") String question);
+
     Page<UserContributionVO> pageQueryByUser(@Param("userId") Long userId, @Param("query") ContributionPageQueryDTO contributionPageQueryDTO);
 
     Page<AdminContributionVO> pageQueryByAdmin(AdminContributionPageQueryDTO adminContributionPageQueryDTO);

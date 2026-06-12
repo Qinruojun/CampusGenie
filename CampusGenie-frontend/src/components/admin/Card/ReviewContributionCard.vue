@@ -29,13 +29,15 @@
 
       <div class="actions">
         <button
-          class="btn edit"
+          v-if="item.statusDesc !== REVIEW_PASS_MSG && item.statusDesc !== REVIEW_REJECT_MSG"
+          class="btn edit approve-btn"
           @click="$emit('approve', item)"
         >
           审核通过
         </button>
 
         <button
+          v-if="item.statusDesc !== REVIEW_PASS_MSG && item.statusDesc !== REVIEW_REJECT_MSG"
           class="btn delete"
           @click="$emit('reject', item)"
         >
@@ -44,6 +46,7 @@
 
         <button
           class="detail"
+          :class="{ 'detail-centered': item.statusDesc === REVIEW_PASS_MSG || item.statusDesc === REVIEW_REJECT_MSG }"
           @click="$emit('view', item)"
         >
           查看详情 ›
@@ -71,7 +74,7 @@ const statusClass = computed(() => {
   if(props.item.statusDesc === REVIEW_PASS_MSG){
     return 'approved'
   }
-  else if(props.item.status === WAIT_FOR_REVIEW_MSG){
+  else if(props.item.statusDesc === WAIT_FOR_REVIEW_MSG){
     return 'pending'
   }
   else{
@@ -98,5 +101,23 @@ const statusClass = computed(() => {
 .tag.rejected {
   color: #6b7280;
   background: #f3f4f6;
+}
+
+.detail-centered {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn.approve-btn {
+  color: #16a34a !important;
+  border-color: #16a34a !important;
+}
+
+.btn.approve-btn:hover {
+  color: #fff !important;
+  border-color: #16a34a !important;
+  background: #16a34a !important;
 }
 </style>

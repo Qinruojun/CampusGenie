@@ -9,13 +9,15 @@
     </insert>
     <select id="getQueryLogsByTime_to_HotQuestion" resultType="com.genie.entity.HotQuestion">
         SELECT
-            knowledge_id,
-            hit_place,
+            MIN(knowledge_id) AS knowledgeId,
+            CASE WHEN MIN(knowledge_id) IS NULL THEN NULL ELSE MIN(hit_place) END AS hitPlace,
             normalized_query AS normalizedQuestion,
             COUNT(*) AS queryCount
         FROM query_log
-
-        WHERE  query_time BETWEEN #{startDate} AND #{endDate}
+        WHERE query_time BETWEEN #{startDate} AND #{endDate}
+          AND hit = 1
+          AND normalized_query IS NOT NULL
+          AND normalized_query != ''
         GROUP BY normalized_query
         ORDER BY queryCount DESC
         LIMIT 10
