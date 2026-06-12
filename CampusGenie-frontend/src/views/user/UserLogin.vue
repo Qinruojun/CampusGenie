@@ -8,8 +8,12 @@
         <form class="login-form">
             <input class="input" v-model="loginForm.username" placeholder="用户账号" />
             <input class="input" type="password" v-model="loginForm.password" placeholder="密码" />
+            <p v-if="loginError" class="error-tip">{{ loginError }}</p>
             <button @click="Login" type="button" class="primary-btn">登录</button>
-         <p @click="isLogin =false">没有账号?去注册</p>
+            <p class="switch-tip">
+              没有账号？
+              <button type="button" class="switch-link" @click="isLogin = false">去注册</button>
+            </p>
           </form>
         </div>
      
@@ -22,8 +26,12 @@
             <input class =  "input" type="password" v-model="confirpwd" placeholder="再次输入密码">  
             <input class =  "input" v-model="registerForm.email" placeholder="邮箱">
             <input class =  "input" v-model="registerForm.phone" placeholder="电话">
+            <p v-if="registerError" class="error-tip">{{ registerError }}</p>
             <button @click ="Register" type ="button" class="primary-btn">注册</button>
-            <p @click="isLogin = true">已有账号?去登陆</p>
+            <p class="switch-tip">
+              已有账号？
+              <button type="button" class="switch-link" @click="isLogin = true">去登录</button>
+            </p>
 <!--@click表示监听点击事件，监听到就会执行Register函数或者isLogin=true赋值语句-->
           </form>
      </div>
@@ -42,6 +50,8 @@ import {ROLE_KEY, TOKEN_KEY,USERNAME_KEY} from '@/constants/storage'
 const router = useRouter()
 const isLogin =ref(true)//如果这个是true那么显示登陆界面
 const confirpwd = ref(null)
+const loginError = ref('')
+const registerError = ref('')
 const loginForm = ref({
   username:'',
   password:''
@@ -52,30 +62,47 @@ const registerForm = ref({
   email:'',
   phone:''
 })
+function getErrorMessage(error, fallback = '操作失败，请稍后重试') {
+  return error?.response?.data?.msg || error?.message || fallback
+}
+
 //定义点击了登录按钮之后的函数
 async function Login(){
- const login_res = await login(loginForm.value)
- if(login_res.code ==SUCCESS){
-  localStorage.setItem(TOKEN_KEY,login_res.data.token)
-  localStorage.setItem(USERNAME_KEY,login_res.data.username)
-   localStorage.setItem(ROLE_KEY,login_res.data.role)
-  router.push('/user/home')//跳转到提问页
- }
+  loginError.value = ''
+  try {
+    const login_res = await login(loginForm.value)
+    if(login_res.code ==SUCCESS){
+      localStorage.setItem(TOKEN_KEY,login_res.data.token)
+      localStorage.setItem(USERNAME_KEY,login_res.data.username)
+      localStorage.setItem(ROLE_KEY,login_res.data.role)
+      router.push('/user/home')//跳转到提问页
+      return
+    }
+    loginError.value = login_res.msg || '登录失败，请检查账号和密码'
+  } catch (error) {
+    loginError.value = getErrorMessage(error, '登录失败，请检查账号和密码')
+  }
 }
 
 async function Register(){
   console.log("用户进行注册")
+  registerError.value = ''
   if (registerForm.value.password!==confirpwd.value){
-    alert('两次密码不一致')
+    registerError.value = '两次密码不一致'
     return
   }
-  //调用定义在api的注册接口
-  const register_res=await register(registerForm.value)
-  print(register_res)
-  if(register_res.code==SUCCESS){
-  alert("注册成功！")//alert是浏览器自带弹窗
-    router.push('/user/home')//跳转到提问页
-}
+  try {
+    //调用定义在api的注册接口
+    const register_res=await register(registerForm.value)
+    if(register_res.code==SUCCESS){
+      alert("注册成功！")//alert是浏览器自带弹窗
+      router.push('/user/home')//跳转到提问页
+      return
+    }
+    registerError.value = register_res.msg || '注册失败，请检查填写信息'
+  } catch (error) {
+    registerError.value = getErrorMessage(error, '注册失败，请检查填写信息')
+  }
 
 }
 </script>
@@ -107,6 +134,43 @@ h1 {
 .login-link {
   display: grid;
   place-items: center;
+}
+
+.error-tip {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  text-align: left;
+}
+
+.switch-tip {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.switch-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.switch-link:hover {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
+.switch-link:focus-visible {
+  outline: 2px solid rgba(35, 157, 83, 0.35);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .forgot {

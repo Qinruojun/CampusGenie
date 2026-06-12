@@ -2,6 +2,7 @@ package com.genie.service.impl;
 
 import com.genie.context.BaseContext;
 import com.genie.dto.AskRequestDTO;
+import com.genie.dto.QaConversationRenameDTO;
 import com.genie.dto.QaMessageSendDTO;
 import com.genie.entity.QaConversation;
 import com.genie.entity.QaMessage;
@@ -92,6 +93,24 @@ public class QaHistoryServiceImpl implements QaHistoryService {
         }
 
         return answerVO;
+    }
+
+    @Override
+    public void deleteConversation(Long conversationId) {
+        Long userId = getRequiredUserId();
+        ensureConversationOwnedByUser(conversationId, userId);
+        qaConversationMapper.softDeleteByIdAndUserId(conversationId, userId, LocalDateTime.now());
+    }
+
+    @Override
+    public void renameConversation(Long conversationId, QaConversationRenameDTO qaConversationRenameDTO) {
+        Long userId = getRequiredUserId();
+        ensureConversationOwnedByUser(conversationId, userId);
+        String title = qaConversationRenameDTO.getTitle().trim();
+        if (title.isEmpty()) {
+            throw new BaseException("对话标题不能为空");
+        }
+        qaConversationMapper.updateTitle(conversationId, userId, title);
     }
 
     private Long getRequiredUserId() {

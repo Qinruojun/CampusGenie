@@ -21,7 +21,15 @@ public interface QaConversationMapper {
                             @Param("title") String title,
                             @Param("updatedTime") LocalDateTime updatedTime);
 
+    void updateTitle(@Param("id") Long id,
+                     @Param("userId") Long userId,
+                     @Param("title") String title);
+
     void updateTime(@Param("id") Long id,
                     @Param("userId") Long userId,
                     @Param("updatedTime") LocalDateTime updatedTime);
+
+    void softDeleteByIdAndUserId(@Param("id") Long id,
+                                 @Param("userId") Long userId,
+                                 @Param("updatedTime") LocalDateTime updatedTime);
 }

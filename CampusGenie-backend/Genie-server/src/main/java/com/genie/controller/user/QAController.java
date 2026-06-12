@@ -2,6 +2,7 @@ package com.genie.controller.user;
 
 import com.genie.constant.CodeConstant;
 import com.genie.dto.AskRequestDTO;
+import com.genie.dto.QaConversationRenameDTO;
 import com.genie.dto.QaMessageSendDTO;
 import com.genie.result.Result;
 import com.genie.service.QAService;
@@ -50,5 +51,17 @@ public class QAController {
     @PostMapping("/qa/conversations/{id}/messages")
     public Result<AnswerVO> sendMessage(@PathVariable Long id, @Valid @RequestBody QaMessageSendDTO qaMessageSendDTO) {
         return Result.success(qaHistoryService.sendMessage(id, qaMessageSendDTO), CodeConstant.SUCCESS, "获取答案成功");
+    }
+
+    @DeleteMapping("/qa/conversations/{id}")
+    public Result<Void> deleteConversation(@PathVariable Long id) {
+        qaHistoryService.deleteConversation(id);
+        return Result.success(null, CodeConstant.SUCCESS, "删除对话成功");
+    }
+
+    @PutMapping("/qa/conversations/{id}/title")
+    public Result<Void> renameConversation(@PathVariable Long id, @Valid @RequestBody QaConversationRenameDTO qaConversationRenameDTO) {
+        qaHistoryService.renameConversation(id, qaConversationRenameDTO);
+        return Result.success(null, CodeConstant.SUCCESS, "重命名对话成功");
     }
 }

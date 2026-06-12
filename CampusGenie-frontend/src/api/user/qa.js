@@ -57,3 +57,20 @@ export function sendConversationMessage(id, question) {
         }
     })
 }
+
+export function deleteConversation(id) {
+    return request({
+        url: `/user/qa/conversations/${id}`,
+        method: 'delete'
+    })
+}
+
+export function renameConversation(id, title) {
+    return request({
+        url: `/user/qa/conversations/${id}/title`,
+        method: 'put',
+        data: {
+            title
+        }
+    })
+}

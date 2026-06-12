@@ -5,8 +5,15 @@ import { useRouter } from 'vue-router'
 import { add } from '@/api/admin/knowledge'
 import CategorySelect from '@/components/CategorySelect.vue'
 import {SUCCESS} from "@/constants/code.js";
+import { useCategoryOptions } from '@/composables/useCategoryOptions'
 
 const router = useRouter()
+const {
+  categoryOptions,
+  categoryLoading,
+  categoryError,
+  loadCategoryList
+} = useCategoryOptions()
 
 const form = ref({
   question: '',
@@ -16,7 +23,6 @@ const form = ref({
   status: 1
 })
 
-const categoryList = ref([])
 const loading = ref(false)
 
 
@@ -86,6 +92,9 @@ const handleCancel = () => {
   router.back()
 }
 
+onMounted(() => {
+  loadCategoryList()
+})
 
 </script>
 
@@ -119,8 +128,10 @@ const handleCancel = () => {
         <label>所属分类</label>
         <CategorySelect
             v-model="form.categoryId"
+            :options="categoryOptions"
+            :loading="categoryLoading"
+            :error-message="categoryError"
             placeholder="请选择问题分类"
-            @change="handleCategoryChange"
         />
       </div>
 

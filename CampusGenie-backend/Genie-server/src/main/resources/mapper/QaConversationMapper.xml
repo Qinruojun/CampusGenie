@@ -41,9 +41,26 @@
           and deleted = 0
     </update>
 
+    <update id="updateTitle">
+        update qa_conversation
+        set title = #{title}
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </update>
+
     <update id="updateTime">
         update qa_conversation
         set updated_time = #{updatedTime}
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </update>
+
+    <update id="softDeleteByIdAndUserId">
+        update qa_conversation
+        set deleted = 1,
+            updated_time = #{updatedTime}
         where id = #{id}
           and user_id = #{userId}
           and deleted = 0

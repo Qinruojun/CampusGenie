@@ -11,5 +11,6 @@ import HotQuestionPanel from '@/components/panel/HotQuestionPanel.vue'
       :show-trend-text="false"
       :show-hot-mark="false"
       :polling="true"
+      result-from="admin-hot"
   />
 </template>

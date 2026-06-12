@@ -18,6 +18,10 @@ const props = defineProps({
     type: String,
     default: '← 返回首页'
   },
+  resultFrom: {
+    type: String,
+    default: 'hot'
+  },
   eyebrow: {
     type: String,
     default: '热点问题'
@@ -132,6 +136,7 @@ const {
                             query:{
                               q:item.question,
                               answer:item.answer,
+                              from: resultFrom,
                             }
           }"
           >

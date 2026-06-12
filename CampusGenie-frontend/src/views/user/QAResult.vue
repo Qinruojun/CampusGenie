@@ -3,6 +3,10 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const question = route.query.q
 const answer = route.query.answer
+const isFromAdminHot = route.query.from === 'admin-hot'
+const showBackToHot = route.query.from === 'hot' || isFromAdminHot
+const hotListPath = isFromAdminHot ? '/admin/hotQuestion' : '/user/hot'
+const homePath = isFromAdminHot ? '/admin/knowledge' : '/user/home'
 
 
 
@@ -10,7 +14,16 @@ const answer = route.query.answer
 
 <template>
   <main class="page result-page">
-    <RouterLink class="back-link" to="/user/home">← 返回首页</RouterLink>
+    <div class="back-actions">
+      <RouterLink
+        v-if="showBackToHot"
+        class="back-link"
+        :to="hotListPath"
+      >
+        ← 返回热点列表
+      </RouterLink>
+      <RouterLink class="back-link" :to="homePath">← 返回首页</RouterLink>
+    </div>
 
     <p class="eyebrow">问答结果</p>
     <h1>{{ question }}</h1>
@@ -44,9 +57,14 @@ const answer = route.query.answer
 .eyebrow{
   margin: 0 auto;
 }
+.back-actions {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
 .back-link {
   display: inline-block;
-  margin-bottom: 40px;
   color: var(--muted);
 }
 

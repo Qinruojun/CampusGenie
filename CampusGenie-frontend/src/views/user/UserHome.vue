@@ -1,37 +1,36 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
+import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from "@/constants/storage.js";
 
-const router = useRouter()
-const question = ref('')
-const username = localStorage.getItem(USERNAME_KEY) || '用户'
+const router = useRouter();
+const question = ref("");
+const username = localStorage.getItem(USERNAME_KEY) || "用户";
 
 function search() {
-  const query = question.value.trim()
-  if(!query){
-    alert('请输入问题')
-    return
+  const query = question.value.trim();
+  if (!query) {
+    alert("请输入问题");
+    return;
   }
   router.push({
-    path: '/user/qa',
+    path: "/user/qa",
     query: {
       // 这里写你要传的参数
-      question: query
-    }
-  })
-
+      question: query,
+    },
+  });
 }
 
 function logout() {
-  const ok = confirm('确定要退出登录吗？')
-  if (!ok) return
+  const ok = confirm("确定要退出登录吗？");
+  if (!ok) return;
 
-  localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(ROLE_KEY)
-  localStorage.removeItem(USERNAME_KEY)
-  router.replace('/user/login')
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(ROLE_KEY);
+  localStorage.removeItem(USERNAME_KEY);
+  router.replace("/user/login");
 }
 </script>
 
@@ -48,7 +47,11 @@ function logout() {
       <p class="page-desc">智能问答 · 校园知识 · 快速解决</p>
 
       <form class="search-box" @submit.prevent="search">
-        <input v-model="question" class="input" placeholder="请输入你的问题，例如：图书馆几点关门？" />
+        <input
+          v-model="question"
+          class="input"
+          placeholder="请输入你的问题，例如：图书馆几点关门？"
+        />
         <button class="primary-btn" type="submit">搜索</button>
       </form>
 
@@ -56,7 +59,7 @@ function logout() {
         <RouterLink class="shortcut card" to="/user/hot">
           <span class="shortcut-icon">□</span>
           <strong>热点问题</strong>
-          <small>查看大家常问的问题</small>
+          <small>查看热门的问题</small>
         </RouterLink>
         <RouterLink class="shortcut card" to="/user/qa">
           <span class="shortcut-icon">◇</span>

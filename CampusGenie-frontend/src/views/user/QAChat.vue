@@ -14,21 +14,45 @@ class="new-chat"
       </button>
 
       <div class="history-title">历史对话</div>
-      <div
-        v-if="conversations.length === 0"
-        class="history-empty"
-      >
-        暂无历史对话
+      <div class="history-list">
+        <div
+          v-if="conversations.length === 0"
+          class="history-empty"
+        >
+          暂无历史对话
+        </div>
+        <div
+          v-for="conversation in conversations"
+          :key="conversation.id"
+          class="history-row"
+          :class="{ active: conversation.id === activeConversationId }"
+        >
+          <button
+            class="history-item"
+            @click="selectConversation(conversation.id)"
+          >
+            {{ conversation.title }}
+          </button>
+          <button
+            class="history-action"
+            type="button"
+            aria-label="重命名对话"
+            title="重命名对话"
+            @click.stop="renameConversationItem(conversation)"
+          >
+            ✎
+          </button>
+          <button
+            class="history-action history-delete"
+            type="button"
+            aria-label="删除对话"
+            title="删除对话"
+            @click.stop="deleteConversationItem(conversation.id)"
+          >
+            ×
+          </button>
+        </div>
       </div>
-      <button
-        v-for="conversation in conversations"
-        :key="conversation.id"
-        class="history-item"
-        :class="{ active: conversation.id === activeConversationId }"
-        @click="selectConversation(conversation.id)"
-      >
-        {{ conversation.title }}
-      </button>
     </aside>
 
     <main class="chat-main">
@@ -39,7 +63,7 @@ class="new-chat"
         </div>
       </header>
 
-      <section class="message-list">
+      <section ref="messageListRef" class="message-list">
         <div
             v-for="message in messages"
             :key="message.id"
@@ -74,12 +98,14 @@ class="new-chat"
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   createConversation,
+  deleteConversation,
   getConversationMessages,
   getConversations,
+  renameConversation,
   sendConversationMessage
 } from '@/api/user/qa.js'
 
@@ -89,6 +115,7 @@ const inputText = ref('')//用户输入的问题
 const loading = ref(false)
 const conversations = ref([])
 const activeConversationId = ref(null)
+const messageListRef = ref(null)
 
 function createInitialMessage() {
   return {
@@ -99,6 +126,15 @@ function createInitialMessage() {
 }
 
 const messages = ref([createInitialMessage()])
+
+const scrollMessagesToBottom = async () => {
+  await nextTick()
+  const messageList = messageListRef.value
+
+  if (messageList) {
+    messageList.scrollTop = messageList.scrollHeight
+  }
+}
 
 const loadConversations = async () => {
   try {
@@ -114,6 +150,7 @@ const loadConversations = async () => {
 const startNewChat = async ()=>{
   messages.value = [createInitialMessage()]
   activeConversationId.value = null
+  await scrollMessagesToBottom()
 }
 
 const ensureConversation = async () => {
@@ -148,9 +185,62 @@ const selectConversation = async (id) => {
           content: item.content
         }))
       : [createInitialMessage()]
+
+    await scrollMessagesToBottom()
   } catch (error) {
     console.error(error)
     alert(error.response?.data?.msg || '历史消息加载失败')
+  }
+}
+
+const deleteConversationItem = async (id) => {
+  if (loading.value) return
+
+  const ok = confirm('确定要删除这个对话吗？')
+  if (!ok) return
+
+  try {
+    await deleteConversation(id)
+    conversations.value = conversations.value.filter(item => item.id !== id)
+
+    if (activeConversationId.value === id) {
+      messages.value = [createInitialMessage()]
+      activeConversationId.value = null
+      await scrollMessagesToBottom()
+    }
+  } catch (error) {
+    console.error(error)
+    alert(error.response?.data?.msg || '删除对话失败')
+  }
+}
+
+const renameConversationItem = async (conversation) => {
+  if (loading.value) return
+
+  const input = prompt('请输入新的对话名称', conversation.title)
+  if (input === null) return
+
+  const title = input.trim()
+  if (!title) {
+    alert('对话标题不能为空')
+    return
+  }
+
+  if (title.length > 24) {
+    alert('对话标题不能超过24个字符')
+    return
+  }
+
+  if (title === conversation.title) return
+
+  try {
+    await renameConversation(conversation.id, title)
+    conversations.value = conversations.value.map(item =>
+      item.id === conversation.id ? { ...item, title } : item
+    )
+  } catch (error) {
+    console.error(error)
+    alert(error.response?.data?.msg || '重命名对话失败')
   }
 }
 
@@ -165,7 +255,11 @@ const sendQuestion = async (questionText) => {
     content: text
   })
 
+  await scrollMessagesToBottom()
+
   loading.value = true
+
+  await scrollMessagesToBottom()
 
   try {
     const conversationId = await ensureConversation()
@@ -176,6 +270,7 @@ const sendQuestion = async (questionText) => {
       role: 'assistant',
       content: res.data.answer
     })
+    await scrollMessagesToBottom()
     await loadConversations()
   } catch (error) {
     console.error(error)
@@ -185,8 +280,10 @@ const sendQuestion = async (questionText) => {
       role: 'assistant',
       content: '服务器异常，请稍后再试。'
     })
+    await scrollMessagesToBottom()
   } finally {
     loading.value = false
+    await scrollMessagesToBottom()
   }
 }
 
@@ -214,18 +311,23 @@ onMounted(() => {
 </script>
 <style scoped>
 .chat-page {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   background: var(--background);
+  overflow: hidden;
   /*color: #172418;*/
 }
 
 .chat-sidebar {
   width: 260px;
+  height: 100vh;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
   background: var(--background);
   border-right: 1px solid #e5e7eb;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .logo {
@@ -259,29 +361,76 @@ onMounted(() => {
 }
 
 .history-title {
+  flex-shrink: 0;
   margin: 28px 0 12px;
   color: #6b7280;
   font-size: 13px;
   font-weight: 700;
 }
 
-.history-item {
+.history-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.history-row {
   width: 100%;
-  padding: 12px;
   margin-bottom: 8px;
-  border: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   border-radius: 10px;
   background: #f3f6f2;
   color: #374151;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
 }
 
-.history-item.active {
+.history-row.active {
   color: #16a34a;
   background: #eaf8ef;
   font-weight: 800;
+}
+
+.history-item {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-action {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.history-action:last-child {
+  margin-right: 6px;
+}
+
+.history-action:hover {
+  color: #16a34a;
+  background: #eaf8ef;
+}
+
+.history-delete:hover {
+  color: #dc2626;
+  background: #fee2e2;
 }
 
 .history-empty {
@@ -294,6 +443,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .chat-header {
@@ -318,6 +468,7 @@ onMounted(() => {
 
 .message-list {
   flex: 1;
+  min-height: 0;
   padding: 32px;
   overflow-y: auto;
 }
@@ -357,6 +508,7 @@ onMounted(() => {
 }
 
 .chat-input-bar {
+  flex-shrink: 0;
   display: flex;
   gap: 12px;
   padding: 20px 32px;
