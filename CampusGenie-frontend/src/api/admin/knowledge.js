@@ -64,8 +64,7 @@ export function changeStatus(id,status){
     return request({
         url:`/admin/knowledge/${id}/status`,//后端接口地址
         method: 'put',
-        "status":status,
-
+        data: { status }
     })
 }
 //删除知识条目
