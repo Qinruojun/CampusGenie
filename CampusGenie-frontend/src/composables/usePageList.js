@@ -66,7 +66,14 @@ export function usePageList(options) {
             }
         } catch (error) {
             console.error(error)
-            alert('服务器异常，查询失败')
+            const status = error.response?.status
+            const message = error.response?.data?.msg || error.response?.data?.message
+
+            if (status === 401) {
+                alert('登录已失效，请重新登录')
+            } else {
+                alert(message || '服务器异常，查询失败')
+            }
         } finally {
             loading.value = false
         }

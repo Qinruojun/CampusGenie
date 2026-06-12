@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.QaMessageMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into qa_message(conversation_id, user_id, role, content, created_time)
+        values(#{conversationId}, #{userId}, #{role}, #{content}, #{createdTime})
+    </insert>
+
+    <select id="countByConversationIdAndUserId" resultType="java.lang.Integer">
+        select count(*)
+        from qa_message
+        where conversation_id = #{conversationId}
+          and user_id = #{userId}
+    </select>
+
+    <select id="selectByConversationIdAndUserId" resultType="com.genie.vo.QaMessageVO">
+        select id,
+               conversation_id as conversationId,
+               role,
+               content,
+               created_time as createdTime
+        from qa_message
+        where conversation_id = #{conversationId}
+          and user_id = #{userId}
+        order by created_time asc, id asc
+    </select>
+</mapper>

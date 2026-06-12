@@ -2,10 +2,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import {SUCCESS} from "@/constants/code.js";
+import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
 
 const router = useRouter()
 const question = ref('')
+const username = localStorage.getItem(USERNAME_KEY) || '用户'
 
 function search() {
   const query = question.value.trim()
@@ -22,10 +23,24 @@ function search() {
   })
 
 }
+
+function logout() {
+  const ok = confirm('确定要退出登录吗？')
+  if (!ok) return
+
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(ROLE_KEY)
+  localStorage.removeItem(USERNAME_KEY)
+  router.replace('/user/login')
+}
 </script>
 
 <template>
   <main class="home page">
+    <button class="logout-btn" type="button" @click="logout">
+      {{ username }} · 退出登录
+    </button>
+
     <RouterView />
     <section class="hero-center">
       <p class="eyebrow">CampusGenie</p>
@@ -71,6 +86,26 @@ function search() {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+.logout-btn {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  z-index: 10;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(35, 157, 83, 0.24);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--green);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.logout-btn:hover {
+  background: rgba(35, 157, 83, 0.08);
 }
 
 .search-box {

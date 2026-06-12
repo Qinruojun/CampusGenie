@@ -37,7 +37,14 @@
         delete from knowledge_base where id = #{id}
     </delete>
     <select id="selectById" resultType="com.genie.entity.KnowledgeBase">
-        select  question, answer, category_id, source, status from knowledge_base where id = #{id}
+        select id,
+               question,
+               answer,
+               category_id as categoryId,
+               source,
+               status
+        from knowledge_base
+        where id = #{id}
     </select>
     <select id="selectByIdAndStatus" resultType="com.genie.entity.KnowledgeBase">
         select  id, status from knowledge_base where id = #{id} and status = #{status}

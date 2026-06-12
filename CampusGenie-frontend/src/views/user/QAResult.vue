@@ -1,5 +1,4 @@
 <script setup>
-import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 const route = useRoute()
 const question = route.query.q
@@ -11,7 +10,7 @@ const answer = route.query.answer
 
 <template>
   <main class="page result-page">
-    <RouterLink class="back-link" to="/">← 返回首页</RouterLink>
+    <RouterLink class="back-link" to="/user/home">← 返回首页</RouterLink>
 
     <p class="eyebrow">问答结果</p>
     <h1>{{ question }}</h1>

@@ -2,7 +2,6 @@ import {getPage, Delete} from '@/api/user/contribution.js'
 import { SORT_ORDER_DESC } from '@/constants/status.js'
 import { usePageList } from '@/composables/usePageList.js'
 import {SUCCESS} from "@/constants/code.js";
-import {reject} from "@/api/admin/contirbute.js";
 
 export function useContributionList() {
     const pageList = usePageList({
@@ -47,6 +46,7 @@ export function useContributionList() {
 
         // 给页面一个更明确的名字
         loadContributionList: pageList.loadList,
+        handleDelete,
 
     }
 }

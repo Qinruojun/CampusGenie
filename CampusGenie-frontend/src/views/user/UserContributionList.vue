@@ -1,6 +1,10 @@
 <!--用户贡献页，查看自己的贡献-->
 <template>
   <div class="contribution-page">
+    <RouterLink class="back-link" to="/user/home">
+      ← 返回首页
+    </RouterLink>
+
 <!--    <section class="page-head">-->
 <!--      <p class="eyebrow">-->
 <!--        CampusGenie-->
@@ -104,26 +108,30 @@
               @delete="handleDelete"
             />
           </div>
-          <>
-            <div class="pagination">
-              <button @click="handlePrevPage">
-                上一页
-              </button>
-              <button
-                  class="current"
-                  @click="page = 1"
-              >
-                1
-              </button>
-              <button @click="page = 2">
-                2
-              </button>
-              <button @click="page = 3">
-                3
-              </button>
-              <button @click="handleNextPage">
-                下一页
-          </>
+
+          <div
+            v-if="totalPages > 1"
+            class="pagination"
+          >
+            <button
+              :disabled="page <= 1"
+              @click="handlePrevPage"
+            >
+              上一页
+            </button>
+            <button
+              v-for="pageNumber in pageNumbers"
+              :key="pageNumber"
+              :class="{ current: page === pageNumber }"
+              @click="page = pageNumber"
+            >
+              {{ pageNumber }}
+            </button>
+            <button
+              :disabled="page >= totalPages"
+              @click="handleNextPage"
+            >
+              下一页
             </button>
           </div>
         </section>
@@ -133,19 +141,15 @@
 </template>
 
     <script setup>
-      import { computed,ref, onMounted } from 'vue'
-      import { useRouter } from 'vue-router'
+      import { computed, onMounted } from 'vue'
 
       import CategorySelect from '@/components/CategorySelect.vue'
       import { useCategoryOptions } from '@/composables/useCategoryOptions'
       import UserContributionCard from '@/components/user/ContributionCard.vue'
-      import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
-      import { WAIT_FOR_REVIEW,REVIEW_PASS,REVIEW_REJECT} from "@/constants/status.js";
+      import { SORT_ORDER_DESC } from "@/constants/status.js";
+      import { WAIT_FOR_REVIEW_MSG,REVIEW_PASS,REVIEW_REJECT, REVIEW_PASS_MSG, REVIEW_REJECT_MSG} from "@/constants/status.js";
       import StatCard from "@/components/StatCard.vue";
       import {useContributionList} from "@/composables/user/useContributionList.js";
-
-      const router = useRouter()
-
       const {
         categoryOptions,
         categoryLoading,
@@ -160,14 +164,13 @@
         pageSize,
         total,
         list,
-        loading,
-        loadList,
         handleSearch,
         handleReset,
         handlePrevPage,
         handleNextPage,
         handleToggleSortOrder,
         loadContributionList,
+        handleDelete,
 
       } = useContributionList()
 
@@ -178,10 +181,25 @@
         loadContributionList()
       })
       const handleView = item => {
-        alert("hhh,什么都没写")
-        //TODO
+        if (item.statusDesc !== REVIEW_REJECT_MSG) {
+          alert('只有已驳回的贡献才有驳回原因')
+          return
+        }
+
+        alert(item.rejectReason || '暂无驳回原因')
       }
-      //TODO: 还要后端返回统计信息
+      const currentPageStatusCount = statusDesc => {
+        return list.value.filter(item => item.statusDesc === statusDesc).length
+      }
+
+      const totalPages = computed(() => {
+        return Math.max(1, Math.ceil(total.value / pageSize.value))
+      })
+
+      const pageNumbers = computed(() => {
+        return Array.from({ length: totalPages.value }, (_, index) => index + 1)
+      })
+
       const statList = computed(() => [
         {
           title: '贡献总数',
@@ -191,26 +209,25 @@
           tone: 'green'
         },
         {
-          title: '已通过',
-          value: '1,102',//HACK
+          title: '当前页已通过',
+          value: currentPageStatusCount(REVIEW_PASS_MSG),
           unit: '条',
           icon: '➤',
           tone: 'green'
         },
         {
-          title: '待审核',
-          value: 154, //HACK
+          title: '当前页待审核',
+          value: currentPageStatusCount(WAIT_FOR_REVIEW_MSG),
           unit: '条',
           icon: '◷',
           tone: 'orange'
         },
         {
-          title: '已驳回',
-          value: 32,//HACK
+          title: '当前页已驳回',
+          value: currentPageStatusCount(REVIEW_REJECT_MSG),
           unit: '条',
           icon: '↗',
-          tone: 'green',
-          extra: '较上周 ↑18%'
+          tone: 'green'
         }
       ])
 
@@ -281,6 +298,18 @@
   /*color: #1c241c;*/
 
 }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 28px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.back-link:hover {
+  color: #16a34a;
+}
+
 .page {
  width: 100%;
   margin: 0 auto;

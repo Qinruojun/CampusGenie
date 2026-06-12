@@ -36,8 +36,8 @@
     /**
     * 知识条目排序
     * */
-    export const SORT_ORDER_ASC = 'ASC';
-    export const SORT_ORDER_DESC = 'DESC';
+    export const SORT_ORDER_ASC = 'asc';
+    export const SORT_ORDER_DESC = 'desc';
     /**
      * 用户贡献状态
      **/

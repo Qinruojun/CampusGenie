@@ -12,6 +12,6 @@ import java.util.List;
 public interface QueryLogMapper {
     void insert(QueryLog queryLog);
 
-    //根据一天前到现在的查询记录来构造热点问题列表(根据hit_place和knowledge_id分组，且hit为1)
+    // 根据一天前到现在的有效用户查询构造热点问题列表
     List<HotQuestion> getQueryLogsByTime_to_HotQuestion(@Param("startDate")LocalDateTime localDateTime,@Param("endDate") LocalDateTime now);
 }

@@ -48,12 +48,16 @@ public class HotQuestionServiceImpl  implements HotQuestionService {
         for (int i = 0; i < hotQuestions.size(); i++) {
             HotQuestion hotQuestion = hotQuestions.get(i);
             //TODO后续考虑知识草稿引入
-            KnowledgeBase knowledge = knowledgeBaseMapper.selectById(hotQuestion.getKnowledgeId());
+            KnowledgeBase knowledge = hotQuestion.getKnowledgeId() == null
+                    ? null
+                    : knowledgeBaseMapper.selectById(hotQuestion.getKnowledgeId());
             if (knowledge != null) {
                 hotQuestion.setNormalizedAnswer(knowledge.getAnswer());
             } else {
                 hotQuestion.setNormalizedAnswer("暂无答案");
-                log.warn("知识库ID {} 未找到对应答案", hotQuestion.getKnowledgeId());
+                if (hotQuestion.getKnowledgeId() != null) {
+                    log.warn("知识库ID {} 未找到对应答案", hotQuestion.getKnowledgeId());
+                }
             }
 
             hotQuestion.setDisplayQuestion(hotQuestion.getNormalizedQuestion());
