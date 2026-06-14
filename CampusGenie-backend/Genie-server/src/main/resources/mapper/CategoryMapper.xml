@@ -10,4 +10,12 @@
     <select id="selectById" resultType="com.genie.entity.Category">
 select name from category where id = #{id}
     </select>
+    <select id="getCategoryList" resultType="com.genie.vo.CategoryVO">
+        SELECT
+            id,
+            name
+        FROM category
+        WHERE is_active = 1
+        ORDER BY sort_order ASC
+    </select>
 </mapper>

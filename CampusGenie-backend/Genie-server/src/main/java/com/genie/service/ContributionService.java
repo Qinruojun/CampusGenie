@@ -3,6 +3,7 @@ package com.genie.service;
 import com.genie.dto.*;
 import com.genie.result.PageResult;
 import com.genie.vo.BatchReviewVO;
+import com.genie.vo.ContributionStatisticsVO;
 import jakarta.validation.Valid;
 
 
@@ -20,4 +21,6 @@ public interface ContributionService {
     void delete(Long id);
 
     BatchReviewVO batchReview(@Valid BatchReviewDTO batchReviewDTO);
+
+    ContributionStatisticsVO getStatistics();
 }

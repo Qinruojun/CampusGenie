@@ -1,5 +1,6 @@
 package com.genie.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -32,11 +33,12 @@ public class AdminContributionVO {
 
     // 审核状态描述
     private String statusDesc;
-    
+    @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss", timezone = "Asia/Shanghai")
     // 提交时间
     private LocalDateTime createdTime;
     
     // 审核时间
+
     private LocalDateTime reviewedTime;
     
     // 驳回理由

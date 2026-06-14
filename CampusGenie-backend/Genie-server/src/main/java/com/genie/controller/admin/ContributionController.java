@@ -6,6 +6,7 @@ import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.ContributionService;
 import com.genie.vo.BatchReviewVO;
+import com.genie.vo.ContributionStatisticsVO;
 import com.genie.vo.UserContributionVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,13 @@ public class ContributionController  {
                     result.getSuccessCount(), result.getFailCount()));
         }
 
+    }
+
+    @GetMapping("/statistics")
+    public Result getStatistics() {
+        log.info("获取贡献统计数据");
+        ContributionStatisticsVO statistics = contributionService.getStatistics();
+        return Result.success(statistics, CodeConstant.SUCCESS, "获取统计数据成功");
     }
 
 }

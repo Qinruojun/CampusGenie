@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.QaConversationMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into qa_conversation(user_id, title, created_time, updated_time, deleted)
+        values(#{userId}, #{title}, #{createdTime}, #{updatedTime}, #{deleted})
+    </insert>
+
+    <select id="selectByIdAndUserId" resultType="com.genie.entity.QaConversation">
+        select id,
+               user_id as userId,
+               title,
+               created_time as createdTime,
+               updated_time as updatedTime,
+               deleted
+        from qa_conversation
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </select>
+
+    <select id="selectByUserId" resultType="com.genie.vo.QaConversationVO">
+        select id,
+               title,
+               created_time as createdTime,
+               updated_time as updatedTime
+        from qa_conversation
+        where user_id = #{userId}
+          and deleted = 0
+        order by updated_time desc
+    </select>
+
+    <update id="updateTitleAndTime">
+        update qa_conversation
+        set title = #{title},
+            updated_time = #{updatedTime}
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </update>
+
+    <update id="updateTitle">
+        update qa_conversation
+        set title = #{title}
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </update>
+
+    <update id="updateTime">
+        update qa_conversation
+        set updated_time = #{updatedTime}
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </update>
+
+    <update id="softDeleteByIdAndUserId">
+        update qa_conversation
+        set deleted = 1,
+            updated_time = #{updatedTime}
+        where id = #{id}
+          and user_id = #{userId}
+          and deleted = 0
+    </update>
+</mapper>

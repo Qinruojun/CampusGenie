@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.constant.ActionTypeConstant;
+import com.genie.constant.StatusConstant;
 import com.genie.constant.TargetTypeConstant;
 import com.genie.context.BaseContext;
 import com.genie.dto.KnowledgeDTO;
@@ -9,13 +10,16 @@ import com.genie.entity.AdminLog;
 import com.genie.entity.Category;
 import com.genie.entity.KnowledgeBase;
 import com.genie.exception.KnowledgeBaseStatusException;
+import com.genie.exception.KnowledgeNotFoundException;
 import com.genie.mapper.AdminLogMapper;
 import com.genie.mapper.CategoryMapper;
 import com.genie.mapper.KnowledgeBaseMapper;
+import com.genie.mapper.KnowledgeDraftMapper;
 import com.genie.result.PageResult;
 import com.genie.service.KnowledgeService;
 import com.genie.vo.BatchDeleteVO;
 import com.genie.vo.KnowledgeExportVO;
+import com.genie.vo.KnowledgeStatisticsVO;
 import com.genie.vo.KnowledgeVO;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -49,6 +53,8 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     private AdminLogMapper adminLogMapper;
     @Autowired
     private CategoryMapper categoryMapper;
+    @Autowired
+    private KnowledgeDraftMapper knowledgeDraftMapper;
 
     @Override
     @Transactional
@@ -114,11 +120,27 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
+    public KnowledgeBase getKnowledgeById(Long id) {
+        return knowledgeBaseMapper.selectById(id);
+    }
+
+    @Override
     @Transactional
     public void deleteKnowledge(Long id) {
-        //删除知识条目并调用mapper更新
+        // 先查询知识条目，检查状态
+        KnowledgeBase knowledgeBase = knowledgeBaseMapper.selectById(id);
+        if (knowledgeBase == null) {
+            throw new KnowledgeNotFoundException("知识条目不存在");
+        }
+        
+        // 只有已停用（status=0）的知识才能删除
+        if (!StatusConstant.STOPPED.equals(knowledgeBase.getStatus())) {
+            throw new KnowledgeBaseStatusException("只能删除已停用的知识条目，请先停用该知识");
+        }
+        
+        // 删除知识条目并调用mapper更新
         knowledgeBaseMapper.deleteById(id);
-        //创建管理员操作日志
+        // 创建管理员操作日志
         AdminLog adminLog = AdminLog.builder()
                 .adminName(BaseContext.getCurrentUsername())
                 .actionType(ActionTypeConstant.DELETE)
@@ -130,27 +152,32 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
+    @Transactional
     public void changeStatus(Long id, Integer status) {
-        //获取要修改的知识条目的状态并判断是否与知识库存储状态一致，不一致报错，一致修改
-        KnowledgeBase knowledgeBase = knowledgeBaseMapper.selectByIdAndStatus(id,status);
-        if(knowledgeBase== null){
-            throw new KnowledgeBaseStatusException("知识条目状态异常");
+        KnowledgeBase knowledgeBase = knowledgeBaseMapper.selectById(id);
+        if(knowledgeBase == null){
+            throw new KnowledgeNotFoundException("知识条目不存在");
         }
-        //修改状态
-        knowledgeBase.setStatus(1-status);
+        
+        Integer oldStatus = knowledgeBase.getStatus();
+        if(oldStatus.equals(status)){
+            throw new KnowledgeBaseStatusException("知识条目当前已是该状态，无需切换");
+        }
+        
+        knowledgeBase.setStatus(status);
+        knowledgeBase.setUpdatedBy(BaseContext.getCurrentUsername());
+        knowledgeBase.setUpdatedTime(LocalDateTime.now());
         knowledgeBaseMapper.update(knowledgeBase);
-        //创建管理员操作日志
+        
         AdminLog adminLog = AdminLog.builder()
                 .adminName(BaseContext.getCurrentUsername())
                 .actionType(ActionTypeConstant.UPDATE)
                 .targetType(TargetTypeConstant.KNOWLEDGE_BASE)
                 .targetId(knowledgeBase.getId())
-                .detail("{\"before\":{\"status\":" + status + "},\"after\":{\"status\":" + (1-status) + "}}")
+                .detail("{\"before\":{\"status\":" + oldStatus + "},\"after\":{\"status\":" + status + "}}")
                 .createdTime(LocalDateTime.now())
                 .build();
         adminLogMapper.insert(adminLog);
-
-
     }
 
     @Override
@@ -330,5 +357,25 @@ public class KnowledgeServiceImpl implements KnowledgeService {
             }
             return vo;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public KnowledgeStatisticsVO getStatistics() {
+        // 已发布数量（status=1）
+        Integer publishedCount = knowledgeBaseMapper.countByStatus(StatusConstant.PUBLISHED);
+        
+        // 已停用知识库数量（status=0）
+        Integer stoppedCount = knowledgeBaseMapper.countByStatus(StatusConstant.STOPPED);
+        
+        // 本周更新数量（本周一 00:00:00 至今）
+        LocalDateTime startOfWeek = LocalDateTime.now().with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        Integer weeklyUpdateCount = knowledgeBaseMapper.countByUpdatedTimeAfter(startOfWeek);
+        
+        // 上周更新数量（上周一 00:00:00 到上周日 23:59:59）
+        LocalDateTime startOfLastWeek = startOfWeek.minusWeeks(1);
+        LocalDateTime endOfLastWeek = startOfWeek.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        Integer lastWeekUpdateCount = knowledgeBaseMapper.countByUpdatedTimeBetween(startOfLastWeek, endOfLastWeek);
+        
+        return new KnowledgeStatisticsVO(publishedCount, stoppedCount, weeklyUpdateCount, lastWeekUpdateCount);
     }
 }

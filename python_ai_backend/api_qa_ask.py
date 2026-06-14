@@ -1,17 +1,3 @@
-"""
-/api/qa/ask 只是人为给这个功能起的一个“门牌号”。
-只要前端发起请求的地址和后端定义的门牌号对得上，叫什么名字都可以！！！
-
-将本地终端版的问答系统 (RAG_qa.py) 封装为标准的 RESTful API 接口， 以便前端网页进行网络调用
-
-主要业务流程:
-    1. 生命周期管理: 使用 @app.on_event("startup") 在服务器启动时全局加载一次 
-       大模型和向量数据库，避免每次请求重复加载，大幅降低接口延迟。
-    2. 数据校验模型: 借助 Pydantic 定义清晰的请求体 (ChatRequest) 和 响应体 (ChatResponse)。
-    3. 核心问答接口 (POST /api/qa/ask): 接收用户提问，调用底层的 RAG 双层架构生成答案，
-       并计算单次请求的推理耗时，最终以 JSON 格式返回给前端。
-"""
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn

@@ -15,6 +15,8 @@ import java.util.List;
 public interface UserContributionMapper {
     void insert(UserContribution userContribution);
 
+    Integer countByUserIdAndQuestion(@Param("userId") Long userId, @Param("question") String question);
+
     Page<UserContributionVO> pageQueryByUser(@Param("userId") Long userId, @Param("query") ContributionPageQueryDTO contributionPageQueryDTO);
 
     Page<AdminContributionVO> pageQueryByAdmin(AdminContributionPageQueryDTO adminContributionPageQueryDTO);
@@ -24,4 +26,6 @@ public interface UserContributionMapper {
     void update(UserContribution userContribution);
 
     void deleteById(Long id);
+
+    Integer countByStatus(@Param("status") Integer status);
 }

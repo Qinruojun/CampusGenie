@@ -33,7 +33,7 @@ build/
 ### VS Code ###
 .vscode/
 
+
+__pycache__/
 .env
 .venv/
-### Test ###
-test-jack/

@@ -8,10 +8,12 @@ import com.genie.dto.*;
 import com.genie.entity.KnowledgeBase;
 import com.genie.entity.ReviewLog;
 import com.genie.entity.UserContribution;
+import com.genie.exception.ContributionAlreadyExistsException;
 import com.genie.exception.ContributionAlreadyReviewedException;
 import com.genie.exception.EmptyContributionListException;
 import com.genie.exception.InvalidActionException;
 import com.genie.exception.RejectReasonRequiredException;
+import com.genie.exception.UserNotLoginException;
 import com.genie.mapper.KnowledgeBaseMapper;
 import com.genie.mapper.ReviewLogMapper;
 import com.genie.mapper.UserContributionMapper;
@@ -20,6 +22,8 @@ import com.genie.service.ContributionService;
 import com.genie.vo.AdminContributionVO;
 import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
+import com.genie.vo.ContributionStatisticsVO;
+import jakarta.validation.Valid;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @Service
 public class ContributionServiceImpl implements ContributionService {
     @Autowired
@@ -43,10 +48,18 @@ public class ContributionServiceImpl implements ContributionService {
     @Override
     public void contribute(ContributionSubmitDTO contributionSubmitDTO){
         //TODO 是否还需校验（敏感词？非空上层校验了）
+        Long userId = BaseContext.getCurrentUserId();
+        String question = contributionSubmitDTO.getQuestion().trim();
+        Integer existingCount = userContributionMapper.countByUserIdAndQuestion(userId, question);
+        if (existingCount != null && existingCount > 0) {
+            throw new ContributionAlreadyExistsException("该问题已提交，请勿重复提交");
+        }
+
+        contributionSubmitDTO.setQuestion(question);
         //创建实体并插入数据库
         UserContribution userContribution = new UserContribution();
         BeanUtils.copyProperties(contributionSubmitDTO,userContribution);
-        userContribution.setUserId(BaseContext.getCurrentUserId());
+        userContribution.setUserId(userId);
         userContribution.setStatus(StatusConstant.WAIT_FOR_REVIEW);
         userContribution.setCreatedTime(LocalDateTime.now());
         userContributionMapper.insert(userContribution);
@@ -56,6 +69,9 @@ public class ContributionServiceImpl implements ContributionService {
     public PageResult pageQueryByUser(ContributionPageQueryDTO contributionPageQueryDTO) {
         PageHelper.startPage(contributionPageQueryDTO.getPage(),contributionPageQueryDTO.getPageSize());
         Long userId = BaseContext.getCurrentUserId();
+        if (userId == null) {
+            throw new UserNotLoginException("请先登录后再查看我的贡献");
+        }
         Page<UserContributionVO> page = userContributionMapper.pageQueryByUser(userId,contributionPageQueryDTO);
         return new PageResult(page.getTotal(),page.getResult());
 
@@ -207,5 +223,14 @@ public class ContributionServiceImpl implements ContributionService {
 
             return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
         }
+
+    @Override
+    public ContributionStatisticsVO getStatistics() {
+        Integer pendingCount = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+        Integer approvedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_PASS);
+        Integer rejectedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_REJECT);
+        
+        return new ContributionStatisticsVO(pendingCount, approvedCount, rejectedCount);
+    }
 
 }

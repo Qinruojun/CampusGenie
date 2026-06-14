@@ -3,7 +3,9 @@ package com.genie.service;
 import com.genie.dto.KnowledgeDTO;
 import com.genie.dto.KnowledgePageQueryDTO;
 import com.genie.result.PageResult;
+import com.genie.entity.KnowledgeBase;
 import com.genie.vo.BatchDeleteVO;
+import com.genie.vo.KnowledgeStatisticsVO;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
@@ -16,6 +18,8 @@ public interface KnowledgeService {
     void newKnowledge(@Valid KnowledgeDTO knowledgeDTO);
 
     void editKnowledge(@Valid KnowledgeDTO knowledgeDTO);
+
+    KnowledgeBase getKnowledgeById(Long id);
 
     void deleteKnowledge(Long id);
 
@@ -32,4 +36,6 @@ public interface KnowledgeService {
     void downloadExcelTemplate(HttpServletResponse response) throws IOException;
 
     void downloadJsonTemplate(HttpServletResponse response) throws IOException;
+
+    KnowledgeStatisticsVO getStatistics();
 }

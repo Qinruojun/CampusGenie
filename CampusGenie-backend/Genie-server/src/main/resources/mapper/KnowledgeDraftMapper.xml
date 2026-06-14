@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.genie.mapper.KnowledgeDraftMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into knowledge_draft(question, answer, category_id, source, status, created_time)
+        values(#{question}, #{answer}, #{categoryId}, #{source}, #{status}, #{createdTime})
+    </insert>
+    <update id="update">
+        update knowledge_draft
+        <set>
+            <if test="question != null">
+                question = #{question},
+            </if>
+            <if test="answer != null">
+                answer = #{answer},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="source != null">
+                source = #{source},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="reviewedBy != null">
+                reviewed_by = #{reviewedBy},
+            </if>
+            <if test="reviewedTime != null">
+                reviewed_time = #{reviewedTime},
+            </if>
+
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="deleteById">
+        delete from knowledge_draft where id = #{id}
+    </delete>
+    <select id="selectById" resultType="com.genie.entity.KnowledgeDraft">
+        select  id, question, answer, category_id, source, status, reviewed_by, reviewed_time, created_time from knowledge_draft where id = #{id}
+    </select>
+
+
+    <select id="pageQuery" resultType="com.genie.vo.KnowledgeDraftVO">
+        select kd.id, kd.question, kd.answer,  c.name as categoryName,
+        CASE uc.status
+        WHEN 0 THEN '待审核'
+        WHEN 1 THEN '已通过'
+        END as statusDesc, kd.created_time, kd.reviewed_time
+        from knowledge_draft kd
+        left join category c on kd.category_id = c.id
+        <where>
+            <if test="query.status != null">
+                and uc.status = #{query.status}
+            </if>
+            <if test="query.keyword != null and query.keyword != ''">
+                and kd.question like concat('%', #{query.keyword}, '%')
+            </if>
+            <if test="query.startTime !=null">
+                and kd.created_time &gt;= #{query.startTime}
+            </if>
+            <if test="query.endTime !=null">
+                and kd.created_time &lt;= #{query.endTime}
+            </if>
+        </where>
+        <if test="query.sortOrder != null">
+            order by kd.created_time
+            <choose>
+                <when test="query.sortOrder == 'desc'">
+                    desc
+                </when>
+                <otherwise>
+                    asc
+                </otherwise>
+            </choose>
+        </if>
+
+    </select>
+
+    <select id="countByStatus" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where status = #{status}
+    </select>
+
+</mapper>

@@ -5,12 +5,14 @@ import com.genie.dto.ImportOptionDTO;
 import com.genie.dto.KnowledgeDTO;
 import com.genie.dto.KnowledgePageQueryDTO;
 import com.genie.dto.StatusUpdateDTO;
+import com.genie.entity.KnowledgeBase;
 import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.KnowledgeImportService;
 import com.genie.service.KnowledgeService;
 import com.genie.vo.BatchDeleteVO;
 import com.genie.vo.ImportResultVO;
+import com.genie.vo.KnowledgeStatisticsVO;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,12 @@ public class KnowledgeController {
         log.info("修改知识条目{}", knowledgeDTO);
          knowledgeService.editKnowledge(knowledgeDTO);
          return Result.success(null,CodeConstant.SUCCESS,"修改知识条目成功");
+    }
+    @GetMapping("/{id}")//查询知识条目详情
+    public Result<KnowledgeBase> getKnowledgeById(@PathVariable Long id) {
+        log.info("查询知识条目详情{}", id);
+        KnowledgeBase knowledgeBase = knowledgeService.getKnowledgeById(id);
+        return Result.success(knowledgeBase, CodeConstant.SUCCESS, "查询知识条目成功");
     }
     @DeleteMapping("/{id}/delete")//删除知识条目
     public Result deleteKnowledge(@PathVariable Long id) {//将URL中的id取出来传给方法里的id
@@ -122,6 +130,13 @@ public class KnowledgeController {
         knowledgeService.downloadJsonTemplate(response);
         log.info("下载json模板成功");
         return;
+    }
+
+    @GetMapping("/statistics")
+    public Result<KnowledgeStatisticsVO> getStatistics() {
+        log.info("获取知识库统计数据");
+        KnowledgeStatisticsVO statistics = knowledgeService.getStatistics();
+        return Result.success(statistics, CodeConstant.SUCCESS, "获取统计数据成功");
     }
 
 

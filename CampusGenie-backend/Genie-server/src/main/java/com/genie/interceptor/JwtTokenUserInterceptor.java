@@ -41,6 +41,10 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return true;
+        }
         //1、从请求头中获取令牌
         String token = request.getHeader(jwtProperties.getUserTokenName());
 

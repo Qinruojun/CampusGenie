@@ -7,6 +7,12 @@
         insert into user_contribution(user_id, question, answer, category_id, supplement, contact, status, created_time)
         values (#{userId}, #{question}, #{answer}, #{categoryId}, #{supplement}, #{contact}, #{status}, #{createdTime})
     </insert>
+    <select id="countByUserIdAndQuestion" resultType="java.lang.Integer">
+        select count(*)
+        from user_contribution
+        where user_id = #{userId}
+          and question = #{question}
+    </select>
     <update id="update">
         update user_contribution
         <set>
@@ -46,12 +52,18 @@
     </delete>
 
     <select id="pageQueryByUser" resultType="com.genie.vo.UserContributionVO">
-        select uc.id, question, answer,  c.name as categoryName,
+        select uc.id,
+               uc.question as question,
+               uc.answer as answer,
+               c.name as categoryName,
                CASE uc.status
                    WHEN 0 THEN '待审核'
                    WHEN 1 THEN '已通过'
                    WHEN 2 THEN '已驳回'
-                   END as statusDesc, uc.created_time, uc.reviewed_time, uc.reject_reason
+                   END as statusDesc,
+               uc.created_time as createdTime,
+               uc.reviewed_time as reviewedTime,
+               uc.reject_reason as rejectReason
         from user_contribution uc
         left join category c on uc.category_id = c.id
         <where>
@@ -60,6 +72,9 @@
             </if>
             <if test="query.status != null">
                 and uc.status = #{query.status}
+            </if>
+            <if test="query.categoryId != null">
+                and uc.category_id = #{query.categoryId}
             </if>
             <if test="query.keyword != null and query.keyword != ''">
                 and question like concat('%', #{query.keyword}, '%')
@@ -123,6 +138,12 @@
     </select>
     <select id="selectById" resultType="com.genie.entity.UserContribution">
         select id, user_id, question, answer, category_id, status from user_contribution where id = #{id}
+    </select>
+
+    <select id="countByStatus" resultType="java.lang.Integer">
+        select count(*)
+        from user_contribution
+        where status = #{status}
     </select>
 
 </mapper>

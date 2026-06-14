@@ -1,0 +1,143 @@
+
+.knowledge-card {
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) 260px 280px;
+    align-items: center;
+    gap: 28px;
+    min-height: 104px;
+    padding: 18px 28px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+.usercontribution-card {
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) 260px 280px;
+    align-items: center;
+    gap: 28px;
+    min-height: 104px;
+    padding: 18px 28px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+.reviewcontribution-card{
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) 260px 280px;
+    align-items: center;
+    gap: 28px;
+    min-height: 104px;
+    padding: 18px 28px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.main-info {
+    min-width: 0;
+}
+
+.main-info h3 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #111827;
+}
+
+.answer {
+    max-width: 680px;
+    margin: 0 0 10px;
+    color: #4b5563;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.status-info {
+    min-height: 76px;
+    padding-left: 28px;
+    border-left: 1px solid #e5e7eb;
+}
+
+.status-info p {
+    margin: 7px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(3, 86px);
+    justify-content: end;
+    gap: 14px;
+}
+
+.btn {
+    height: 40px;
+    border-radius: 8px;
+    background: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn.toggle {
+    border: 1px solid;
+}
+
+.btn.edit {
+    color: #111827;
+    border: 1px solid #9ca3af;
+}
+
+.btn.delete {
+    color: #ef4444;
+    border: 1px solid #fca5a5;
+}
+
+.detail {
+    grid-column: 3;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    color: #16a34a;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: right;
+}
+
+@media (max-width: 1200px) {
+    .knowledge-card {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .status-info {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .actions {
+        justify-content: start;
+    }
+}
+
