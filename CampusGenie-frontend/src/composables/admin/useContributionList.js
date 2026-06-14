@@ -1,4 +1,4 @@
-import {approve, getPage,reject} from '@/api/admin/contirbute.js'
+import {approve, getPage,reject,getStatistics} from '@/api/admin/contirbute.js'
 import { SORT_ORDER_DESC } from '@/constants/status.js'
 import { usePageList } from '@/composables/usePageList.js'
 import {SUCCESS} from "@/constants/code.js";
@@ -43,6 +43,7 @@ export function useContributionList() {
             if (res.code === SUCCESS) {
                 alert(res.msg || '审核通过成功')
                 await pageList.loadList()
+                await loadStatistics()
             } else {
                 alert(res.msg || '审核通过失败')
             }
@@ -63,6 +64,7 @@ export function useContributionList() {
             if (res.code === SUCCESS) {
                 alert(res.msg || '审核驳回成功')
                 await pageList.loadList()
+                await loadStatistics()
             } else {
                 alert(res.msg || '审核驳回失败')
             }
@@ -74,12 +76,29 @@ export function useContributionList() {
 
 
 
+    const loadStatistics = async () => {
+        try {
+            const res = await getStatistics()
+            if (res.code === SUCCESS) {
+                return res.data
+            } else {
+                console.error('获取统计数据失败:', res.msg)
+                return null
+            }
+        } catch (error) {
+            console.error('获取统计数据异常:', error)
+            return null
+        }
+    }
+
+
     return {
         ...pageList,
 
         // 给页面一个更明确的名字
         loadContributionList: pageList.loadList,
         handleApprove,
-        handleReject
+        handleReject,
+        loadStatistics
     }
 }

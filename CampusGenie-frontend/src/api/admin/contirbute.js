@@ -63,3 +63,19 @@ export function getPage(params){
         })
 
 }
+
+export function getStatistics() {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "获取统计数据成功",
+            "data": {
+                "pendingCount": 154,
+                "approvedCount": 32,
+                "rejectedCount": 32
+            }
+        })
+    }
+
+    return request.get('/admin/contributions/statistics')
+}

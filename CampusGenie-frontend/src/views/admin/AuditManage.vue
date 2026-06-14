@@ -194,9 +194,16 @@ const {
   handleNextPage,
   handleToggleSortOrder,
   handleApprove,
-  handleReject
+  handleReject,
+  loadStatistics
 } = useContributionList()
-//TODO :后端需要写统计数据
+
+const statisticsData = ref({
+  pendingCount: 0,
+  approvedCount: 0,
+  rejectedCount: 0
+})
+
 const statList = computed(() => [
   {
     title: '贡献总数',
@@ -208,14 +215,14 @@ const statList = computed(() => [
 
   {
     title: '待审核',
-    value: 154, //HACK
+    value: statisticsData.value.pendingCount,
     unit: '条',
     icon: '◷',
     tone: 'orange'
   },
   {
     title: '已通过',
-    value: 32,//HACK
+    value: statisticsData.value.approvedCount,
     unit: '条',
     icon: '✓',
     tone: 'green',
@@ -223,7 +230,7 @@ const statList = computed(() => [
   },
   {
     title:'已驳回',
-    value: 32,//HACK
+    value: statisticsData.value.rejectedCount,
     unit: '条',
     icon: '×',
     tone: 'orange',
@@ -263,14 +270,24 @@ async function submitReject(reason) {
 
     rejectDialogVisible.value = false
     rejectTarget.value = null
+
+    await loadStatisticsData()
   } finally {
     rejectLoading.value = false
+  }
+}
+
+async function loadStatisticsData() {
+  const data = await loadStatistics()
+  if (data) {
+    statisticsData.value = data
   }
 }
 
 onMounted(() => {
   loadCategoryList()
   loadContributionList()
+  loadStatisticsData()
 })
 </script>
 

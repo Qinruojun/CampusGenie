@@ -5,6 +5,7 @@ import com.genie.entity.KnowledgeDraft;
 import com.genie.vo.KnowledgeDraftVO;
 import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface KnowledgeDraftMapper {
@@ -17,4 +18,6 @@ public interface KnowledgeDraftMapper {
     void update(KnowledgeDraft knowledgeDraft);
 
     Page<KnowledgeDraftVO> pageQuery(KnowledgeDraftPageQueryDTO query);
+
+    Integer countByStatus(@Param("status") Integer status);
 }

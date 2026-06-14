@@ -1,4 +1,4 @@
-import { getPage, Delete, changeStatus } from '@/api/admin/knowledge.js'
+import { getPage, Delete, changeStatus, getStatistics } from '@/api/admin/knowledge.js'
 import {SORT_ORDER_ASC, SORT_ORDER_DESC} from '@/constants/status.js'
 import { SUCCESS } from '@/constants/code.js'
 import { DISABLE, ENABLE } from '@/constants/status.js'
@@ -38,12 +38,15 @@ export function useKnowledgeList() {
             if (res.code === SUCCESS) {
                 alert(res.msg || '删除成功')
                 await pageList.loadList()
+                // 注意：这里不需要调用 loadStatisticsData()，因为它在 KnowledgeManage.vue 中处理
             } else {
                 alert(res.msg || '删除失败')
             }
         } catch (error) {
             console.error(error)
-            alert('服务器异常，删除失败')
+            // 尝试从错误响应中获取后端返回的错误信息
+            const errorMsg = error.response?.data?.msg || error.message || '服务器异常，删除失败'
+            alert(errorMsg)
         }
     }
 
@@ -59,7 +62,11 @@ export function useKnowledgeList() {
 
             if (res.code === SUCCESS) {
                 alert(res.msg || `${actionText}成功`)
+                // 先刷新列表
                 await pageList.loadList()
+                // 再刷新统计数据
+                const statsData = await loadStatistics()
+                console.log('刷新后的统计数据:', statsData)
             } else {
                 alert(res.msg || `${actionText}失败`)
             }
@@ -69,6 +76,22 @@ export function useKnowledgeList() {
         }
     }
 
+    const loadStatistics = async () => {
+        try {
+            const res = await getStatistics()
+            if (res.code === SUCCESS) {
+                return res.data
+            } else {
+                console.error('获取统计数据失败:', res.msg)
+                return null
+            }
+        } catch (error) {
+            console.error('获取统计数据异常:', error)
+            return null
+        }
+    }
+
+
     return {
         ...pageList,
 
@@ -77,6 +100,7 @@ export function useKnowledgeList() {
 
         handleDelete,
         handleToggleStatus,
+        loadStatistics
 
     }
 }

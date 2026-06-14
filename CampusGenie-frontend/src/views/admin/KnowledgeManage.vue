@@ -61,6 +61,7 @@
               :icon="item.icon"
               :tone="item.tone"
               :extra="item.extra"
+              :extra-tone="item.extraTone"
           />
         </div>
 
@@ -123,10 +124,25 @@ const {
   handlePrevPage,
   handleNextPage,
   handleToggleSortOrder,
-  handleDelete,
-  handleToggleStatus,
-
+  handleDelete: baseHandleDelete,
+  handleToggleStatus: baseHandleToggleStatus,
+  loadStatistics
 } = useKnowledgeList()
+
+// 重写 handleDelete，确保更新统计数据
+const handleDelete = async (id) => {
+  await baseHandleDelete(id)
+  // 删除成功后刷新统计数据
+  await loadStatisticsData()
+}
+
+// 重写 handleToggleStatus，确保更新统计数据
+const handleToggleStatus = async (item) => {
+  await baseHandleToggleStatus(item)
+  // 状态切换成功后刷新统计数据
+  await loadStatisticsData()
+}
+
 const handleAdd = () => {
   router.push('/admin/addKnowledge')
 }
@@ -137,45 +153,94 @@ const handleEdit = (item) => {
 const handleImport = () => {
   router.push('/admin/importKnowledge')
 }
+
+const statisticsData = ref({
+  publishedCount: 0,
+  stoppedCount: 0,
+  weeklyUpdateCount: 0,
+  lastWeekUpdateCount: 0
+})
+
+async function loadStatisticsData() {
+  const data = await loadStatistics()
+  console.log('加载统计数据:', data)
+  if (data) {
+    statisticsData.value = {
+      publishedCount: data.publishedCount || 0,
+      stoppedCount: data.stoppedCount || 0,
+      weeklyUpdateCount: data.weeklyUpdateCount || 0,
+      lastWeekUpdateCount: data.lastWeekUpdateCount || 0
+    }
+    console.log('更新后的统计数据:', statisticsData.value)
+  }
+}
+
 onMounted(()=>{
   loadCategoryList()
   loadKnowledgeList()
+  loadStatisticsData()
 })
 const handleView = item => {
   console.log('查看详情', item)//TODO：显示知识卡片详情
 }
-//TODO: 还要后端返回统计信息
-const statList = computed(() => [
-  {
-    title: '知识总数',
-    value: total.value,
-    unit: '条',
-    icon: '▧',
-    tone: 'green'
-  },
-  {
-    title: '已发布',
-    value: '1,102',//HACK
-    unit: '条',
-    icon: '➤',
-    tone: 'green'
-  },
-  {
-    title: '待审核/已停用',
-    value: 154, //HACK
-    unit: '条',
-    icon: '◷',
-    tone: 'orange'
-  },
-  {
-    title: '本周更新',
-    value: 32,//HACK
-    unit: '条',
-    icon: '↗',
-    tone: 'green',
-    extra: '较上周 ↑18%'
+
+const statList = computed(() => {
+  const weeklyCount = statisticsData.value.weeklyUpdateCount
+  const lastWeekCount = statisticsData.value.lastWeekUpdateCount
+
+  let trendText = ''
+  let trendTone = 'green' // green: 上升, red: 下降, orange: 持平
+
+  if (lastWeekCount > 0) {
+    const percent = Math.round(((weeklyCount - lastWeekCount) / lastWeekCount) * 100)
+    if (percent > 0) {
+      trendText = `较上周 ↑${percent}%`
+      trendTone = 'green'
+    } else if (percent < 0) {
+      trendText = `较上周 ↓${Math.abs(percent)}%`
+      trendTone = 'red'
+    } else {
+      trendText = '较上周持平'
+      trendTone = 'orange'
+    }
+  } else if (weeklyCount > 0) {
+    trendText = '上周无数据'
+    trendTone = 'orange'
   }
-])
+
+  return [
+    {
+      title: '知识总数',
+      value: total.value,
+      unit: '条',
+      icon: '▧',
+      tone: 'green'
+    },
+    {
+      title: '已发布',
+      value: statisticsData.value.publishedCount,
+      unit: '条',
+      icon: '➤',
+      tone: 'green'
+    },
+    {
+      title: '已停用',
+      value: statisticsData.value.stoppedCount,
+      unit: '条',
+      icon: '◷',
+      tone: 'orange'
+    },
+    {
+      title: '本周更新',
+      value: weeklyCount,
+      unit: '条',
+      icon: '↗',
+      tone: 'green',
+      extra: trendText,
+      extraTone: trendTone
+    }
+  ]
+})
 
 </script>
 

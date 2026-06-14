@@ -13,7 +13,7 @@
 
       <span>{{ unit }}</span>
 
-      <em v-if="extra">{{ extra }}</em>
+      <em v-if="extra" :class="extraClass">{{ extra }}</em>
     </div>
   </div>
 </template>
@@ -45,6 +45,10 @@ const props = defineProps({
   extra: {
     type: String,
     default: ''
+  },
+  extraTone: {
+    type: String,
+    default: 'green'
   }
 })
 
@@ -52,6 +56,13 @@ const textClass = computed(() => {
   if (props.tone === 'green') return 'green-text'
   if (props.tone === 'orange') return 'orange-text'
   return ''
+})
+
+const extraClass = computed(() => {
+  if (props.extraTone === 'green') return 'extra-green'
+  if (props.extraTone === 'red') return 'extra-red'
+  if (props.extraTone === 'orange') return 'extra-orange'
+  return 'extra-green'
 })
 </script>
 
@@ -105,10 +116,21 @@ const textClass = computed(() => {
 
 .stat-card em {
   margin-left: 18px;
-  color: #16a34a;
   font-size: 13px;
   font-style: normal;
   font-weight: 700;
+}
+
+.extra-green {
+  color: #16a34a;
+}
+
+.extra-red {
+  color: #dc2626;
+}
+
+.extra-orange {
+  color: #f59e0b;
 }
 
 .green-text {

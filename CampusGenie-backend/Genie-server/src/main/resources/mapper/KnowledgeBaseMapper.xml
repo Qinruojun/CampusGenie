@@ -87,4 +87,22 @@
             </if>
         </where>
     </select>
+
+    <select id="countByStatus" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_base
+        where status = #{status}
+    </select>
+
+    <select id="countByUpdatedTimeAfter" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_base
+        where updated_time &gt;= #{startTime}
+    </select>
+
+    <select id="countByUpdatedTimeBetween" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_base
+        where updated_time &gt;= #{startTime} and updated_time &lt; #{endTime}
+    </select>
 </mapper>

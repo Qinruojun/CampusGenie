@@ -22,6 +22,8 @@ import com.genie.service.ContributionService;
 import com.genie.vo.AdminContributionVO;
 import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
+import com.genie.vo.ContributionStatisticsVO;
+import jakarta.validation.Valid;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 @Service
 public class ContributionServiceImpl implements ContributionService {
     @Autowired
@@ -220,5 +223,14 @@ public class ContributionServiceImpl implements ContributionService {
 
             return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
         }
+
+    @Override
+    public ContributionStatisticsVO getStatistics() {
+        Integer pendingCount = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+        Integer approvedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_PASS);
+        Integer rejectedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_REJECT);
+        
+        return new ContributionStatisticsVO(pendingCount, approvedCount, rejectedCount);
+    }
 
 }

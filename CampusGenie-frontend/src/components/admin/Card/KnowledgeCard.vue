@@ -36,7 +36,7 @@
         编辑
       </button>
 
-      <button class="btn delete" @click="$emit('delete', item)">
+      <button class="btn delete" @click="$emit('delete', item.id)">
         删除
       </button>
 

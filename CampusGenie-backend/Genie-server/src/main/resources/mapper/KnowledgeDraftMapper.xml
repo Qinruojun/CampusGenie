@@ -79,4 +79,10 @@
 
     </select>
 
+    <select id="countByStatus" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where status = #{status}
+    </select>
+
 </mapper>

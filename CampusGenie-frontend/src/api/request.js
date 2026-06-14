@@ -28,6 +28,12 @@ request.interceptors.response.use(
     },
     error => {
         console.error('请求失败：', error)
+        console.error('错误详情：', {
+            message: error.message,
+            code: error.code,
+            config: error.config,
+            response: error.response
+        })
         return Promise.reject(error)
     }
 )

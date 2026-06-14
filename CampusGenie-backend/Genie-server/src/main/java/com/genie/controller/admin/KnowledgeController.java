@@ -12,6 +12,7 @@ import com.genie.service.KnowledgeImportService;
 import com.genie.service.KnowledgeService;
 import com.genie.vo.BatchDeleteVO;
 import com.genie.vo.ImportResultVO;
+import com.genie.vo.KnowledgeStatisticsVO;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -129,6 +130,13 @@ public class KnowledgeController {
         knowledgeService.downloadJsonTemplate(response);
         log.info("下载json模板成功");
         return;
+    }
+
+    @GetMapping("/statistics")
+    public Result<KnowledgeStatisticsVO> getStatistics() {
+        log.info("获取知识库统计数据");
+        KnowledgeStatisticsVO statistics = knowledgeService.getStatistics();
+        return Result.success(statistics, CodeConstant.SUCCESS, "获取统计数据成功");
     }
 
 

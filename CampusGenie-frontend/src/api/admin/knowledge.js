@@ -114,3 +114,20 @@ export function Import(FormData){
     })
 }
 //----已实现版本
+
+export function getStatistics() {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "获取统计数据成功",
+            "data": {
+                "publishedCount": 1102,
+                "stoppedCount": 154,
+                "weeklyUpdateCount": 32,
+                "lastWeekUpdateCount": 27
+            }
+        })
+    }
+
+    return request.get('/admin/knowledge/statistics')
+}

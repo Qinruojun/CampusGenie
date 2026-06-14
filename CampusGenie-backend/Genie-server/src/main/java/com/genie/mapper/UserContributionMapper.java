@@ -26,4 +26,6 @@ public interface UserContributionMapper {
     void update(UserContribution userContribution);
 
     void deleteById(Long id);
+
+    Integer countByStatus(@Param("status") Integer status);
 }
