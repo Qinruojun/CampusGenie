@@ -149,5 +149,13 @@ genie:
     # 前端需要在请求头中携带：: token:xxxxx
     user-token-name: token
 
+  # 意图识别服务配置
+  intent:
+    service-url: http://127.0.0.1:15000/classify
+    token: 122333444455555
+    timeout: 3000
+    threshold:
+      high: 0.75
+      low: 0.50
 
 
