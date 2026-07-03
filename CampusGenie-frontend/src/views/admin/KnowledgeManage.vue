@@ -47,6 +47,7 @@
 
           <button class="btn primary small" @click="handleSearch">搜索</button>
           <button class="btn ghost small" @click="handleReset">重置</button>
+          <button class="btn ghost small" @click="handleExport">▼ 导出</button>
         </div>
 
 
@@ -100,6 +101,7 @@ import {useKnowledgeList} from "@/composables/admin/useKnowledgeList.js";
 import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
 import KnowledgeCard from '@/components/admin/Card/KnowledgeCard.vue'
 import StatCard from "@/components/StatCard.vue";
+import { exportKnowledge } from '@/api/admin/knowledge.js'
 const knowledgeEditStore = useKnowledgeEditStore()
 const router = useRouter()
 
@@ -152,6 +154,15 @@ const handleEdit = (item) => {
 }
 const handleImport = () => {
   router.push('/admin/importKnowledge')
+}
+
+const handleExport = () => {
+  const f = queryForm.value
+  exportKnowledge({
+    keyword: f.keyword,
+    categoryId: f.categoryId,
+    status: f.status
+  })
 }
 
 const statisticsData = ref({
@@ -248,7 +259,7 @@ const statList = computed(() => {
 <style>
 .filter-panel {
   display: grid;
-  grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
+  grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px 90px;
   gap: 16px;
   align-items: center;
   padding: 20px;
