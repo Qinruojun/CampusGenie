@@ -40,4 +40,9 @@ public class RedisConstant {
     /** 锁定时间（秒） */
     public static final long LOGIN_LOCK_TTL = 900;  // 15分钟
 
+
+    // ==================== 待审核计数 ====================
+    /** 待审核知识条目数量 */
+    public static final String PENDING_REVIEW_COUNT = "pending:review:count";
+
 }

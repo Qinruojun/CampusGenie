@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.constant.ActionTypeConstant;
+import com.genie.constant.RedisConstant;
 import com.genie.constant.StatusConstant;
 import com.genie.constant.TargetTypeConstant;
 import com.genie.context.BaseContext;
@@ -24,11 +25,14 @@ import com.genie.vo.AdminContributionVO;
 import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
 import com.genie.vo.ContributionStatisticsVO;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class ContributionServiceImpl implements ContributionService {
     @Autowired
     private UserContributionMapper userContributionMapper;
@@ -48,6 +53,55 @@ public class ContributionServiceImpl implements ContributionService {
     private ReviewLogMapper reviewLogMapper;
     @Autowired
     private RateLimitService rateLimitService;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @PostConstruct
+    public void initPendingReviewCount() {
+        try {
+            Integer count = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+            redisTemplate.opsForValue().set(RedisConstant.PENDING_REVIEW_COUNT, count != null ? count : 0);
+            log.info("初始化待审核数量: {}", count);
+        } catch (Exception e) {
+            log.error("初始化待审核数量失败", e);
+        }
+    }
+
+    private void incrementPendingCount() {
+        try {
+            redisTemplate.opsForValue().increment(RedisConstant.PENDING_REVIEW_COUNT, 1);
+        } catch (Exception e) {
+            log.error("增加待审核数量失败", e);
+        }
+    }
+
+    private void decrementPendingCount() {
+        try {
+            redisTemplate.opsForValue().increment(RedisConstant.PENDING_REVIEW_COUNT, -1);
+        } catch (Exception e) {
+            log.error("减少待审核数量失败", e);
+        }
+    }
+
+    @Override
+    public Integer getPendingReviewCount() {
+        try {
+            Object value = redisTemplate.opsForValue().get(RedisConstant.PENDING_REVIEW_COUNT);
+            if (value != null) {
+                if (value instanceof Integer) {
+                    return (Integer) value;
+                } else if (value instanceof Long) {
+                    return ((Long) value).intValue();
+                } else {
+                    return Integer.parseInt(value.toString());
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取待审核数量失败，降级查询数据库", e);
+        }
+        return userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+    }
+
     @Override
     public void contribute(ContributionSubmitDTO contributionSubmitDTO){
 
@@ -70,6 +124,7 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setStatus(StatusConstant.WAIT_FOR_REVIEW);
         userContribution.setCreatedTime(LocalDateTime.now());
         userContributionMapper.insert(userContribution);
+        incrementPendingCount();
     }
 
     @Override
@@ -112,6 +167,7 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setReviewedBy(BaseContext.getCurrentUsername());
         userContribution.setReviewedTime(LocalDateTime.now());
         userContributionMapper.update(userContribution);
+        decrementPendingCount();
         //合并知识库数据Knowledge_Base
         KnowledgeBase knowledgeBase=KnowledgeBase.builder()
                 .question(approveDTO.getEditedQuestion()!=  null? approveDTO.getEditedQuestion() : userContribution.getQuestion())
@@ -156,6 +212,7 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setReviewedTime(LocalDateTime.now());
         userContribution.setRejectReason(rejectDTO.getRejectReason());
         userContributionMapper.update(userContribution);
+        decrementPendingCount();
 
         //记录审核日志
         ReviewLog reviewLog=ReviewLog.builder()

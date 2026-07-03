@@ -60,4 +60,11 @@ public class ContributionController  {
         return Result.success(statistics, CodeConstant.SUCCESS, "获取统计数据成功");
     }
 
+    @GetMapping("/pending-count")
+    public Result getPendingCount() {
+        log.info("获取待审核数量");
+        Integer count = contributionService.getPendingReviewCount();
+        return Result.success(count, CodeConstant.SUCCESS, "获取待审核数量成功");
+    }
+
 }

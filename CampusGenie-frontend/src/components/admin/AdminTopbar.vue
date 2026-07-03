@@ -32,10 +32,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminUserCard from '@/components/admin/Card/AdminUserCard.vue'
 import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
+import { getPendingCount } from '@/api/admin/contirbute.js'
 
 const props = defineProps({
   title: {
@@ -53,18 +54,30 @@ const props = defineProps({
   roleName: {
     type: String,
     default: '超级管理员'
-  },
-  noticeCount: {
-    type: Number,
-    default: 3
   }
 })
 
 const emit = defineEmits(['toggle-sidebar'])
 const router = useRouter()
 
+const noticeCount = ref(0)
+
 const displayUsername = computed(() => {
   return localStorage.getItem(USERNAME_KEY) || props.username
+})
+
+function fetchPendingCount() {
+  getPendingCount().then(res => {
+    if (res.code === 200) {
+      noticeCount.value = res.data || 0
+    }
+  }).catch(() => {
+    noticeCount.value = 0
+  })
+}
+
+onMounted(() => {
+  fetchPendingCount()
 })
 
 function logout() {
