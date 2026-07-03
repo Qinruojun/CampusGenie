@@ -120,4 +120,10 @@ const statusClass = computed(() => {
   border-color: #16a34a !important;
   background: #16a34a !important;
 }
+
+.btn.delete:hover {
+  color: #fff !important;
+  border-color: #ef4444 !important;
+  background: #ef4444 !important;
+}
 </style>
