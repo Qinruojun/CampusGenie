@@ -65,7 +65,7 @@
             >
               更新时间
               <span class="sort-arrow">
-                {{ queryForm.sortOrder === SORT_ORDER_DESC ? '↓' : '↑' }}
+                {{ queryForm.sortOrder === SORT_ORDER_DESC ? '⇩' : '⇧' }}
               </span>
             </button>
 
@@ -286,6 +286,8 @@
 
       .sort-arrow {
         margin-left: 4px;
+        font-size: 14px;
+        font-weight: 700;
       }
     </style>
 
