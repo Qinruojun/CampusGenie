@@ -38,7 +38,7 @@ public class AdminContributionVO {
     private LocalDateTime createdTime;
     
     // 审核时间
-
+    @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss", timezone = "Asia/Shanghai
     private LocalDateTime reviewedTime;
     
     // 驳回理由

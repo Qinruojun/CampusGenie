@@ -13,6 +13,7 @@ const AddKnowledge =()=>import('../views/admin/KnowledgeAdd.vue')
 const EditKnowledge=()=>import('../views/admin/KnowledgeEdit.vue')
 const ImportKnowledge =()=>import('../views/admin/KnowledgeImport.vue')
 const ViewKnowledge = ()=>import('../views/admin/KnowledgeView.vue')
+const ContributionView = ()=>import('../views/admin/ContributionView.vue')
 const AdminHotQuestion =()=>import('@/views/admin/HotQuestion.vue')
 const AdminHome =()=>import('@/views/admin/AdminHome.vue')
 const AdminProfile  =()=>import('@/views/admin/AdminProfile.vue')
@@ -186,6 +187,15 @@ const router = createRouter({
           name: 'admin-audit',
           component: AuditManage,
           meta:{
+            requiresAuth: true,
+            role: ADMIN_ROLE,
+          }
+        },
+        {
+          path: 'contribution/:id',
+          name: 'contribution-view',
+          component: ContributionView,
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE,
           }

@@ -172,6 +172,8 @@ import { useCategoryOptions } from '@/composables/useCategoryOptions.js'
 import { useContributionList } from '@/composables/admin/useContributionList.js'
 import { SORT_ORDER_ASC, SORT_ORDER_DESC } from '@/constants/status.js'
 import StatCard from "@/components/StatCard.vue";
+import { useRouter } from 'vue-router'
+import { useContributionViewStore } from '@/stores/contributionViewStore'
 
 const {
   categoryOptions,
@@ -197,6 +199,8 @@ const {
   handleReject,
   loadStatistics
 } = useContributionList()
+
+const router = useRouter()
 
 const statisticsData = ref({
   pendingCount: 0,
@@ -247,11 +251,13 @@ const statList = computed(() => [
 // }
 
 const handleView = (item) => {
-  console.log('查看贡献详情', item)//TODO:要写详情查看用户贡献详情页
+  contributionViewStore.setContribution(item)
+  router.push(`/admin/contribution/${item.id}`)
 }
 const rejectDialogVisible = ref(false)
 const rejectTarget = ref(null)
 const rejectLoading = ref(false)
+const contributionViewStore = useContributionViewStore()
 function openRejectDialog(item) {
   rejectTarget.value = item
   rejectDialogVisible.value = true
