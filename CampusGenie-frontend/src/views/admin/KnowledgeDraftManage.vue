@@ -1,0 +1,255 @@
+<template>
+  <div class="page">
+    <main class="main">
+
+      <section class="content">
+        <div class="page-head">
+          <div>
+            <h1>知识草稿管理</h1>
+            <p>管理和维护知识草稿，支持审核通过、驳回和编辑操作。</p>
+          </div>
+
+          <div class="head-actions">
+          </div>
+        </div>
+
+        <div class="filter-panel">
+          <div class="search">
+            <span>⌕</span>
+            <input
+                v-model="queryForm.keyword"
+                placeholder="请输入问题关键词"
+                @keyup.enter="handleSearch"
+            />
+          </div>
+
+          <CategorySelect
+              v-model="queryForm.categoryId"
+              :options="categoryOptions"
+              :loading="categoryLoading"
+              :error-message="categoryError"
+              placeholder="全部分类"
+          />
+
+          <select class="filter-select" v-model="queryForm.status">
+            <option value="">全部状态</option>
+            <option value="pending">待审核</option>
+            <option value="approved">已通过</option>
+            <option value="rejected">已驳回</option>
+          </select>
+
+          <button class="sort-btn" :class="{ 'sort-desc': queryForm.sortOrder === SORT_ORDER_DESC, 'sort-asc': queryForm.sortOrder === SORT_ORDER_ASC }" @click="handleToggleSortOrder">
+            创建时间
+            <span class="sort-arrow">
+              {{ queryForm.sortOrder === SORT_ORDER_DESC ? '⇩' : '⇧' }}
+            </span>
+          </button>
+
+          <button class="btn primary small" @click="handleSearch">搜索</button>
+          <button class="btn ghost small" @click="handleReset">重置</button>
+        </div>
+
+        <div class="stats">
+          <StatCard
+              v-for="item in statList"
+              :key="item.title"
+              :title="item.title"
+              :value="item.value"
+              :unit="item.unit"
+              :icon="item.icon"
+              :tone="item.tone"
+          />
+        </div>
+
+        <div class="card-list">
+          <DraftCard
+              v-for="item in list"
+              :key="item.id"
+              :item="item"
+              @view="handleView"
+              @edit="handleEdit"
+              @approve="handleApprove"
+              @reject="handleReject"
+          />
+        </div>
+
+        <div class="pagination">
+          <button @click="handlePrevPage">上一页</button>
+          <button :class="{ current: page === 1 }" @click="page = 1">1</button>
+          <button :class="{ current: page === 2 }" @click="page = 2">2</button>
+          <button :class="{ current: page === 3 }" @click="page = 3">3</button>
+          <button @click="handleNextPage">下一页</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import CategorySelect from '@/components/CategorySelect.vue'
+import { useCategoryOptions } from '@/composables/useCategoryOptions'
+import { useKnowledgeDraftList } from "@/composables/admin/useKnowledgeDraftList.js";
+import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
+import DraftCard from '@/components/admin/Card/DraftCard.vue'
+import StatCard from "@/components/StatCard.vue";
+
+const router = useRouter()
+
+const {
+  categoryOptions,
+  categoryLoading,
+  categoryError,
+  loadCategoryList
+} = useCategoryOptions()
+
+const {
+  queryForm,
+  page,
+  pageSize,
+  total,
+  list,
+  loading,
+  loadKnowledgeDraftList,
+  handleSearch,
+  handleReset,
+  handlePrevPage,
+  handleNextPage,
+  handleToggleSortOrder,
+  handleApprove: baseHandleApprove,
+  handleReject: baseHandleReject,
+  handleEdit: baseHandleEdit
+} = useKnowledgeDraftList()
+
+const handleApprove = async (id) => {
+  await baseHandleApprove(id)
+}
+
+const handleReject = async (id) => {
+  await baseHandleReject(id)
+}
+
+const handleEdit = (item) => {
+  router.push(`/admin/editKnowledgeDraft/${item.id}`)
+}
+
+const handleView = (item) => {
+  router.push(`/admin/viewKnowledgeDraft/${item.id}`)
+}
+
+onMounted(() => {
+  loadCategoryList()
+  loadKnowledgeDraftList()
+})
+
+const statList = computed(() => {
+  const pendingCount = list.value.filter(item => item.statusDesc === '待审核').length
+  const approvedCount = list.value.filter(item => item.statusDesc === '已通过').length
+  const rejectedCount = list.value.filter(item => item.statusDesc === '已驳回').length
+
+  return [
+    {
+      title: '草稿总数',
+      value: total.value,
+      unit: '条',
+      icon: '▧',
+      tone: 'green'
+    },
+    {
+      title: '待审核',
+      value: pendingCount,
+      unit: '条',
+      icon: '⏳',
+      tone: 'orange'
+    },
+    {
+      title: '已通过',
+      value: approvedCount,
+      unit: '条',
+      icon: '✓',
+      tone: 'green'
+    },
+    {
+      title: '已驳回',
+      value: rejectedCount,
+      unit: '条',
+      icon: '✕',
+      tone: 'red'
+    }
+  ]
+})
+</script>
+
+<style scoped src="@/styles/card-list.css"></style>
+<style>
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
+  gap: 16px;
+  align-items: center;
+  padding: 20px;
+  margin-bottom: 18px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.filter-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.filter-select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.sort-btn {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.sort-btn.sort-desc {
+  color: #f97316;
+  border-color: #f97316;
+}
+
+.sort-btn.sort-desc:hover {
+  color: #ea580c;
+  border-color: #ea580c;
+}
+
+.sort-btn.sort-asc {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.sort-btn.sort-asc:hover {
+  color: #15803d;
+  border-color: #15803d;
+}
+
+.sort-arrow {
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+</style>
