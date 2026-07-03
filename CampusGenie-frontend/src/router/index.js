@@ -12,6 +12,7 @@ const Welcome=() => import ( '../views/Welcome.vue')
 const AddKnowledge =()=>import('../views/admin/KnowledgeAdd.vue')
 const EditKnowledge=()=>import('../views/admin/KnowledgeEdit.vue')
 const ImportKnowledge =()=>import('../views/admin/KnowledgeImport.vue')
+const ViewKnowledge = ()=>import('../views/admin/KnowledgeView.vue')
 const AdminHotQuestion =()=>import('@/views/admin/HotQuestion.vue')
 const AdminHome =()=>import('@/views/admin/AdminHome.vue')
 const AdminProfile  =()=>import('@/views/admin/AdminProfile.vue')
@@ -161,6 +162,15 @@ const router = createRouter({
           role: ADMIN_ROLE
         }}
         ,
+        {
+          path: 'viewKnowledge/:id',
+          name: 'view-knowledge',
+          component: ViewKnowledge,
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
         {
           path: 'importKnowledge',
           name: 'import-knowledge',

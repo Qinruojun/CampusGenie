@@ -181,7 +181,7 @@ onMounted(()=>{
   loadStatisticsData()
 })
 const handleView = item => {
-  console.log('查看详情', item)//TODO：显示知识卡片详情
+  router.push(`/admin/viewKnowledge/${item.id}`)
 }
 
 const statList = computed(() => {
