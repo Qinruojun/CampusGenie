@@ -61,6 +61,7 @@
 
             <button
               class="sort-btn"
+              :class="{ 'sort-desc': queryForm.sortOrder === SORT_ORDER_DESC, 'sort-asc': queryForm.sortOrder === SORT_ORDER_ASC }"
               @click="handleToggleSortOrder"
             >
               更新时间
@@ -279,9 +280,24 @@
         box-sizing: border-box;
       }
 
-      .sort-btn:hover {
+      .sort-btn.sort-desc {
+        color: #f97316;
+        border-color: #f97316;
+      }
+
+      .sort-btn.sort-desc:hover {
+        color: #ea580c;
+        border-color: #ea580c;
+      }
+
+      .sort-btn.sort-asc {
         color: #16a34a;
         border-color: #16a34a;
+      }
+
+      .sort-btn.sort-asc:hover {
+        color: #15803d;
+        border-color: #15803d;
       }
 
       .sort-arrow {
