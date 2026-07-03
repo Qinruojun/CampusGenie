@@ -80,6 +80,9 @@ spring:
     # Redis 服务器端口号
     port: ${genie.redis.port}
 
+    # Redis
+    password: ${genie.redis.password}
+
 # ============================================
 # MyBatis 配置（ORM 框架）
 # ============================================
