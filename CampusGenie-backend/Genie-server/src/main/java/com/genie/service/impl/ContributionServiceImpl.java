@@ -19,6 +19,7 @@ import com.genie.mapper.ReviewLogMapper;
 import com.genie.mapper.UserContributionMapper;
 import com.genie.result.PageResult;
 import com.genie.service.ContributionService;
+import com.genie.service.RateLimitService;
 import com.genie.vo.AdminContributionVO;
 import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
@@ -45,10 +46,16 @@ public class ContributionServiceImpl implements ContributionService {
     private KnowledgeBaseMapper knowledgeBaseMapper;
     @Autowired
     private ReviewLogMapper reviewLogMapper;
+    @Autowired
+    private RateLimitService rateLimitService;
     @Override
     public void contribute(ContributionSubmitDTO contributionSubmitDTO){
-        //TODO 是否还需校验（敏感词？非空上层校验了）
+
         Long userId = BaseContext.getCurrentUserId();
+        rateLimitService.checkContributeLimit(userId);
+
+
+
         String question = contributionSubmitDTO.getQuestion().trim();
         Integer existingCount = userContributionMapper.countByUserIdAndQuestion(userId, question);
         if (existingCount != null && existingCount > 0) {

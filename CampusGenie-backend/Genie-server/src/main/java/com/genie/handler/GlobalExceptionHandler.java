@@ -2,6 +2,7 @@ package com.genie.handler;
 
 import com.genie.constant.MessageConstant;
 import com.genie.exception.BaseException;
+import com.genie.exception.RateLimitException;
 import com.genie.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,14 @@ public class GlobalExceptionHandler {
             log.error("SQL异常：{}", msg);
             return Result.error(MessageConstant.UNKNOWN_ERROR);
         }
+    }
+    /**
+     * 处理限流异常
+     */
+    @ExceptionHandler(RateLimitException.class)
+    public Result<Void> handleRateLimitException(RateLimitException ex) {
+        log.warn("限流异常：{}", ex.getMessage());
+        return Result.error(ex.getMessage());
     }
 
 
