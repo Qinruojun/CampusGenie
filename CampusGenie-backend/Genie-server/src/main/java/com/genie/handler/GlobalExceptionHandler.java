@@ -1,6 +1,7 @@
 package com.genie.handler;
 
 import com.genie.constant.MessageConstant;
+import com.genie.exception.AccountLockedException;
 import com.genie.exception.BaseException;
 import com.genie.exception.RateLimitException;
 import com.genie.result.Result;
@@ -59,6 +60,10 @@ public class GlobalExceptionHandler {
         log.warn("限流异常：{}", ex.getMessage());
         return Result.error(ex.getMessage());
     }
-
+    @ExceptionHandler(AccountLockedException.class)
+    public Result<Void> handleAccountLockedException(AccountLockedException ex) {
+        log.warn("账号锁定：{}", ex.getMessage());
+        return Result.error(ex.getMessage());
+    }
 
 }

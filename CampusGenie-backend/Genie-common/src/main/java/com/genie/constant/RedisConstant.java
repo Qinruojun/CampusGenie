@@ -30,4 +30,14 @@ public class RedisConstant {
     /** 24小时内最大提交次数 */
     public static final long RATE_DAY_MAX = 5;
 
+    // ==================== 登录密码错误锁定 ====================
+    /** 登录失败计数 Key 前缀 */
+    public static final String LOGIN_FAIL_PREFIX = "login:fail:";
+    /** 登录锁定标记 Key 前缀 */
+    public static final String LOGIN_LOCK_PREFIX = "login:lock:";
+    /** 最大允许失败次数 */
+    public static final long LOGIN_FAIL_MAX = 5;
+    /** 锁定时间（秒） */
+    public static final long LOGIN_LOCK_TTL = 900;  // 15分钟
+
 }
