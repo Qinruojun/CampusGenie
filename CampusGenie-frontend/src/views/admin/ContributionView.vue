@@ -32,14 +32,10 @@ const handleBack = () => router.back()
 
 <template>
   <div class="page">
-    <div class="page-header">
-      <h2>查看贡献详情</h2>
-      <button class="back-btn" @click="handleBack">← 返回</button>
-    </div>
-
     <div v-if="pageLoading" class="loading">正在加载贡献详情...</div>
 
     <div v-else-if="item" class="form-card">
+      <h2 class="card-title">查看贡献详情</h2>
       <div class="form-item">
         <label>贡献ID</label>
         <div class="view-field">{{ item.id }}</div>
@@ -77,9 +73,11 @@ const handleBack = () => router.back()
 
       <div class="form-item">
         <label>审核状态</label>
-        <span class="status-tag" :class="statusClass(item.statusDesc)">
-          {{ item.statusDesc }}
-        </span>
+        <div class="status-container">
+          <span class="status-tag" :class="statusClass(item.statusDesc)">
+            {{ item.statusDesc }}
+          </span>
+        </div>
       </div>
 
       <div class="form-item">
@@ -106,21 +104,29 @@ const handleBack = () => router.back()
 
 <style scoped>
 .page { padding: 24px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.page-header h2 { margin: 0; font-size: 24px; }
-.back-btn { padding: 8px 16px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 6px; }
-.back-btn.primary {
-  padding: 10px 24px; background: #fff; border: 1px solid #16a34a;
-  color: #16a34a; font-weight: 600; border-radius: 8px;
-}
-.back-btn.primary:hover { background: #16a34a; color: #fff; }
 .loading { padding: 24px; color: #666; }
 .form-card {
-  max-width: 800px; padding: 24px; background: #fff;
-  border: 1px solid #eee; border-radius: 8px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+.card-title {
+  text-align: center;
+  margin: 0 0 20px 0;
+  font-size: 24px;
 }
 .form-item { margin-bottom: 20px; }
-.form-item label { display: block; margin-bottom: 6px; font-weight: 600; color: #374151; font-size: 14px; }
+.form-item label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  text-align: center;
+}
 .view-field {
   width: 100%; box-sizing: border-box; padding: 10px 12px;
   border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px;
@@ -128,6 +134,10 @@ const handleBack = () => router.back()
 }
 .answer-field { white-space: pre-wrap; min-height: 120px; }
 .status-tag { display: inline-flex; align-items: center; height: 28px; padding: 0 14px; border-radius: 6px; font-size: 14px; font-weight: 700; }
+.status-container {
+  display: flex;
+  justify-content: center;
+}
 .status-tag.approved { color: #16a34a; background: #dcfce7; }
 .status-tag.pending { color: #f59e0b; background: #fff7ed; }
 .status-tag.rejected { color: #6b7280; background: #f3f4f6; }
@@ -138,4 +148,18 @@ const handleBack = () => router.back()
   color: #b91c1c;
 }
 .form-actions { display: flex; justify-content: center; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid #eee; }
+.back-btn {
+  padding: 10px 24px;
+  background: #fff;
+  border: 1px solid #16a34a;
+  color: #16a34a;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.back-btn:hover {
+  background: #16a34a;
+  color: #fff;
+}
 </style>

@@ -1,4 +1,3 @@
-
 .knowledge-card {
     display: grid;
     grid-template-columns: minmax(360px, 1fr) 260px 280px;
@@ -10,6 +9,7 @@
     border-radius: 8px;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
+
 .usercontribution-card {
     display: grid;
     grid-template-columns: minmax(360px, 1fr) 260px 280px;
@@ -21,7 +21,8 @@
     border-radius: 8px;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
-.reviewcontribution-card{
+
+.reviewcontribution-card {
     display: grid;
     grid-template-columns: minmax(360px, 1fr) 260px 280px;
     align-items: center;
@@ -109,6 +110,12 @@
     border: 1px solid #9ca3af;
 }
 
+.btn.edit:hover {
+    color: #fff;
+    border-color: #3b82f6;
+    background: #3b82f6;
+}
+
 .btn.delete {
     color: #ef4444;
     border: 1px solid #fca5a5;
@@ -140,4 +147,3 @@
         justify-content: start;
     }
 }
-

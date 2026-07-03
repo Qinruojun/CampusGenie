@@ -206,6 +206,12 @@ const formatTime = (time) => {
   border-color: #9ca3af;
 }
 
+.btn.edit:hover {
+  color: #fff;
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+
 .btn.delete {
   color: #ef4444;
   border-color: #fca5a5;
