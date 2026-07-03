@@ -12,7 +12,7 @@
     </div>
 
     <div class="topbar-right">
-      <button class="notice-btn" type="button">
+      <button class="notice-btn" type="button" @click="goToAudit">
         <span class="bell-icon">🔔</span>
         <span v-if="noticeCount > 0" class="notice-count">
           {{ noticeCount }}
@@ -79,6 +79,10 @@ function fetchPendingCount() {
 onMounted(() => {
   fetchPendingCount()
 })
+
+function goToAudit() {
+  router.push('/admin/audit?status=0')
+}
 
 function logout() {
   const ok = confirm('确定要退出管理员登录吗？')

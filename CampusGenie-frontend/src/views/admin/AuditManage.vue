@@ -163,7 +163,7 @@
 </template>
 
 <script setup>
-import {onMounted, computed, ref} from 'vue'
+import {onMounted, computed, ref, watch} from 'vue'
 import {REVIEW_PASS,REVIEW_REJECT,WAIT_FOR_REVIEW} from "@/constants/status.js";
 import CategorySelect from '@/components/CategorySelect.vue'
 import ContributionCard from '@/components/admin/Card/ReviewContributionCard.vue'
@@ -172,7 +172,7 @@ import { useCategoryOptions } from '@/composables/useCategoryOptions.js'
 import { useContributionList } from '@/composables/admin/useContributionList.js'
 import { SORT_ORDER_ASC, SORT_ORDER_DESC } from '@/constants/status.js'
 import StatCard from "@/components/StatCard.vue";
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useContributionViewStore } from '@/stores/contributionViewStore'
 
 const {
@@ -201,6 +201,7 @@ const {
 } = useContributionList()
 
 const router = useRouter()
+const route = useRoute()
 
 const statisticsData = ref({
   pendingCount: 0,
@@ -292,6 +293,12 @@ async function loadStatisticsData() {
 
 onMounted(() => {
   loadCategoryList()
+  
+  const statusParam = route.query.status
+  if (statusParam !== undefined) {
+    queryForm.value.status = statusParam
+  }
+  
   loadContributionList()
   loadStatisticsData()
 })
