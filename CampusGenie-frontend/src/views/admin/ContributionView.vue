@@ -45,7 +45,7 @@ const handleBack = () => router.back()
         <div class="view-field">{{ item.id }}</div>
       </div>
 
-      <div class="form-item">
+      <div class="form-item" v-if="item.username">
         <label>提交用户</label>
         <div class="view-field">{{ item.username }}</div>
       </div>

@@ -14,6 +14,7 @@ public class UserContributionVO {
     // 待审核 / 已通过 / 已驳回
     @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime createdTime;
+    @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime reviewedTime;
     private String rejectReason;
 }

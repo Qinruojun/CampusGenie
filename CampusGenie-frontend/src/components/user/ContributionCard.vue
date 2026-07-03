@@ -34,19 +34,18 @@
 
       <div class="actions">
         <button
+          class="btn view"
+          @click="$emit('view', item)"
+        >
+          查看详情
+        </button>
+
+        <button
           v-if="item.statusDesc === WAIT_FOR_REVIEW_MSG"
           class="btn edit"
           @click="$emit('delete', item)"
         >
           删除
-        </button>
-
-        <button
-          v-if="item.statusDesc === REVIEW_REJECT_MSG"
-          class="detail"
-          @click="$emit('view', item)"
-        >
-          查看驳回原因
         </button>
       </div>
     </article>
@@ -102,13 +101,13 @@ const statusClass = computed(() => {
   display: none;
 }
 
-.detail {
-  grid-column: auto;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid #74d19a;
-  border-radius: 8px;
-  text-align: center;
+.btn.view {
+  color: #16a34a;
+  border: 1px solid #16a34a;
+}
+.btn.view:hover {
+  color: #fff;
+  background: #16a34a;
 }
 
 .tag.approved {

@@ -103,6 +103,16 @@ const router = createRouter({
         role: USER_ROLE
       }
     },
+    {
+      path: '/user/contribution/:id',
+      name: 'user-contribution-view',
+      component: ContributionView,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
 
     {
       path: '/admin/login',

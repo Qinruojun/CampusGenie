@@ -149,7 +149,11 @@
       import { SORT_ORDER_DESC } from "@/constants/status.js";
       import { WAIT_FOR_REVIEW_MSG,REVIEW_PASS,REVIEW_REJECT, REVIEW_PASS_MSG, REVIEW_REJECT_MSG} from "@/constants/status.js";
       import StatCard from "@/components/StatCard.vue";
-      import {useContributionList} from "@/composables/user/useContributionList.js";
+      import { useContributionList } from "@/composables/user/useContributionList.js";
+      import { useContributionViewStore } from '@/stores/contributionViewStore'
+      import { useRouter } from 'vue-router'
+      const router = useRouter()
+      const contributionViewStore = useContributionViewStore()
       const {
         categoryOptions,
         categoryLoading,
@@ -181,12 +185,8 @@
         loadContributionList()
       })
       const handleView = item => {
-        if (item.statusDesc !== REVIEW_REJECT_MSG) {
-          alert('只有已驳回的贡献才有驳回原因')
-          return
-        }
-
-        alert(item.rejectReason || '暂无驳回原因')
+        contributionViewStore.setContribution(item)
+        router.push(`/user/contribution/${item.id}`)
       }
       const currentPageStatusCount = statusDesc => {
         return list.value.filter(item => item.statusDesc === statusDesc).length
