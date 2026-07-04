@@ -31,7 +31,8 @@ function toggleSidebar() {
 }
 
 const pageTitle = computed(() => {
-  if (route.path.includes('/admin/knowledge')) return '知识库管理'
+  if (route.path.includes('/admin/knowledge') && !route.path.includes('/admin/knowledgeDraft')) return '知识库管理'
+  if (route.path.includes('/admin/knowledgeDraft')) return '知识草稿管理'
   if (route.path.includes('/admin/importKnowledge')) return '批量导入'
   if (route.path.includes('/admin/hotQuestion')) return '热点统计'
   if (route.path.includes('/admin/audit')) return '审核管理'
@@ -41,7 +42,8 @@ const pageTitle = computed(() => {
 })
 
 const pageSubtitle = computed(() => {
-  if (route.path.includes('/admin/knowledge')) return '管理和维护校园知识库内容'
+  if (route.path.includes('/admin/knowledge') && !route.path.includes('/admin/knowledgeDraft')) return '管理和维护校园知识库内容'
+  if (route.path.includes('/admin/knowledgeDraft')) return '管理和维护知识草稿，支持审核通过、驳回和编辑操作'
   if (route.path.includes('/admin/audit')) return '审核用户提交的知识贡献'
   if (route.path.includes('/admin/hotQuestion')) return '查看校园热点问题趋势'
 

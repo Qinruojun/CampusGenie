@@ -6,6 +6,10 @@ genie:
     database: CampusGenie
     username: dev
     password: Campus@Dev#DB123456
+  redis:
+    host: 8.148.158.43
+    port: 6379
+    password: qinruojun123@05063924
 
 
 

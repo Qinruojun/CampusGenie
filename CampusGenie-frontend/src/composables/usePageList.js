@@ -1,6 +1,6 @@
-import {ref, watch} from 'vue'
+import { ref, watch } from 'vue'
 import { SUCCESS } from '@/constants/code.js'
-import {SORT_ORDER_ASC, SORT_ORDER_DESC} from "@/constants/status.js";
+import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
 
 function removeEmptyParams(params) {
     const result = {}
@@ -9,6 +9,8 @@ function removeEmptyParams(params) {
         const value = params[key]
 
         if (value !== '' && value !== null && value !== undefined) {
+            result[key] = value
+        } else if (value === 0 || value === '0') {
             result[key] = value
         }
     })
@@ -59,20 +61,25 @@ export function usePageList(options) {
             const res = await pageApi(removeEmptyParams(params))
 
             if (res.code === SUCCESS) {
-                list.value = res.data.records || []
-                total.value = res.data.total || 0
+                list.value = res.data?.records || []
+                total.value = res.data?.total || 0
             } else {
                 alert(res.msg || '查询失败')
             }
         } catch (error) {
-            console.error(error)
-            const status = error.response?.status
-            const message = error.response?.data?.msg || error.response?.data?.message
+            console.error('Page list load error:', error)
+            try {
+                const status = error.response?.status
+                const message = error.response?.data?.msg || error.response?.data?.message
 
-            if (status === 401) {
-                alert('登录已失效，请重新登录')
-            } else {
-                alert(message || '服务器异常，查询失败')
+                if (status === 401) {
+                    alert('登录已失效，请重新登录')
+                } else {
+                    alert(message || '服务器异常，查询失败')
+                }
+            } catch (e) {
+                console.error('Error handling failed:', e)
+                alert('网络异常，请检查连接')
             }
         } finally {
             loading.value = false

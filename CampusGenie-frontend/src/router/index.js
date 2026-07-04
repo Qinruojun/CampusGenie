@@ -1,29 +1,35 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 const UserContributionList = () => import('../views/user/UserContributionList.vue')
-const  UserHome =()=>import( '../views/user/UserHome.vue')
-const QAResult =()=>import('../views/user/QAResult.vue')
-const UserContribution =()=>import( '../views/user/UserContribution.vue')
-const AdminLogin=()=>import('../views/admin/AdminLogin.vue')
-const  KnowledgeManage=()=>import( '../views/admin/KnowledgeManage.vue')
-const  AuditManage=() =>import( '../views/admin/AuditManage.vue')
-const  HotQuestions =()=>import( '../views/user/HotQuestions.vue')
-const  UserLogin =()=> import( '../views/user/UserLogin.vue')
-const Welcome=() => import ( '../views/Welcome.vue')
-const AddKnowledge =()=>import('../views/admin/KnowledgeAdd.vue')
-const EditKnowledge=()=>import('../views/admin/KnowledgeEdit.vue')
-const ImportKnowledge =()=>import('../views/admin/KnowledgeImport.vue')
-const AdminHotQuestion =()=>import('@/views/admin/HotQuestion.vue')
-const AdminHome =()=>import('@/views/admin/AdminHome.vue')
-const AdminProfile  =()=>import('@/views/admin/AdminProfile.vue')
-const AdminLayout =()=>import('@/layouts/AdminLayout.vue')
-const UserQAChat =()=>import('@/views/user/QAChat.vue')
-import {USER_ROLE ,USERNAME_KEY} from '../constants/storage'
-import {TOKEN_KEY,ADMIN_ROLE,ROLE_KEY} from '../constants/storage'
+const UserHome = () => import('../views/user/UserHome.vue')
+const QAResult = () => import('../views/user/QAResult.vue')
+const UserContribution = () => import('../views/user/UserContribution.vue')
+const AdminLogin = () => import('../views/admin/AdminLogin.vue')
+const KnowledgeManage = () => import('../views/admin/KnowledgeManage.vue')
+const KnowledgeDraftManage = () => import('../views/admin/KnowledgeDraftManage.vue')
+const AuditManage = () => import('../views/admin/AuditManage.vue')
+const HotQuestions = () => import('../views/user/HotQuestions.vue')
+const UserLogin = () => import('../views/user/UserLogin.vue')
+const Welcome = () => import('../views/Welcome.vue')
+const AddKnowledge = () => import('../views/admin/KnowledgeAdd.vue')
+const EditKnowledge = () => import('../views/admin/KnowledgeEdit.vue')
+const ImportKnowledge = () => import('../views/admin/KnowledgeImport.vue')
+const ViewKnowledge = () => import('../views/admin/KnowledgeView.vue')
+const ViewKnowledgeDraft = () => import('../views/admin/ViewKnowledgeDraft.vue')
+const EditKnowledgeDraft = () => import('../views/admin/EditKnowledgeDraft.vue')
+const ContributionView = () => import('../views/admin/ContributionView.vue')
+const AdminHotQuestion = () => import('@/views/admin/HotQuestion.vue')
+const AdminHome = () => import('@/views/admin/AdminHome.vue')
+const AdminProfile = () => import('@/views/admin/AdminProfile.vue')
+const AdminLayout = () => import('@/layouts/AdminLayout.vue')
+const UserQAChat = () => import('@/views/user/QAChat.vue')
+const UserProfile = () => import('@/views/user/UserProfile.vue')
+import { USER_ROLE, USERNAME_KEY } from '../constants/storage'
+import { TOKEN_KEY, ADMIN_ROLE, ROLE_KEY } from '../constants/storage'
 //把页面改成懒加载
 const router = createRouter({
   history: createWebHashHistory(),
 
-//TODO:当前为了debug把一些界面需要认证的改为requireAuth:false了，后面记得改回来
+  //TODO:当前为了debug把一些界面需要认证的改为requireAuth:false了，后面记得改回来
   routes: [
     {
       path: '/',
@@ -101,6 +107,26 @@ const router = createRouter({
         role: USER_ROLE
       }
     },
+    {
+      path: '/user/contribution/:id',
+      name: 'user-contribution-view',
+      component: ContributionView,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
+    {
+      path: '/user/profile',
+      name: 'user-profile',
+      component: UserProfile,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
 
     {
       path: '/admin/login',
@@ -128,7 +154,7 @@ const router = createRouter({
           path: 'home',
           name: 'admin-home',
           component: AdminHome,
-          meta:{
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE
           }
@@ -137,7 +163,34 @@ const router = createRouter({
           path: 'knowledge',
           name: 'admin-knowledge',
           component: KnowledgeManage,
-          meta:{
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'knowledgeDraft',
+          name: 'admin-knowledge-draft',
+          component: KnowledgeDraftManage,
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'viewKnowledgeDraft/:id',
+          name: 'view-knowledge-draft',
+          component: ViewKnowledgeDraft,
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'editKnowledgeDraft/:id',
+          name: 'edit-knowledge-draft',
+          component: EditKnowledgeDraft,
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE
           }
@@ -146,7 +199,7 @@ const router = createRouter({
           path: 'addKnowledge',
           name: 'add-knowledge',
           component: AddKnowledge,
-          meta:{
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE
           }
@@ -156,16 +209,26 @@ const router = createRouter({
           path: 'editKnowledge/:id',
           name: 'edit-knowledge',
           component: EditKnowledge,
-          meta:{
-          requiresAuth: true,
-          role: ADMIN_ROLE
-        }}
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        }
         ,
+        {
+          path: 'viewKnowledge/:id',
+          name: 'view-knowledge',
+          component: ViewKnowledge,
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
         {
           path: 'importKnowledge',
           name: 'import-knowledge',
           component: ImportKnowledge,
-          meta:{
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE,
           }
@@ -175,7 +238,16 @@ const router = createRouter({
           path: 'audit',
           name: 'admin-audit',
           component: AuditManage,
-          meta:{
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE,
+          }
+        },
+        {
+          path: 'contribution/:id',
+          name: 'contribution-view',
+          component: ContributionView,
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE,
           }
@@ -184,7 +256,7 @@ const router = createRouter({
           path: 'hotQuestion',
           name: 'admin-hot-question',
           component: AdminHotQuestion,
-          meta:{
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE,
           }
@@ -193,7 +265,7 @@ const router = createRouter({
           path: 'profile',
           name: 'admin-profile',
           component: AdminProfile,
-          meta:{
+          meta: {
             requiresAuth: true,
             role: ADMIN_ROLE,
           }
@@ -204,7 +276,7 @@ const router = createRouter({
   ]
 }
 
-//还要进行路由守卫，拦截未登陆的访问
+  //还要进行路由守卫，拦截未登陆的访问
 
 
 

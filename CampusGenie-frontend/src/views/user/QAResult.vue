@@ -14,15 +14,15 @@ const homePath = isFromAdminHot ? '/admin/knowledge' : '/user/home'
 
 <template>
   <main class="page result-page">
-    <div class="back-actions">
+    <div class="back-actions" :class="{ center: !showBackToHot }">
       <RouterLink
         v-if="showBackToHot"
-        class="back-link"
+        class="btn ghost"
         :to="hotListPath"
       >
-        ← 返回热点列表
+        返回热点列表
       </RouterLink>
-      <RouterLink class="back-link" :to="homePath">← 返回首页</RouterLink>
+      <RouterLink class="btn primary" :to="homePath">返回首页</RouterLink>
     </div>
 
     <p class="eyebrow">问答结果</p>
@@ -53,19 +53,48 @@ const homePath = isFromAdminHot ? '/admin/knowledge' : '/user/home'
 .result-page {
   margin: 0 auto;
   max-width: 900px;
+  text-align: center;
 }
-.eyebrow{
+.eyebrow {
   margin: 0 auto;
 }
 .back-actions {
   display: flex;
-  gap: 18px;
+  justify-content: center;
+  gap: 16px;
   margin-bottom: 40px;
 }
 
-.back-link {
-  display: inline-block;
-  color: var(--muted);
+.back-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.back-actions .btn.primary {
+  color: #fff;
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.back-actions .btn.primary:hover {
+  background: #15803d;
+}
+
+.back-actions .btn.ghost:hover {
+  border-color: #16a34a;
+  color: #16a34a;
 }
 
 h1 {
@@ -79,6 +108,7 @@ h1 {
   grid-template-columns: 42px 1fr;
   gap: 18px;
   margin-bottom: 18px;
+  text-align: left;
 }
 
 .check {
@@ -99,9 +129,26 @@ h1 {
 .related h3 {
   margin: 0 0 16px;
 }
-page {
-  width: min(980px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 70px 0 96px;
+
+.related {
+  text-align: left;
+}
+
+.simple-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.simple-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+}
+
+.simple-row:hover {
+  color: #16a34a;
 }
 </style>

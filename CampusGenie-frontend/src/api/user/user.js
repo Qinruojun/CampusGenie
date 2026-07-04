@@ -1,17 +1,60 @@
 import request from '../request'
-//export是把这个函数暴露给外部，让别的文件import导入可以用
-export function login(data){
+import { USE_MORK } from "@/constants/test.js";
+import { SUCCESS } from "@/constants/code.js";
+
+export function login(data) {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "登录成功",
+            "data": {
+                "token": "user-token-123456",
+                "username": data.username,
+                "role": "0"
+            }
+        })
+    }
     return request({
-        url:'/user/user/login',//后端接口地址
+        url: '/user/user/login',
         method: 'post',
-        data//前端传给后端的内容
-    })
-}
-export function register(data){
-    return request({
-        url:'/user/user/register',
-        method: 'post',//在Axios中定义的，Axios 支持get,post, put, delete
         data
     })
 }
-//GET:问后端拿数据，POST:给后端提交数据
+
+export function register(data) {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "注册成功",
+            "data": null
+        })
+    }
+    return request({
+        url: '/user/user/register',
+        method: 'post',
+        data
+    })
+}
+
+export function getUserInfo() {
+    return request({
+        url: '/user/user/info',
+        method: 'get'
+    })
+}
+
+export function updateUserInfo(data) {
+    return request({
+        url: '/user/user/info',
+        method: 'put',
+        data
+    })
+}
+
+export function changePassword(data) {
+    return request({
+        url: '/user/user/password',
+        method: 'put',
+        data
+    })
+}

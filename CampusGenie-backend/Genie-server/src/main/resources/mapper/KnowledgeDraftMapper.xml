@@ -42,33 +42,47 @@
         select  id, question, answer, category_id, source, status, reviewed_by, reviewed_time, created_time from knowledge_draft where id = #{id}
     </select>
 
-
-    <select id="pageQuery" resultType="com.genie.vo.KnowledgeDraftVO">
-        select kd.id, kd.question, kd.answer,  c.name as categoryName,
-        CASE uc.status
+    <select id="selectDetailById" resultType="com.genie.vo.KnowledgeDraftVO">
+        select kd.id, kd.question, kd.answer, c.name as categoryName, kd.source,
+        CASE kd.status
         WHEN 0 THEN '待审核'
         WHEN 1 THEN '已通过'
-        END as statusDesc, kd.created_time, kd.reviewed_time
+        END as statusDesc, kd.status, kd.created_time as createdTime, kd.reviewed_time as reviewedTime, kd.reviewed_by as reviewedBy
+        from knowledge_draft kd
+        left join category c on kd.category_id = c.id
+        where kd.id = #{id}
+    </select>
+
+
+    <select id="pageQuery" resultType="com.genie.vo.KnowledgeDraftVO">
+        select kd.id, kd.question, kd.answer, c.name as categoryName, kd.source,
+        CASE kd.status
+        WHEN 0 THEN '待审核'
+        WHEN 1 THEN '已通过'
+        END as statusDesc, kd.status, kd.created_time as createdTime, kd.reviewed_time as reviewedTime
         from knowledge_draft kd
         left join category c on kd.category_id = c.id
         <where>
-            <if test="query.status != null">
-                and uc.status = #{query.status}
+            <if test="status != null">
+                and kd.status = #{status}
             </if>
-            <if test="query.keyword != null and query.keyword != ''">
-                and kd.question like concat('%', #{query.keyword}, '%')
+            <if test="categoryId != null">
+                and kd.category_id = #{categoryId}
             </if>
-            <if test="query.startTime !=null">
-                and kd.created_time &gt;= #{query.startTime}
+            <if test="keyword != null and keyword != ''">
+                and kd.question like concat('%', #{keyword}, '%')
             </if>
-            <if test="query.endTime !=null">
-                and kd.created_time &lt;= #{query.endTime}
+            <if test="startTime !=null">
+                and kd.created_time &gt;= #{startTime}
+            </if>
+            <if test="endTime !=null">
+                and kd.created_time &lt;= #{endTime}
             </if>
         </where>
-        <if test="query.sortOrder != null">
+        <if test="sortOrder != null">
             order by kd.created_time
             <choose>
-                <when test="query.sortOrder == 'desc'">
+                <when test="sortOrder == 'desc'">
                     desc
                 </when>
                 <otherwise>
@@ -83,6 +97,30 @@
         select count(*)
         from knowledge_draft
         where status = #{status}
+    </select>
+
+    <select id="countByCreatedTimeAfter" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where created_time &gt;= #{time}
+    </select>
+
+    <select id="countByCreatedTimeBetween" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where created_time &gt;= #{start} and created_time &lt; #{end}
+    </select>
+
+    <select id="countApprovedByReviewedTimeAfter" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where status = 1 and reviewed_time &gt;= #{time}
+    </select>
+
+    <select id="countApprovedByReviewedTimeBetween" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where status = 1 and reviewed_time &gt;= #{start} and reviewed_time &lt; #{end}
     </select>
 
 </mapper>

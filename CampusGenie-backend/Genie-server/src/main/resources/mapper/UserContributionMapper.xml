@@ -146,4 +146,11 @@
         where status = #{status}
     </select>
 
+    <select id="countByUserIdAndStatus" resultType="java.lang.Integer">
+        select count(*)
+        from user_contribution
+        where user_id = #{userId}
+          and status = #{status}
+    </select>
+
 </mapper>

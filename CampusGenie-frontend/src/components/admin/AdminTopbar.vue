@@ -12,7 +12,7 @@
     </div>
 
     <div class="topbar-right">
-      <button class="notice-btn" type="button">
+      <button class="notice-btn" type="button" @click="goToAudit">
         <span class="bell-icon">🔔</span>
         <span v-if="noticeCount > 0" class="notice-count">
           {{ noticeCount }}
@@ -32,10 +32,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import AdminUserCard from '@/components/admin/Card/AdminUserCard.vue'
 import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
+import { getPendingCount } from '@/api/admin/contirbute.js'
+import { eventBus, EVENT_TYPES } from '@/utils/eventBus.js'
 
 const props = defineProps({
   title: {
@@ -53,19 +55,51 @@ const props = defineProps({
   roleName: {
     type: String,
     default: '超级管理员'
-  },
-  noticeCount: {
-    type: Number,
-    default: 3
   }
 })
 
 const emit = defineEmits(['toggle-sidebar'])
 const router = useRouter()
+const route = useRoute()
+
+const noticeCount = ref(0)
 
 const displayUsername = computed(() => {
   return localStorage.getItem(USERNAME_KEY) || props.username
 })
+
+function fetchPendingCount() {
+  getPendingCount().then(res => {
+    if (res.code === 200) {
+      noticeCount.value = res.data || 0
+    }
+  }).catch(() => {
+    noticeCount.value = 0
+  })
+}
+
+watch(() => route.path, () => {
+  if (route.path.includes('/admin/audit')) {
+    fetchPendingCount()
+  }
+})
+
+function handleRefreshPendingCount() {
+  fetchPendingCount()
+}
+
+onMounted(() => {
+  fetchPendingCount()
+  eventBus.on(EVENT_TYPES.REFRESH_PENDING_COUNT, handleRefreshPendingCount)
+})
+
+onUnmounted(() => {
+  eventBus.off(EVENT_TYPES.REFRESH_PENDING_COUNT, handleRefreshPendingCount)
+})
+
+function goToAudit() {
+  router.push('/admin/audit?status=0')
+}
 
 function logout() {
   const ok = confirm('确定要退出管理员登录吗？')

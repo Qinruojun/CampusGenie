@@ -3,8 +3,8 @@
     <aside class="chat-sidebar">
       <div class="eyebrow logo">CampusGenie</div>
 
-      <RouterLink class="home-link" to="/user/home">
-        ← 返回首页
+      <RouterLink class="home-btn" to="/user/home">
+        返回首页
       </RouterLink>
 
       <button
@@ -337,15 +337,27 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
-.home-link {
-  display: inline-block;
-  margin-bottom: 24px;
-  color: #6b7280;
+.home-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
   font-size: 14px;
   font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-sizing: border-box;
 }
 
-.home-link:hover {
+.home-btn:hover {
+  border-color: #16a34a;
   color: #16a34a;
 }
 

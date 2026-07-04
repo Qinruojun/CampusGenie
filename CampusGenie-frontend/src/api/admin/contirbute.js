@@ -79,3 +79,35 @@ export function getStatistics() {
 
     return request.get('/admin/contributions/statistics')
 }
+
+export function batchReview(data) {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "批量审核完成",
+            "data": {
+                "successCount": data.contributionIds.length,
+                "failCount": 0,
+                "failIds": []
+            }
+        })
+    }
+
+    return request({
+        url: '/admin/contributions/review/batch',
+        method: 'post',
+        data
+    })
+}
+
+export function getPendingCount() {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "获取待审核数量成功",
+            "data": 3
+        })
+    }
+
+    return request.get('/admin/contributions/pending-count')
+}

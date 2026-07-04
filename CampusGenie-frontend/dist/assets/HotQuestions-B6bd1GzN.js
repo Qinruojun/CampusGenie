@@ -1,0 +1,1 @@
+import{E as e,_ as t}from"./index-B-73-khU.js";import{t as n}from"./HotQuestionPanel-BE1RdIAN.js";var r={__name:`HotQuestions`,setup(r){return(r,i)=>(e(),t(n,{"home-link-to":`/user/home`}))}};export{r as default};

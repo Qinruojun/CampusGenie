@@ -19,5 +19,15 @@ public interface KnowledgeDraftMapper {
 
     Page<KnowledgeDraftVO> pageQuery(KnowledgeDraftPageQueryDTO query);
 
+    KnowledgeDraftVO selectDetailById(Long id);
+
     Integer countByStatus(@Param("status") Integer status);
+
+    Integer countByCreatedTimeAfter(@Param("time") java.time.LocalDateTime time);
+
+    Integer countByCreatedTimeBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
+
+    Integer countApprovedByReviewedTimeAfter(@Param("time") java.time.LocalDateTime time);
+
+    Integer countApprovedByReviewedTimeBetween(@Param("start") java.time.LocalDateTime start, @Param("end") java.time.LocalDateTime end);
 }

@@ -1,21 +1,6 @@
 <!--用户贡献页，查看自己的贡献-->
 <template>
   <div class="contribution-page">
-    <RouterLink class="back-link" to="/user/home">
-      ← 返回首页
-    </RouterLink>
-
-<!--    <section class="page-head">-->
-<!--      <p class="eyebrow">-->
-<!--        CampusGenie-->
-<!--      </p>-->
-<!--      <h1>我的贡献</h1>-->
-<!--      <p class="desc">-->
-<!--        查看你提交过的校园问答内容，按提交时间从近到远排列。-->
-<!--      </p>-->
-<!--    </section>-->
-
-
     <div class="page">
       <main class="main">
         <section class="content">
@@ -61,11 +46,12 @@
 
             <button
               class="sort-btn"
+              :class="{ 'sort-desc': queryForm.sortOrder === SORT_ORDER_DESC, 'sort-asc': queryForm.sortOrder === SORT_ORDER_ASC }"
               @click="handleToggleSortOrder"
             >
               更新时间
               <span class="sort-arrow">
-                {{ queryForm.sortOrder === SORT_ORDER_DESC ? '↓' : '↑' }}
+                {{ queryForm.sortOrder === SORT_ORDER_DESC ? '⇩' : '⇧' }}
               </span>
             </button>
 
@@ -82,8 +68,6 @@
               重置
             </button>
           </div>
-
-
 
           <div class="stats">
             <StatCard
@@ -105,34 +89,39 @@
               :key="item.id"
               :item="item"
               @view="handleView"
-              @delete="handleDelete"
+              @delete="onDelete"
             />
           </div>
 
-          <div
-            v-if="totalPages > 1"
-            class="pagination"
-          >
-            <button
-              :disabled="page <= 1"
-              @click="handlePrevPage"
+          <div class="pagination-bar">
+            <RouterLink class="pagination-back-btn" to="/user/home">
+              返回首页
+            </RouterLink>
+            <div
+              v-if="totalPages > 1"
+              class="pagination"
             >
-              上一页
-            </button>
-            <button
-              v-for="pageNumber in pageNumbers"
-              :key="pageNumber"
-              :class="{ current: page === pageNumber }"
-              @click="page = pageNumber"
-            >
-              {{ pageNumber }}
-            </button>
-            <button
-              :disabled="page >= totalPages"
-              @click="handleNextPage"
-            >
-              下一页
-            </button>
+              <button
+                :disabled="page <= 1"
+                @click="handlePrevPage"
+              >
+                上一页
+              </button>
+              <button
+                v-for="pageNumber in pageNumbers"
+                :key="pageNumber"
+                :class="{ current: page === pageNumber }"
+                @click="page = pageNumber"
+              >
+                {{ pageNumber }}
+              </button>
+              <button
+                :disabled="page >= totalPages"
+                @click="handleNextPage"
+              >
+                下一页
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -141,7 +130,7 @@
 </template>
 
     <script setup>
-      import { computed, onMounted } from 'vue'
+      import { computed, onMounted, ref } from 'vue'
 
       import CategorySelect from '@/components/CategorySelect.vue'
       import { useCategoryOptions } from '@/composables/useCategoryOptions'
@@ -149,7 +138,12 @@
       import { SORT_ORDER_DESC } from "@/constants/status.js";
       import { WAIT_FOR_REVIEW_MSG,REVIEW_PASS,REVIEW_REJECT, REVIEW_PASS_MSG, REVIEW_REJECT_MSG} from "@/constants/status.js";
       import StatCard from "@/components/StatCard.vue";
-      import {useContributionList} from "@/composables/user/useContributionList.js";
+      import { useContributionList } from "@/composables/user/useContributionList.js";
+      import { useContributionViewStore } from '@/stores/contributionViewStore'
+      import { useRouter } from 'vue-router'
+      import { getUserStatistics } from '@/api/user/contribution.js'
+      const router = useRouter()
+      const contributionViewStore = useContributionViewStore()
       const {
         categoryOptions,
         categoryLoading,
@@ -174,19 +168,37 @@
 
       } = useContributionList()
 
+      const statistics = ref({
+        pendingCount: 0,
+        approvedCount: 0,
+        rejectedCount: 0
+      })
+
+      const loadStatistics = async () => {
+        try {
+          const res = await getUserStatistics()
+          if (res.code === 200) {
+            statistics.value = res.data
+          }
+        } catch (e) {
+          console.error('加载统计数据失败', e)
+        }
+      }
 
 
       onMounted(()=>{
         loadCategoryList()
         loadContributionList()
+        loadStatistics()
       })
-      const handleView = item => {
-        if (item.statusDesc !== REVIEW_REJECT_MSG) {
-          alert('只有已驳回的贡献才有驳回原因')
-          return
-        }
+      const onDelete = async (item) => {
+        await handleDelete(item)
+        await loadStatistics()
+      }
 
-        alert(item.rejectReason || '暂无驳回原因')
+      const handleView = item => {
+        contributionViewStore.setContribution(item)
+        router.push(`/user/contribution/${item.id}`)
       }
       const currentPageStatusCount = statusDesc => {
         return list.value.filter(item => item.statusDesc === statusDesc).length
@@ -203,28 +215,28 @@
       const statList = computed(() => [
         {
           title: '贡献总数',
-          value: total.value,
+          value: statistics.value.pendingCount + statistics.value.approvedCount + statistics.value.rejectedCount,
           unit: '条',
           icon: '▧',
           tone: 'green'
         },
         {
-          title: '当前页已通过',
-          value: currentPageStatusCount(REVIEW_PASS_MSG),
+          title: '已通过',
+          value: statistics.value.approvedCount,
           unit: '条',
           icon: '➤',
           tone: 'green'
         },
         {
-          title: '当前页待审核',
-          value: currentPageStatusCount(WAIT_FOR_REVIEW_MSG),
+          title: '待审核',
+          value: statistics.value.pendingCount,
           unit: '条',
           icon: '◷',
           tone: 'orange'
         },
         {
-          title: '当前页已驳回',
-          value: currentPageStatusCount(REVIEW_REJECT_MSG),
+          title: '已驳回',
+          value: statistics.value.rejectedCount,
           unit: '条',
           icon: '↗',
           tone: 'green'
@@ -235,18 +247,14 @@
 
     <style scoped src="@/styles/card-list.css"></style>
     <style>
-    /* TODO  */
-      .filter-panel {
-        display: grid;
-        grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
-        gap: 16px;
-        align-items: center;
-        padding: 20px;
-        margin-bottom: 18px;
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      .filter-panel .btn.small {
+        width: 100%;
+        min-width: 0;
+        padding: 0 12px;
+        font-size: 14px;
+        box-sizing: border-box;
       }
+
       .filter-select {
         width: 100%;
         height: 44px;
@@ -279,41 +287,104 @@
         box-sizing: border-box;
       }
 
-      .sort-btn:hover {
+      .sort-btn.sort-desc {
+        color: #f97316;
+        border-color: #f97316;
+      }
+
+      .sort-btn.sort-desc:hover {
+        color: #ea580c;
+        border-color: #ea580c;
+      }
+
+      .sort-btn.sort-asc {
         color: #16a34a;
         border-color: #16a34a;
       }
 
+      .sort-btn.sort-asc:hover {
+        color: #15803d;
+        border-color: #15803d;
+      }
+
       .sort-arrow {
         margin-left: 4px;
+        font-size: 14px;
+        font-weight: 700;
       }
     </style>
 
 <style scoped>
 .contribution-page {
   width: 100%;
-  min-height: calc(100vh - 72px);
-  padding: 72px 10vw 96px;
-  /*background: #f8f7f2;*/
-  /*color: #1c241c;*/
-
+  min-height: 100vh;
+  padding: 0;
+  background: radial-gradient(circle at top, #ffffff 0%, #fbfaf7 56%, #f7f5ef 100%);
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: 28px;
-  color: #6b7280;
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.3fr) 180px 140px 90px 80px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 20px;
+  margin-bottom: 18px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 1200px) {
+  .filter-panel {
+    grid-template-columns: minmax(160px, 1.3fr) 140px 120px 85px 75px 75px;
+    gap: 8px;
+  }
+}
+
+.search {
+  box-sizing: border-box;
+}
+
+.pagination-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.pagination-back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
   font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.back-link:hover {
+.pagination-back-btn:hover {
+  border-color: #16a34a;
   color: #16a34a;
 }
 
 .page {
- width: 100%;
+  width: min(1100px, calc(100% - 48px));
   margin: 0 auto;
- padding: 70px 0 96px;
+  padding: 0;
+  background: transparent !important;
 }
 .page-head {
   text-align: center;
@@ -477,12 +548,9 @@
 }
 
 .pagination {
-  max-width: 960px;
-  margin: 26px auto 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 18px;
+  gap: 14px;
 }
 
 .pagination button {

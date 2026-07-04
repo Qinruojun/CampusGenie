@@ -8,6 +8,8 @@ import com.genie.dto.KnowledgeDraftPageQueryDTO;
 import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.KnowledgeDraftService;
+import com.genie.vo.KnowledgeDraftStatisticsVO;
+import com.genie.vo.KnowledgeDraftVO;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,20 @@ public class DraftController {
         log.info("分页查询用户贡献信息：{}",knowledgeDraftPageQueryDTO);
         PageResult pageResult = knowledgeDraftService.pageQuery(knowledgeDraftPageQueryDTO);
         return Result.success(pageResult, CodeConstant.SUCCESS, "分页查询成功");
+    }
+
+    @GetMapping("/statistics")
+    public Result<KnowledgeDraftStatisticsVO> getStatistics() {
+        log.info("获取知识草稿统计数据");
+        KnowledgeDraftStatisticsVO statistics = knowledgeDraftService.getStatistics();
+        return Result.success(statistics, CodeConstant.SUCCESS, "获取统计数据成功");
+    }
+
+    @GetMapping("/{id}")
+    public Result<KnowledgeDraftVO> getDetailById(@PathVariable Long id) {
+        log.info("查询知识草稿详情：{}", id);
+        KnowledgeDraftVO draft = knowledgeDraftService.getDetailById(id);
+        return Result.success(draft, CodeConstant.SUCCESS, "查询成功");
     }
 
 }

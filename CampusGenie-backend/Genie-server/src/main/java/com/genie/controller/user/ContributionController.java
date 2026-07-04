@@ -10,6 +10,7 @@ import com.genie.dto.LoginDTO;
 import com.genie.result.PageResult;
 import com.genie.result.Result;
 import com.genie.service.ContributionService;
+import com.genie.vo.ContributionStatisticsVO;
 import com.genie.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,13 @@ public class ContributionController {
         log.info("删除用户自己未审核贡献{}", id);
         contributionService.delete(id);
         return Result.success(null,CodeConstant.SUCCESS,"删除成功");
+    }
+
+    @GetMapping("/contributions/statistics")
+    public Result<ContributionStatisticsVO> statistics() {
+        Long userId = BaseContext.getCurrentUserId();
+        ContributionStatisticsVO statistics = contributionService.getUserStatistics(userId);
+        return Result.success(statistics, CodeConstant.SUCCESS, "查询成功");
     }
 
 }

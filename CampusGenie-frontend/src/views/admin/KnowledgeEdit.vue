@@ -143,16 +143,12 @@ onMounted(async () => {
 
 <template>
   <div class="page">
-    <div class="page-header">
-      <h2>编辑知识条目</h2>
-      <button class="back-btn" @click="handleCancel">返回</button>
-    </div>
-
     <div v-if="pageLoading" class="loading">
       正在加载知识条目...
     </div>
 
     <div v-else class="form-card">
+      <h2 class="card-title">编辑知识条目</h2>
       <div class="form-item">
         <label>问题标题</label>
         <input
@@ -200,7 +196,7 @@ onMounted(async () => {
       </div>
 
       <div class="form-actions">
-        <button class="cancel-btn" @click="handleCancel">取消</button>
+        <button class="cancel-btn" @click="handleCancel">取消修改</button>
         <button class="submit-btn" :disabled="loading" @click="handleSubmit">
           {{ loading ? '保存中...' : '保存修改' }}
         </button>
@@ -214,25 +210,6 @@ onMounted(async () => {
   padding: 24px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.back-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  cursor: pointer;
-}
-
 .loading {
   padding: 24px;
   color: #666;
@@ -240,10 +217,17 @@ onMounted(async () => {
 
 .form-card {
   max-width: 800px;
+  margin: 0 auto;
   padding: 24px;
   background: #fff;
   border: 1px solid #eee;
   border-radius: 8px;
+}
+
+.card-title {
+  text-align: center;
+  margin: 0 0 20px 0;
+  font-size: 24px;
 }
 
 .form-item {
@@ -254,6 +238,7 @@ onMounted(async () => {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
+  text-align: center;
 }
 
 .form-item input,
@@ -265,6 +250,14 @@ onMounted(async () => {
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-item input:hover,
+.form-item textarea:hover,
+.form-item select:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-item textarea {
@@ -273,7 +266,7 @@ onMounted(async () => {
 
 .form-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
   margin-top: 24px;
 }
@@ -288,11 +281,23 @@ onMounted(async () => {
 
 .cancel-btn {
   background: #eee;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
 }
 
 .submit-btn {
-  background: #1677ff;
+  background: #3b82f6;
   color: white;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #2563eb;
 }
 
 .submit-btn:disabled {

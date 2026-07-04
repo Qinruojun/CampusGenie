@@ -68,11 +68,12 @@
 
           <button
             class="sort-btn"
+            :class="{ 'sort-desc': queryForm.sortOrder === SORT_ORDER_DESC, 'sort-asc': queryForm.sortOrder === SORT_ORDER_ASC }"
             @click="handleToggleSortOrder"
           >
             更新时间
             <span class="sort-arrow">
-              {{ queryForm.sortOrder === SORT_ORDER_DESC ? '↓' : '↑' }}
+              {{ queryForm.sortOrder === SORT_ORDER_DESC ? '⇩' : '⇧' }}
             </span>
           </button>
 
@@ -103,32 +104,59 @@
         </div>
 
 
-        <div
-          v-if="loading"
-          class="loading-box"
-        >
-          正在加载贡献列表...
+        <div class="batch-toggle-bar">
+          <button
+            class="batch-toggle-btn"
+            :class="{ active: batchMode }"
+            @click="toggleBatchMode"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            {{ batchMode ? '退出批量' : '批量审核' }}
+          </button>
+          <span v-if="batchMode" class="batch-hint">勾选需要操作的贡献，然后点击批量通过或驳回</span>
         </div>
 
         <div
-          v-else-if="list.length === 0"
+          v-if="list.length === 0 && !loading"
           class="empty-box"
         >
           暂无用户贡献数据
         </div>
 
         <div
-          v-else
-          class="card-list"
+          v-show="list.length > 0"
+          class="card-list-wrapper"
         >
-          <ContributionCard
-            v-for="item in list"
-            :key="item.id"
-            :item="item"
-            @view="handleView"
-            @approve="handleApprove"
-            @reject="()=>openRejectDialog(item)"
-          />
+          <Transition name="list">
+            <div class="card-list" :key="list.length">
+              <div class="batch-bar" v-if="batchMode && selectedIds.length > 0">
+                <span>已选 <strong>{{ selectedIds.length }}</strong> 条待审核贡献</span>
+                <button class="btn batch-approve" @click="handleBatchApprove">批量通过</button>
+                <button class="btn batch-reject" @click="handleBatchReject">批量驳回</button>
+                <button class="btn ghost small" @click="handleCancelSelection">取消选择</button>
+              </div>
+
+              <ContributionCard
+                v-for="item in list"
+                :key="item.id"
+                :item="item"
+                :checked="selectedIds.includes(item.id)"
+                :show-checkbox="batchMode"
+                @view="handleView"
+                @approve="handleApprove"
+                @reject="()=>openRejectDialog(item)"
+                @toggle-check="handleToggleCheck"
+              />
+            </div>
+          </Transition>
+          
+          <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <span>正在加载...</span>
+          </div>
         </div>
         <ReasonDialog
           v-model:visible="rejectDialogVisible"
@@ -139,23 +167,36 @@
           :loading="rejectLoading"
           @confirm="submitReject"
         />
+        <ReasonDialog
+          v-model:visible="batchRejectDialogVisible"
+          title="批量驳回用户贡献"
+          tip="请填写驳回原因，选中的贡献将统一驳回。"
+          placeholder="例如：问题描述不清晰、答案内容不完整、与知识库已有内容重复等"
+          confirm-text="确认批量驳回"
+          :loading="batchRejectLoading"
+          @confirm="submitBatchReject"
+        />
 
-        <div class="pagination">
-          <button @click="handlePrevPage">
-            上一页
-          </button>
-          <button class="current">
-            {{ page }}
-          </button>
-          <button @click="handleNextPage">
-            下一页
-          </button>
-          <span class="page-info">
-            共 {{ total }} 条，每页 {{ pageSize }} 条
-          </span>
-          <button @click="loadContributionList">
-            刷新
-          </button>
+        <div class="pagination" :class="{ 'pagination-single': totalPages <= 1 }">
+          <template v-if="totalPages > 1">
+            <button @click="handlePrevPage">
+              上一页
+            </button>
+            <template v-for="p in pageNumbers" :key="p">
+              <span v-if="p === '...'" class="pagination-ellipsis">…</span>
+              <button v-else :class="{ current: page === p }" @click="page = p">{{ p }}</button>
+            </template>
+            <button @click="handleNextPage">
+              下一页
+            </button>
+            <span class="page-info">
+              共 {{ total }} 条，每页 {{ pageSize }} 条
+            </span>
+            <button @click="loadContributionList">
+              刷新
+            </button>
+          </template>
+          <span v-else class="page-info">共 {{ total }} 条</span>
         </div>
       </section>
     </main>
@@ -163,8 +204,9 @@
 </template>
 
 <script setup>
-import {onMounted, computed, ref} from 'vue'
+import {onMounted, computed, ref, watch} from 'vue'
 import {REVIEW_PASS,REVIEW_REJECT,WAIT_FOR_REVIEW} from "@/constants/status.js";
+import { SUCCESS } from "@/constants/code.js";
 import CategorySelect from '@/components/CategorySelect.vue'
 import ContributionCard from '@/components/admin/Card/ReviewContributionCard.vue'
 import ReasonDialog from '@/components/admin/dialog/RejectReasonDialog.vue'
@@ -172,6 +214,10 @@ import { useCategoryOptions } from '@/composables/useCategoryOptions.js'
 import { useContributionList } from '@/composables/admin/useContributionList.js'
 import { SORT_ORDER_ASC, SORT_ORDER_DESC } from '@/constants/status.js'
 import StatCard from "@/components/StatCard.vue";
+import { useRouter, useRoute } from 'vue-router'
+import { useContributionViewStore } from '@/stores/contributionViewStore'
+import { batchReview } from '@/api/admin/contirbute.js'
+import { eventBus, EVENT_TYPES } from '@/utils/eventBus.js'
 
 const {
   categoryOptions,
@@ -198,6 +244,13 @@ const {
   loadStatistics
 } = useContributionList()
 
+const router = useRouter()
+const route = useRoute()
+
+function refreshNoticeCount() {
+  eventBus.emit(EVENT_TYPES.REFRESH_PENDING_COUNT)
+}
+
 const statisticsData = ref({
   pendingCount: 0,
   approvedCount: 0,
@@ -217,7 +270,7 @@ const statList = computed(() => [
     title: '待审核',
     value: statisticsData.value.pendingCount,
     unit: '条',
-    icon: '◷',
+    icon: '⏳',
     tone: 'orange'
   },
   {
@@ -237,6 +290,28 @@ const statList = computed(() => [
 
   }
 ])
+
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+
+const pageNumbers = computed(() => {
+  const tp = totalPages.value
+  if (tp <= 1) return []
+  const pages = []
+  const cur = page.value
+  if (tp <= 7) {
+    for (let i = 1; i <= tp; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (cur > 3) pages.push('...')
+    const start = Math.max(2, cur - 1)
+    const end = Math.min(tp - 1, cur + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (cur < tp - 2) pages.push('...')
+    pages.push(tp)
+  }
+  return pages
+})
+
 // const handleToggleSortOrder = () => {
 //   queryForm.value.sortOrder =
 //       queryForm.value.sortOrder === SORT_ORDER_DESC
@@ -246,12 +321,157 @@ const statList = computed(() => [
 //   handleSearch()
 // }
 
-const handleView = (item) => {
-  console.log('查看贡献详情', item)//TODO:要写详情查看用户贡献详情页
+const BATCH_STORAGE_KEY = 'campusgenie:audit-batch-cache'
+
+function saveBatchState() {
+  sessionStorage.setItem(BATCH_STORAGE_KEY, JSON.stringify({
+    batchMode: batchMode.value,
+    selectedIds: selectedIds.value,
+    status: queryForm.value.status
+  }))
 }
+
+function restoreBatchState() {
+  try {
+    const raw = sessionStorage.getItem(BATCH_STORAGE_KEY)
+    if (raw) {
+      const data = JSON.parse(raw)
+      if (data.batchMode) {
+        batchMode.value = true
+        selectedIds.value = data.selectedIds || []
+        queryForm.value.status = data.status || WAIT_FOR_REVIEW
+      }
+    }
+  } catch (e) {
+    console.error('Failed to restore batch state:', e)
+  }
+}
+
+function clearBatchState() {
+  sessionStorage.removeItem(BATCH_STORAGE_KEY)
+}
+
+const handleView = (item) => {
+  saveBatchState()
+  contributionViewStore.setContribution(item)
+  router.push(`/admin/contribution/${item.id}`)
+}
+
 const rejectDialogVisible = ref(false)
 const rejectTarget = ref(null)
 const rejectLoading = ref(false)
+const contributionViewStore = useContributionViewStore()
+
+// 批量审核模式
+const batchMode = ref(false)
+
+function toggleBatchMode() {
+  batchMode.value = !batchMode.value
+  if (batchMode.value) {
+    queryForm.value.status = WAIT_FOR_REVIEW
+    handleSearch()
+  } else {
+    selectedIds.value = []
+    queryForm.value.status = ''
+    clearBatchState()
+    handleSearch()
+  }
+}
+
+// 批量选择
+const selectedIds = ref([])
+
+function handleToggleCheck(id) {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx >= 0) {
+    selectedIds.value.splice(idx, 1)
+  } else {
+    selectedIds.value.push(id)
+  }
+}
+
+function handleCancelSelection() {
+  selectedIds.value = []
+}
+
+// 批量通过
+async function handleBatchApprove() {
+  const ids = selectedIds.value.slice()
+  if (ids.length === 0) return
+
+  try {
+    const res = await batchReview({ contributionIds: ids, action: 1 })
+    if (res.code === SUCCESS) {
+      const data = res.data || {}
+      let msg = `批量审核完成，成功 ${data.successCount ?? ids.length} 条`
+      if (data.failCount > 0) msg += `，${data.failCount} 条失败`
+      alert(msg)
+      selectedIds.value = []
+    } else {
+      alert(res.msg || '批量通过失败')
+      return
+    }
+  } catch (error) {
+    console.error('批量通过请求异常:', error)
+    alert('批量通过异常: ' + (error.response?.data?.msg || error.message || '未知错误'))
+    return
+  }
+
+  try {
+    await loadContributionList()
+    await loadStatisticsData()
+    refreshNoticeCount()
+  } catch (e) {
+    console.error('刷新列表异常:', e)
+  }
+}
+
+// 批量驳回
+const batchRejectDialogVisible = ref(false)
+const batchRejectLoading = ref(false)
+
+function handleBatchReject() {
+  if (selectedIds.value.length === 0) return
+  batchRejectDialogVisible.value = true
+}
+
+async function submitBatchReject(reason) {
+  const ids = selectedIds.value.slice()
+  if (ids.length === 0) return
+
+  batchRejectLoading.value = true
+  try {
+    const res = await batchReview({ contributionIds: ids, action: 2, rejectReason: reason })
+
+    if (res.code === SUCCESS) {
+      const data = res.data || {}
+      let msg = `批量审核完成，成功 ${data.successCount ?? ids.length} 条`
+      if (data.failCount > 0) msg += `，${data.failCount} 条失败`
+      alert(msg)
+      selectedIds.value = []
+      batchRejectDialogVisible.value = false
+    } else {
+      alert(res.msg || '批量驳回失败')
+      return
+    }
+  } catch (error) {
+    console.error('批量驳回请求异常:', error)
+    alert('批量驳回异常: ' + (error.response?.data?.msg || error.message || '未知错误'))
+    return
+  } finally {
+    batchRejectLoading.value = false
+  }
+
+  try {
+    await loadContributionList()
+    await loadStatisticsData()
+    refreshNoticeCount()
+  } catch (e) {
+    console.error('刷新列表异常:', e)
+  }
+}
+
+// 取消选择
 function openRejectDialog(item) {
   rejectTarget.value = item
   rejectDialogVisible.value = true
@@ -272,6 +492,7 @@ async function submitReject(reason) {
     rejectTarget.value = null
 
     await loadStatisticsData()
+    refreshNoticeCount()
   } finally {
     rejectLoading.value = false
   }
@@ -286,6 +507,14 @@ async function loadStatisticsData() {
 
 onMounted(() => {
   loadCategoryList()
+  
+  const statusParam = route.query.status
+  if (statusParam !== undefined) {
+    queryForm.value.status = statusParam
+  }
+  
+  restoreBatchState()
+  
   loadContributionList()
   loadStatisticsData()
 })
@@ -308,6 +537,44 @@ onMounted(() => {
     90px
     90px;
   align-items: center;
+}
+
+.batch-toggle-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.batch-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.batch-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.batch-toggle-btn.active {
+  color: #fff;
+  background: #16a34a;
+  border-color: #16a34a;
+}
+.batch-hint {
+  color: #6b7280;
+  font-size: 13px;
 }
 
 .filter-select,
@@ -344,13 +611,63 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-.sort-btn:hover {
+.sort-btn.sort-desc {
+  color: #f97316;
+  border-color: #f97316;
+}
+
+.sort-btn.sort-desc:hover {
+  color: #ea580c;
+  border-color: #ea580c;
+}
+
+.sort-btn.sort-asc {
   color: #16a34a;
   border-color: #16a34a;
 }
 
+.sort-btn.sort-asc:hover {
+  color: #15803d;
+  border-color: #15803d;
+}
+
 .sort-arrow {
   margin-left: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+.batch-bar strong {
+  color: #16a34a;
+  font-size: 18px;
+}
+.batch-approve {
+  color: #16a34a !important;
+  border-color: #16a34a !important;
+}
+.batch-approve:hover {
+  color: #fff !important;
+  background: #16a34a !important;
+}
+.batch-reject {
+  color: #ef4444 !important;
+  border-color: #fca5a5 !important;
+}
+.batch-reject:hover {
+  color: #fff !important;
+  background: #ef4444 !important;
 }
 
 .loading-box,
@@ -373,6 +690,76 @@ onMounted(() => {
 @media (max-width: 1400px) {
   .contribution-filter {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card-list-wrapper {
+  position: relative;
+  min-height: 200px;
+}
+
+.card-list {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  gap: 12px;
+  border-radius: 8px;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #16a34a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-box {
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

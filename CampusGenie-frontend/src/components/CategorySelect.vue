@@ -114,9 +114,9 @@ emit('change', selectedCategory || null)
   cursor: pointer;
 }
 
-.category-input:focus {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+.category-input:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .category-input:disabled {

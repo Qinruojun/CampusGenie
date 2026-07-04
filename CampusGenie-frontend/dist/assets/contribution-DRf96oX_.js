@@ -1,0 +1,1 @@
+import{t as e}from"./request-8jDvkGQp.js";function t(t){return e.get(`/user/contributions/page`,{params:t})}function n(t){return e.delete(`/user/contributions/${t}/delete`)}function r(t){return e({url:`/user/contribute`,method:`post`,data:t})}function i(){return e.get(`/user/contributions/statistics`)}export{i,r as n,t as r,n as t};

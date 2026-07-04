@@ -122,6 +122,10 @@ const menuGroups = [
         to: '/admin/knowledge'
       },
       {
+        label: '知识草稿管理',
+        to: '/admin/knowledgeDraft'
+      },
+      {
         label: '批量导入',
         to: '/admin/importKnowledge'
       },

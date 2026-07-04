@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.constant.ActionTypeConstant;
+import com.genie.constant.RedisConstant;
 import com.genie.constant.StatusConstant;
 import com.genie.constant.TargetTypeConstant;
 import com.genie.context.BaseContext;
@@ -19,15 +20,19 @@ import com.genie.mapper.ReviewLogMapper;
 import com.genie.mapper.UserContributionMapper;
 import com.genie.result.PageResult;
 import com.genie.service.ContributionService;
+import com.genie.service.RateLimitService;
 import com.genie.vo.AdminContributionVO;
 import com.genie.vo.BatchReviewVO;
 import com.genie.vo.UserContributionVO;
 import com.genie.vo.ContributionStatisticsVO;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class ContributionServiceImpl implements ContributionService {
     @Autowired
     private UserContributionMapper userContributionMapper;
@@ -45,10 +51,53 @@ public class ContributionServiceImpl implements ContributionService {
     private KnowledgeBaseMapper knowledgeBaseMapper;
     @Autowired
     private ReviewLogMapper reviewLogMapper;
+    @Autowired
+    private RateLimitService rateLimitService;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @PostConstruct
+    public void initPendingReviewCount() {
+        try {
+            Integer count = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+            redisTemplate.opsForValue().set(RedisConstant.PENDING_REVIEW_COUNT, count != null ? count : 0);
+            log.info("初始化待审核数量: {}", count);
+        } catch (Exception e) {
+            log.error("初始化待审核数量失败", e);
+        }
+    }
+
+    private void incrementPendingCount() {
+        try {
+            redisTemplate.opsForValue().increment(RedisConstant.PENDING_REVIEW_COUNT, 1);
+        } catch (Exception e) {
+            log.error("增加待审核数量失败", e);
+        }
+    }
+
+    private void decrementPendingCount() {
+        try {
+            redisTemplate.opsForValue().increment(RedisConstant.PENDING_REVIEW_COUNT, -1);
+        } catch (Exception e) {
+            log.error("减少待审核数量失败", e);
+        }
+    }
+
+    @Override
+    public Integer getPendingReviewCount() {
+        Integer dbCount = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+        refreshPendingReviewCountCache();
+        return dbCount != null ? dbCount : 0;
+    }
+
     @Override
     public void contribute(ContributionSubmitDTO contributionSubmitDTO){
-        //TODO 是否还需校验（敏感词？非空上层校验了）
+
         Long userId = BaseContext.getCurrentUserId();
+        rateLimitService.checkContributeLimit(userId);
+
+
+
         String question = contributionSubmitDTO.getQuestion().trim();
         Integer existingCount = userContributionMapper.countByUserIdAndQuestion(userId, question);
         if (existingCount != null && existingCount > 0) {
@@ -63,6 +112,9 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setStatus(StatusConstant.WAIT_FOR_REVIEW);
         userContribution.setCreatedTime(LocalDateTime.now());
         userContributionMapper.insert(userContribution);
+        incrementPendingCount();
+        invalidateContributionStatisticsCache();
+        invalidateUserContributionStatisticsCache(userId);
     }
 
     @Override
@@ -105,6 +157,7 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setReviewedBy(BaseContext.getCurrentUsername());
         userContribution.setReviewedTime(LocalDateTime.now());
         userContributionMapper.update(userContribution);
+        decrementPendingCount();
         //合并知识库数据Knowledge_Base
         KnowledgeBase knowledgeBase=KnowledgeBase.builder()
                 .question(approveDTO.getEditedQuestion()!=  null? approveDTO.getEditedQuestion() : userContribution.getQuestion())
@@ -132,6 +185,17 @@ public class ContributionServiceImpl implements ContributionService {
                 .createdTime(LocalDateTime.now())
                 .build();
         reviewLogMapper.insert(reviewLog);
+        invalidateKnowledgeStatisticsCache();
+        invalidateContributionStatisticsCache();
+        invalidateUserContributionStatisticsCache(userContribution.getUserId());
+    }
+
+    private void invalidateKnowledgeStatisticsCache() {
+        try {
+            redisTemplate.delete(RedisConstant.KNOWLEDGE_STATISTICS);
+        } catch (Exception e) {
+            log.error("清除知识条目统计缓存失败", e);
+        }
     }
 
     @Override
@@ -149,6 +213,7 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setReviewedTime(LocalDateTime.now());
         userContribution.setRejectReason(rejectDTO.getRejectReason());
         userContributionMapper.update(userContribution);
+        decrementPendingCount();
 
         //记录审核日志
         ReviewLog reviewLog=ReviewLog.builder()
@@ -164,6 +229,8 @@ public class ContributionServiceImpl implements ContributionService {
                 .createdTime(LocalDateTime.now())
                 .build();
                 reviewLogMapper.insert(reviewLog);
+        invalidateContributionStatisticsCache();
+        invalidateUserContributionStatisticsCache(userContribution.getUserId());
     }
 
     @Override
@@ -183,54 +250,143 @@ public class ContributionServiceImpl implements ContributionService {
         /**
          * 批量审核用户贡献
          */
-            List<Long> ids = dto.getContributionIds();
-            Integer action = dto.getAction();
-            String rejectReason = dto.getRejectReason();
-            // 参数校验
-            if (ids == null || ids.isEmpty()) {
-                throw new EmptyContributionListException("请选择要审核的贡献");
-            }
-            if (action == 2 && (rejectReason == null || rejectReason.trim().isEmpty())) {
-                throw new RejectReasonRequiredException("驳回理由不能为空");
-            }
-
-            int successCount = 0;
-            List<Long> failIds = new ArrayList<>();
-            Map<Long, String> failReasons = new HashMap<>();
-            //构建空ApproveDTO对象
-            ApproveDTO approveDTO = new ApproveDTO();
-            //构建RejectDTO对象
-            RejectDTO rejectDTO = new RejectDTO();
-            rejectDTO.setRejectReason(rejectReason);
-
-            for (Long id : ids) {
-                try {
-                    if (action == 1) {
-                        // 批量通过
-                        approve(id, approveDTO);
-                    } else if (action == 2) {
-                        // 批量驳回
-                        reject(id, rejectDTO);
-                    } else {
-                        throw new InvalidActionException("审核动作无效");
-                    }
-                    successCount++;
-                } catch (ContributionAlreadyReviewedException e) {
-                    failIds.add(id);
-                    failReasons.put(id, e.getMessage());
-                }
-            }
-
-            return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
+        List<Long> ids = dto.getContributionIds();
+        Integer action = dto.getAction();
+        String rejectReason = dto.getRejectReason();
+        // 参数校验
+        if (ids == null || ids.isEmpty()) {
+            throw new EmptyContributionListException("请选择要审核的贡献");
         }
+        if (action == 2 && (rejectReason == null || rejectReason.trim().isEmpty())) {
+            throw new RejectReasonRequiredException("驳回理由不能为空");
+        }
+
+        int successCount = 0;
+        List<Long> failIds = new ArrayList<>();
+        Map<Long, String> failReasons = new HashMap<>();
+        //构建空ApproveDTO对象
+        ApproveDTO approveDTO = new ApproveDTO();
+        //构建RejectDTO对象
+        RejectDTO rejectDTO = new RejectDTO();
+        rejectDTO.setRejectReason(rejectReason);
+
+        for (Long id : ids) {
+            try {
+                if (action == 1) {
+                    approve(id, approveDTO);
+                } else if (action == 2) {
+                    reject(id, rejectDTO);
+                } else {
+                    throw new InvalidActionException("审核动作无效");
+                }
+                successCount++;
+            } catch (ContributionAlreadyReviewedException e) {
+                failIds.add(id);
+                failReasons.put(id, e.getMessage());
+            } catch (Exception e) {
+                failIds.add(id);
+                failReasons.put(id, "处理失败：" + e.getMessage());
+            }
+        }
+
+        refreshPendingReviewCountCache();
+        invalidateContributionStatisticsCache();
+        invalidateKnowledgeStatisticsCache();
+
+        return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
+    }
+
+    private void refreshPendingReviewCountCache() {
+        try {
+            Integer count = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+            redisTemplate.opsForValue().set(RedisConstant.PENDING_REVIEW_COUNT, count != null ? count : 0);
+            log.info("刷新待审核数量缓存: {}", count);
+        } catch (Exception e) {
+            log.error("刷新待审核数量缓存失败", e);
+        }
+    }
 
     @Override
     public ContributionStatisticsVO getStatistics() {
+        try {
+            ContributionStatisticsVO cached = (ContributionStatisticsVO) redisTemplate.opsForValue().get(RedisConstant.CONTRIBUTION_STATISTICS);
+            if (cached != null) {
+                return cached;
+            }
+        } catch (Exception e) {
+            log.warn("Redis 读取贡献统计失败，降级到数据库查询", e);
+        }
+
+        ContributionStatisticsVO statistics = computeContributionStatistics();
+        refreshContributionStatisticsCache();
+        return statistics;
+    }
+
+    private ContributionStatisticsVO computeContributionStatistics() {
         Integer pendingCount = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
         Integer approvedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_PASS);
         Integer rejectedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_REJECT);
-        
         return new ContributionStatisticsVO(pendingCount, approvedCount, rejectedCount);
+    }
+
+    private void refreshContributionStatisticsCache() {
+        try {
+            ContributionStatisticsVO statistics = computeContributionStatistics();
+            redisTemplate.opsForValue().set(RedisConstant.CONTRIBUTION_STATISTICS, statistics);
+        } catch (Exception e) {
+            log.error("刷新贡献统计缓存失败", e);
+        }
+    }
+
+    private void invalidateContributionStatisticsCache() {
+        try {
+            redisTemplate.delete(RedisConstant.CONTRIBUTION_STATISTICS);
+        } catch (Exception e) {
+            log.error("清除贡献统计缓存失败", e);
+        }
+    }
+
+    @Override
+    public ContributionStatisticsVO getUserStatistics(Long userId) {
+        String cacheKey = RedisConstant.USER_CONTRIBUTION_STATISTICS_PREFIX + userId;
+        try {
+            ContributionStatisticsVO cached = (ContributionStatisticsVO) redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                return cached;
+            }
+        } catch (Exception e) {
+            log.warn("Redis 读取用户贡献统计失败，降级到数据库查询", e);
+        }
+
+        ContributionStatisticsVO statistics = computeUserStatistics(userId);
+        refreshUserContributionStatisticsCache(userId);
+        return statistics;
+    }
+
+    private ContributionStatisticsVO computeUserStatistics(Long userId) {
+        Integer pendingCount = userContributionMapper.countByUserIdAndStatus(userId, StatusConstant.WAIT_FOR_REVIEW);
+        Integer approvedCount = userContributionMapper.countByUserIdAndStatus(userId, StatusConstant.REVIEW_PASS);
+        Integer rejectedCount = userContributionMapper.countByUserIdAndStatus(userId, StatusConstant.REVIEW_REJECT);
+        return new ContributionStatisticsVO(pendingCount, approvedCount, rejectedCount);
+    }
+
+    private void refreshUserContributionStatisticsCache(Long userId) {
+        try {
+            String cacheKey = RedisConstant.USER_CONTRIBUTION_STATISTICS_PREFIX + userId;
+            ContributionStatisticsVO statistics = computeUserStatistics(userId);
+            redisTemplate.opsForValue().set(cacheKey, statistics);
+        } catch (Exception e) {
+            log.error("刷新用户贡献统计缓存失败", e);
+        }
+    }
+
+    private void invalidateUserContributionStatisticsCache(Long userId) {
+        try {
+            String cacheKey = RedisConstant.USER_CONTRIBUTION_STATISTICS_PREFIX + userId;
+            redisTemplate.delete(cacheKey);
+        } catch (Exception e) {
+            log.error("清除用户贡献统计缓存失败", e);
+        }
     }
 
 }

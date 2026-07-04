@@ -23,4 +23,8 @@ public interface ContributionService {
     BatchReviewVO batchReview(@Valid BatchReviewDTO batchReviewDTO);
 
     ContributionStatisticsVO getStatistics();
+
+    Integer getPendingReviewCount();
+
+    ContributionStatisticsVO getUserStatistics(Long userId);
 }

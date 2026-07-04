@@ -4,7 +4,9 @@ import com.genie.constant.JwtClaimsConstant;
 import com.genie.constant.MessageConstant;
 import com.genie.dto.LoginDTO;
 import com.genie.entity.User;
+import com.genie.exception.AccountLockedException;
 import com.genie.exception.LoginFailedException;
+import com.genie.exception.RegisterFailedException;
 import com.genie.mapper.UserMapper;
 import com.genie.properties.JwtProperties;
 import com.genie.service.AdminService;
@@ -23,21 +25,36 @@ public class AdminServiceImpl  implements AdminService {
     private UserMapper userMapper;
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private LoginAttemptService loginAttemptService;
     @Override
     public LoginVO login(LoginDTO loginDTO) {
+        String username = loginDTO.getUsername();
+
+        // ========== 检查账号是否被锁定 ==========
+        loginAttemptService.checkLocked(username);
         //进行用户查找获得用户信息，找不到报错
         User user=userMapper.selectByUserName(loginDTO.getUsername());
+
         if (user==null){
+            // ========== 用户名不存在也记录失败（防止枚举攻击） ==========
+            loginAttemptService.recordFailure(username);
             throw new LoginFailedException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
         //密码不正确
         if (!user.getPassword().equals(loginDTO.getPassword())){
-            throw new LoginFailedException(MessageConstant.PASSWORD_ERROR);
+            long remaining = loginAttemptService.recordFailure(username);
+            if (remaining == 0) {
+                throw new AccountLockedException("密码错误次数过多，账号已锁定15分钟");
+            }
+            throw new LoginFailedException("密码错误，剩余尝试次数：" + remaining);
         }
         //身份判断
         if(user.getRole()!=1){
             throw new LoginFailedException(MessageConstant.IDENTITY_ERROR);
         }
+        // ========== 登录成功，清除失败记录 ==========
+        loginAttemptService.clearFailure(username);
         //创造jwt
         Map<String,Object> claims=new HashMap<>();
         claims.put(JwtClaimsConstant.USER_ID,user.getId());
@@ -56,6 +73,36 @@ public class AdminServiceImpl  implements AdminService {
         //修改最后登陆时间
         userMapper.updateLastLoginTime(user.getId(), LocalDateTime.now());
         return  loginVO;
+    }
+
+    @Override
+    public User getAdminInfo(Long id) {
+        return userMapper.selectById(id);
+    }
+
+    @Override
+    public void updateAdminInfo(Long id, String username, String email, String phone) {
+        if (username != null && !username.trim().isEmpty()) {
+            User current = userMapper.selectById(id);
+            if (current != null && !username.equals(current.getUsername())) {
+                int count = userMapper.countByUsernameExcludeId(username, id);
+                if (count > 0) {
+                    throw new RegisterFailedException("用户名已存在");
+                }
+            }
+            userMapper.updateInfoWithUsername(id, username, email, phone);
+        } else {
+            userMapper.updateInfo(id, email, phone);
+        }
+    }
+
+    @Override
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        String currentPassword = userMapper.selectPasswordById(id);
+        if (!currentPassword.equals(oldPassword)) {
+            throw new LoginFailedException("旧密码错误");
+        }
+        userMapper.updatePassword(id, newPassword);
     }
 
 }

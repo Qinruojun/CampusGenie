@@ -28,4 +28,6 @@ public interface UserContributionMapper {
     void deleteById(Long id);
 
     Integer countByStatus(@Param("status") Integer status);
+
+    Integer countByUserIdAndStatus(@Param("userId") Long userId, @Param("status") Integer status);
 }
