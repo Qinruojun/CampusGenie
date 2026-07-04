@@ -35,6 +35,10 @@ const  submit=async()=>{
       result.value = true
       submitted.value = true
       contributionForm.value = createEmptyContributionForm()
+      setTimeout(() => {
+        result.value = false
+        submitted.value = false
+      }, 5000)
     }
     else{
      submitted.value = false
@@ -60,8 +64,6 @@ onMounted(()=>{
 
 <template>
   <main class="page contribute-page">
-    <RouterLink class="back-link" to="/user/home">← 返回首页</RouterLink>
-
     <p class="eyebrow">用户贡献</p>
     <h1 class="page-title">补充一条校园知识</h1>
     <p class="page-desc">你提交的内容会进入审核队列，通过后加入知识库。</p>
@@ -109,6 +111,8 @@ onMounted(()=>{
         <p class="muted">{{  result? '感谢你的贡献，我们会尽快审核。' : '填写左侧表单后，这里会显示提交状态。' }}</p>
       </aside>
     </div>
+
+    <RouterLink class="back-btn" to="/user/home">返回首页</RouterLink>
   </main>
 </template>
 
@@ -122,15 +126,28 @@ onMounted(()=>{
   align-items: center;
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: 28px;
-  color: var(--muted);
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 48px;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: none;
+  background: #16a34a;
+  color: #fff;
+  font-size: 16px;
   font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.back-link:hover {
-  color: var(--green);
+.back-btn:hover {
+  background: #15803d;
+  color: #fff;
 }
 
 .contribute-page > .eyebrow,
@@ -142,8 +159,9 @@ onMounted(()=>{
 .content-grid {
   margin-top: 44px;
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 20px;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 28px;
+  width: 100%;
 }
 
 .form {
@@ -182,7 +200,7 @@ label {
   margin: 0 0 8px;
 }
 .page {
- width: min(980px, calc(100% - 48px));
+ width: min(1100px, calc(100% - 48px));
  margin: 0 auto;
  padding: 70px 0 96px;
 }

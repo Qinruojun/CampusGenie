@@ -16,7 +16,7 @@ const props = defineProps({
   },
   homeLinkText: {
     type: String,
-    default: '← 返回首页'
+    default: '返回首页'
   },
   resultFrom: {
     type: String,
@@ -89,10 +89,6 @@ const {
 <template>
   <div class="page-bg">
     <main class="page hot-page">
-      <RouterLink v-if="homeLinkTo" class="back-link" :to="homeLinkTo">
-        {{ homeLinkText }}
-      </RouterLink>
-
       <p class="eyebrow">{{ eyebrow }}</p>
       <h1 class="page-title">
         <span v-if="showTitleIcon" class="title-icon">🔥</span>
@@ -154,6 +150,10 @@ const {
           </li>
         </ol>
       </section>
+
+      <RouterLink v-if="homeLinkTo" class="btn-back-home" :to="homeLinkTo">
+        {{ homeLinkText }}
+      </RouterLink>
     </main>
   </div>
 </template>
@@ -175,15 +175,28 @@ const {
   text-align: center;
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: 28px;
-  color: var(--muted);
+.btn-back-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 40px;
+  height: 44px;
+  padding: 0 32px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 15px;
   font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
 }
 
-.back-link:hover {
-  color: var(--green);
+.btn-back-home:hover {
+  border-color: #16a34a;
+  color: #16a34a;
 }
 
 .hot-card {

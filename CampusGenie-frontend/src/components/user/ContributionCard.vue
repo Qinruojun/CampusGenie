@@ -101,6 +101,10 @@ const statusClass = computed(() => {
   display: none;
 }
 
+.btn {
+  padding: 0 18px;
+}
+
 .btn.view {
   color: #16a34a;
   border: 1px solid #16a34a;

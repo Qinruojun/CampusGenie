@@ -1,21 +1,6 @@
 <!--用户贡献页，查看自己的贡献-->
 <template>
   <div class="contribution-page">
-    <RouterLink class="back-link" to="/user/home">
-      ← 返回首页
-    </RouterLink>
-
-<!--    <section class="page-head">-->
-<!--      <p class="eyebrow">-->
-<!--        CampusGenie-->
-<!--      </p>-->
-<!--      <h1>我的贡献</h1>-->
-<!--      <p class="desc">-->
-<!--        查看你提交过的校园问答内容，按提交时间从近到远排列。-->
-<!--      </p>-->
-<!--    </section>-->
-
-
     <div class="page">
       <main class="main">
         <section class="content">
@@ -84,8 +69,6 @@
             </button>
           </div>
 
-
-
           <div class="stats">
             <StatCard
               v-for="item in statList"
@@ -106,34 +89,39 @@
               :key="item.id"
               :item="item"
               @view="handleView"
-              @delete="handleDelete"
+              @delete="onDelete"
             />
           </div>
 
-          <div
-            v-if="totalPages > 1"
-            class="pagination"
-          >
-            <button
-              :disabled="page <= 1"
-              @click="handlePrevPage"
+          <div class="pagination-bar">
+            <RouterLink class="pagination-back-btn" to="/user/home">
+              返回首页
+            </RouterLink>
+            <div
+              v-if="totalPages > 1"
+              class="pagination"
             >
-              上一页
-            </button>
-            <button
-              v-for="pageNumber in pageNumbers"
-              :key="pageNumber"
-              :class="{ current: page === pageNumber }"
-              @click="page = pageNumber"
-            >
-              {{ pageNumber }}
-            </button>
-            <button
-              :disabled="page >= totalPages"
-              @click="handleNextPage"
-            >
-              下一页
-            </button>
+              <button
+                :disabled="page <= 1"
+                @click="handlePrevPage"
+              >
+                上一页
+              </button>
+              <button
+                v-for="pageNumber in pageNumbers"
+                :key="pageNumber"
+                :class="{ current: page === pageNumber }"
+                @click="page = pageNumber"
+              >
+                {{ pageNumber }}
+              </button>
+              <button
+                :disabled="page >= totalPages"
+                @click="handleNextPage"
+              >
+                下一页
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -203,6 +191,11 @@
         loadContributionList()
         loadStatistics()
       })
+      const onDelete = async (item) => {
+        await handleDelete(item)
+        await loadStatistics()
+      }
+
       const handleView = item => {
         contributionViewStore.setContribution(item)
         router.push(`/user/contribution/${item.id}`)
@@ -254,17 +247,14 @@
 
     <style scoped src="@/styles/card-list.css"></style>
     <style>
-      .filter-panel {
-        display: grid;
-        grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
-        gap: 16px;
-        align-items: center;
-        padding: 20px;
-        margin-bottom: 18px;
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      .filter-panel .btn.small {
+        width: 100%;
+        min-width: 0;
+        padding: 0 12px;
+        font-size: 14px;
+        box-sizing: border-box;
       }
+
       .filter-select {
         width: 100%;
         height: 44px;
@@ -332,19 +322,66 @@
   background: radial-gradient(circle at top, #ffffff 0%, #fbfaf7 56%, #f7f5ef 100%);
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: 28px;
-  color: #6b7280;
-  font-weight: 700;
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.3fr) 180px 140px 90px 80px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 20px;
+  margin-bottom: 18px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
-.back-link:hover {
+@media (max-width: 1200px) {
+  .filter-panel {
+    grid-template-columns: minmax(160px, 1.3fr) 140px 120px 85px 75px 75px;
+    gap: 8px;
+  }
+}
+
+.search {
+  box-sizing: border-box;
+}
+
+.pagination-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.pagination-back-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pagination-back-btn:hover {
+  border-color: #16a34a;
   color: #16a34a;
 }
 
 .page {
-  width: min(980px, calc(100% - 48px));
+  width: min(1100px, calc(100% - 48px));
   margin: 0 auto;
   padding: 0;
   background: transparent !important;
@@ -511,12 +548,9 @@
 }
 
 .pagination {
-  max-width: 960px;
-  margin: 26px auto 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 18px;
+  gap: 14px;
 }
 
 .pagination button {
