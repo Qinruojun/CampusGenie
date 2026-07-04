@@ -22,6 +22,7 @@ const AdminHome = () => import('@/views/admin/AdminHome.vue')
 const AdminProfile = () => import('@/views/admin/AdminProfile.vue')
 const AdminLayout = () => import('@/layouts/AdminLayout.vue')
 const UserQAChat = () => import('@/views/user/QAChat.vue')
+const UserProfile = () => import('@/views/user/UserProfile.vue')
 import { USER_ROLE, USERNAME_KEY } from '../constants/storage'
 import { TOKEN_KEY, ADMIN_ROLE, ROLE_KEY } from '../constants/storage'
 //把页面改成懒加载
@@ -110,6 +111,16 @@ const router = createRouter({
       path: '/user/contribution/:id',
       name: 'user-contribution-view',
       component: ContributionView,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      }
+    },
+    {
+      path: '/user/profile',
+      name: 'user-profile',
+      component: UserProfile,
       meta: {
         hideNav: true,
         requiresAuth: true,

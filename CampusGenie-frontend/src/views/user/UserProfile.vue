@@ -5,7 +5,7 @@
         <div class="page-head">
           <div>
             <h1>个人设置</h1>
-            <p>管理您的管理员账户信息。</p>
+            <p>管理您的账户信息。</p>
           </div>
         </div>
 
@@ -15,8 +15,8 @@
               <span>👤</span>
             </div>
             <div class="profile-info">
-              <h2>{{ adminInfo.username || '' }}</h2>
-              <p>管理员</p>
+              <h2>{{ userInfo.username || '' }}</h2>
+              <p>用户</p>
             </div>
           </div>
 
@@ -25,19 +25,19 @@
             <div class="form-grid">
               <div class="form-item">
                 <label>用户名</label>
-                <input v-model="adminInfo.username" placeholder="请输入用户名" />
+                <input v-model="userInfo.username" placeholder="请输入用户名" />
               </div>
               <div class="form-item">
                 <label>邮箱</label>
-                <input v-model="adminInfo.email" placeholder="" />
+                <input v-model="userInfo.email" placeholder="请输入邮箱" />
               </div>
               <div class="form-item">
                 <label>手机号</label>
-                <input v-model="adminInfo.phone" placeholder="" />
+                <input v-model="userInfo.phone" placeholder="请输入手机号" />
               </div>
               <div class="form-item">
                 <label>创建时间</label>
-                <input :value="formatCreatedTime(adminInfo.createdTime)" readonly />
+                <input :value="formatCreatedTime(userInfo.createdTime)" readonly />
               </div>
             </div>
           </div>
@@ -47,15 +47,15 @@
             <div class="form-grid">
               <div class="form-item">
                 <label>旧密码</label>
-                <input type="password" v-model="passwordForm.oldPassword" placeholder="" />
+                <input type="password" v-model="passwordForm.oldPassword" placeholder="请输入旧密码" />
               </div>
               <div class="form-item">
                 <label>新密码</label>
-                <input type="password" v-model="passwordForm.newPassword" placeholder="" />
+                <input type="password" v-model="passwordForm.newPassword" placeholder="请输入新密码" />
               </div>
               <div class="form-item">
                 <label>确认新密码</label>
-                <input type="password" v-model="passwordForm.confirmPassword" placeholder="" />
+                <input type="password" v-model="passwordForm.confirmPassword" placeholder="请再次输入新密码" />
               </div>
             </div>
           </div>
@@ -65,17 +65,19 @@
             <button class="btn ghost" @click="handleReset">重置</button>
           </div>
         </div>
+
+        <RouterLink class="back-btn" to="/user/home">返回首页</RouterLink>
       </section>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { getAdminInfo, updateAdminInfo, changePassword } from '@/api/admin/admin.js'
+import { reactive, onMounted } from 'vue'
+import { getUserInfo, updateUserInfo, changePassword } from '@/api/user/user.js'
 import { SUCCESS } from '@/constants/code.js'
 
-const adminInfo = reactive({
+const userInfo = reactive({
   username: '',
   email: '',
   phone: '',
@@ -102,32 +104,33 @@ function formatCreatedTime(dateValue) {
   return date.toLocaleString('zh-CN')
 }
 
-const loadAdminInfo = async () => {
+const loadUserInfo = async () => {
   try {
-    const res = await getAdminInfo()
+    const res = await getUserInfo()
     if (res.code === SUCCESS && res.data) {
-      adminInfo.username = res.data.username || ''
-      adminInfo.email = res.data.email || ''
-      adminInfo.phone = res.data.phone || ''
-      adminInfo.createdTime = res.data.createdTime || res.data.created_time || null
-      originalUsername = adminInfo.username
+      userInfo.username = res.data.username || ''
+      userInfo.email = res.data.email || ''
+      userInfo.phone = res.data.phone || ''
+      userInfo.createdTime = res.data.createdTime || null
+      originalUsername = userInfo.username
     }
   } catch (error) {
-    console.error('加载管理员信息失败:', error)
+    console.error('加载用户信息失败:', error)
   }
 }
 
 const handleSave = async () => {
   const updateData = {}
-  if (adminInfo.username) updateData.username = adminInfo.username
-  if (adminInfo.email) updateData.email = adminInfo.email
-  if (adminInfo.phone) updateData.phone = adminInfo.phone
+  if (userInfo.username) updateData.username = userInfo.username
+  if (userInfo.email) updateData.email = userInfo.email
+  if (userInfo.phone) updateData.phone = userInfo.phone
 
   try {
     if (Object.keys(updateData).length > 0) {
-      const res = await updateAdminInfo(updateData)
+      const res = await updateUserInfo(updateData)
       if (res.code === SUCCESS) {
         alert('基本信息更新成功')
+        // 如果用户名变了，更新顶栏显示
         if (updateData.username) {
           localStorage.setItem('username', updateData.username)
         }
@@ -147,7 +150,8 @@ const handleSave = async () => {
       }
       const res = await changePassword({
         oldPassword: passwordForm.oldPassword,
-        newPassword: passwordForm.newPassword
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
       })
       if (res.code === SUCCESS) {
         alert('密码修改成功')
@@ -164,7 +168,7 @@ const handleSave = async () => {
     console.error('保存失败:', error)
     const msg = error.response?.data?.msg || '保存失败'
     alert(msg)
-    adminInfo.username = originalUsername
+    userInfo.username = originalUsername
   }
 }
 
@@ -175,13 +179,38 @@ const handleReset = () => {
 }
 
 onMounted(() => {
-  loadAdminInfo()
+  loadUserInfo()
 })
 </script>
 
 <style scoped>
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  color: #1f2937;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+.content {
+  padding: 28px 36px;
+}
+
 .page-head {
   margin-bottom: 24px;
+}
+
+.page-head h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.page-head p {
+  margin: 0;
+  color: #6b7280;
 }
 
 .profile-card {
@@ -307,11 +336,34 @@ onMounted(() => {
   background: #f3f4f6;
 }
 
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 32px;
+  margin-top: 24px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
 @media (max-width: 600px) {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .form-actions {
     justify-content: center;
   }

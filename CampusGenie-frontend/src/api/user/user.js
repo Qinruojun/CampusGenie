@@ -35,3 +35,26 @@ export function register(data) {
         data
     })
 }
+
+export function getUserInfo() {
+    return request({
+        url: '/user/user/info',
+        method: 'get'
+    })
+}
+
+export function updateUserInfo(data) {
+    return request({
+        url: '/user/user/info',
+        method: 'put',
+        data
+    })
+}
+
+export function changePassword(data) {
+    return request({
+        url: '/user/user/password',
+        method: 'put',
+        data
+    })
+}

@@ -29,9 +29,15 @@ public interface UserMapper {
     @Select("update user set email = #{email}, phone = #{phone} where id = #{id}")
     void updateInfo(Long id, String email, String phone);
 
-    @Select("update user set password = #{password} where id = #{id}")
-    void updatePassword(Long id, String password);
+    @Select("update user set username = #{username}, email = #{email}, phone = #{phone} where id = #{id}")
+    void updateInfoWithUsername(Long id, String username, String email, String phone);
 
     @Select("select password from user where id = #{id}")
     String selectPasswordById(Long id);
+
+    @Select("update user set password = #{password} where id = #{id}")
+    void updatePassword(Long id, String password);
+
+    @Select("select count(*) from user where username = #{username} and id != #{excludeId}")
+    int countByUsernameExcludeId(String username, Long excludeId);
 }

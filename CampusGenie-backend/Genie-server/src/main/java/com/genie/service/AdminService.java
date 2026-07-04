@@ -10,7 +10,7 @@ public interface AdminService {
 
     User getAdminInfo(Long id);
 
-    void updateAdminInfo(Long id, String email, String phone);
+    void updateAdminInfo(Long id, String username, String email, String phone);
 
     void changePassword(Long id, String oldPassword, String newPassword);
 }

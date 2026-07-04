@@ -36,9 +36,14 @@ function logout() {
 
 <template>
   <main class="home page">
-    <button class="logout-btn" type="button" @click="logout">
-      {{ username }} · 退出登录
-    </button>
+    <div class="top-actions">
+      <RouterLink class="profile-btn" to="/user/profile" title="个人设置">
+        <span>⚙</span>
+      </RouterLink>
+      <button class="logout-btn" type="button" @click="logout">
+        {{ username }} · 退出登录
+      </button>
+    </div>
 
     <RouterView />
     <section class="hero-center">
@@ -92,11 +97,38 @@ function logout() {
   text-align: center;
 }
 
-.logout-btn {
+.top-actions {
   position: fixed;
   top: 24px;
   right: 28px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(35, 157, 83, 0.24);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 18px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transition: all 0.2s;
+}
+
+.profile-btn:hover {
+  background: rgba(35, 157, 83, 0.08);
+  transform: scale(1.05);
+}
+
+.logout-btn {
   height: 40px;
   padding: 0 16px;
   border: 1px solid rgba(35, 157, 83, 0.24);
@@ -106,6 +138,7 @@ function logout() {
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  white-space: nowrap;
 }
 
 .logout-btn:hover {

@@ -6,6 +6,7 @@ import com.genie.dto.LoginDTO;
 import com.genie.entity.User;
 import com.genie.exception.AccountLockedException;
 import com.genie.exception.LoginFailedException;
+import com.genie.exception.RegisterFailedException;
 import com.genie.mapper.UserMapper;
 import com.genie.properties.JwtProperties;
 import com.genie.service.AdminService;
@@ -80,8 +81,19 @@ public class AdminServiceImpl  implements AdminService {
     }
 
     @Override
-    public void updateAdminInfo(Long id, String email, String phone) {
-        userMapper.updateInfo(id, email, phone);
+    public void updateAdminInfo(Long id, String username, String email, String phone) {
+        if (username != null && !username.trim().isEmpty()) {
+            User current = userMapper.selectById(id);
+            if (current != null && !username.equals(current.getUsername())) {
+                int count = userMapper.countByUsernameExcludeId(username, id);
+                if (count > 0) {
+                    throw new RegisterFailedException("用户名已存在");
+                }
+            }
+            userMapper.updateInfoWithUsername(id, username, email, phone);
+        } else {
+            userMapper.updateInfo(id, email, phone);
+        }
     }
 
     @Override

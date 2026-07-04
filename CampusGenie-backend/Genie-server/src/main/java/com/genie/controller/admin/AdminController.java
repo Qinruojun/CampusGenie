@@ -39,7 +39,7 @@ public class AdminController {
     @PutMapping("/info")
     public Result updateAdminInfo(@RequestBody Map<String, String> params) {
         UserContext userContext = BaseContext.getCurrentUserContext();
-        adminService.updateAdminInfo(userContext.getUserId(), params.get("email"), params.get("phone"));
+        adminService.updateAdminInfo(userContext.getUserId(), params.get("username"), params.get("email"), params.get("phone"));
         return Result.success(null, CodeConstant.SUCCESS, "更新成功");
     }
 
