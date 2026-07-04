@@ -157,6 +157,25 @@ export function getStatistics() {
     return request.get('/admin/knowledge/statistics')
 }
 
+export function batchDeleteKnowledge(data) {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "批量删除成功",
+            "data": {
+                "successCount": data.ids.length,
+                "failCount": 0,
+                "failIds": []
+            }
+        })
+    }
+    return request({
+        url: '/admin/knowledge/batch',
+        method: 'delete',
+        params: { ids: data.ids }
+    })
+}
+
 export function exportKnowledge(params) {
     const query = new URLSearchParams()
     if (params.keyword) query.set('keyword', params.keyword)

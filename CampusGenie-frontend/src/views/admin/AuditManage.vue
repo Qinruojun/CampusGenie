@@ -136,7 +136,7 @@
                 <span>已选 <strong>{{ selectedIds.length }}</strong> 条待审核贡献</span>
                 <button class="btn batch-approve" @click="handleBatchApprove">批量通过</button>
                 <button class="btn batch-reject" @click="handleBatchReject">批量驳回</button>
-                <button class="btn ghost small" @click="selectedIds.value = []">取消选择</button>
+                <button class="btn ghost small" @click="handleCancelSelection">取消选择</button>
               </div>
 
               <ContributionCard
@@ -290,10 +290,42 @@ const statList = computed(() => [
 //   handleSearch()
 // }
 
+const BATCH_STORAGE_KEY = 'campusgenie:audit-batch-cache'
+
+function saveBatchState() {
+  sessionStorage.setItem(BATCH_STORAGE_KEY, JSON.stringify({
+    batchMode: batchMode.value,
+    selectedIds: selectedIds.value,
+    status: queryForm.value.status
+  }))
+}
+
+function restoreBatchState() {
+  try {
+    const raw = sessionStorage.getItem(BATCH_STORAGE_KEY)
+    if (raw) {
+      const data = JSON.parse(raw)
+      if (data.batchMode) {
+        batchMode.value = true
+        selectedIds.value = data.selectedIds || []
+        queryForm.value.status = data.status || WAIT_FOR_REVIEW
+      }
+    }
+  } catch (e) {
+    console.error('Failed to restore batch state:', e)
+  }
+}
+
+function clearBatchState() {
+  sessionStorage.removeItem(BATCH_STORAGE_KEY)
+}
+
 const handleView = (item) => {
+  saveBatchState()
   contributionViewStore.setContribution(item)
   router.push(`/admin/contribution/${item.id}`)
 }
+
 const rejectDialogVisible = ref(false)
 const rejectTarget = ref(null)
 const rejectLoading = ref(false)
@@ -310,6 +342,7 @@ function toggleBatchMode() {
   } else {
     selectedIds.value = []
     queryForm.value.status = ''
+    clearBatchState()
     handleSearch()
   }
 }
@@ -324,6 +357,10 @@ function handleToggleCheck(id) {
   } else {
     selectedIds.value.push(id)
   }
+}
+
+function handleCancelSelection() {
+  selectedIds.value = []
 }
 
 // 批量通过
@@ -440,6 +477,8 @@ onMounted(() => {
   if (statusParam !== undefined) {
     queryForm.value.status = statusParam
   }
+  
+  restoreBatchState()
   
   loadContributionList()
   loadStatisticsData()
