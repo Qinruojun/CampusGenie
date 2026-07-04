@@ -106,11 +106,6 @@ const importStats = computed(() => {
       label: '失败数量',
       value: data.failCount ?? 0,
       tone: 'danger'
-    },
-    {
-      label: '批次 ID',
-      value: data.batchId ?? '-',
-      tone: 'info'
     }
   ]
 })
@@ -1164,7 +1159,7 @@ svg {
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
