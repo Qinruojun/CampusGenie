@@ -42,14 +42,17 @@ public class KnowledgeDraftServiceImpl  implements KnowledgeDraftService {
     public void reject(Long id) {
         //获得这个贡献并判断状态是否为未审核
         KnowledgeDraft knowledgeDraft = knowledgeDraftMapper.selectById(id);
+        if (knowledgeDraft == null) {
+            throw new ContributionAlreadyReviewedException("知识草稿不存在或已被删除");
+        }
         if (!StatusConstant.WAIT_FOR_REVIEW.equals(knowledgeDraft.getStatus()))
-            throw new ContributionAlreadyReviewedException( "该知识草稿已审核");
+            throw new ContributionAlreadyReviewedException("该知识草稿已审核");
         knowledgeDraftMapper.deleteById(id);
         //记录审核日记
         ReviewLog reviewLog = ReviewLog.builder()
                 .contributionType(TargetTypeConstant.Review_TYPE_KNOWLEDGE_DRAFT)
                 .contributionId(id)
-                .reviewer(knowledgeDraft.getReviewedBy())
+                .reviewer(BaseContext.getCurrentUsername())
                 .action(ActionTypeConstant.REVIEW_REJECT)
                 .originalQuestion(knowledgeDraft.getQuestion())
                 .originalAnswer(knowledgeDraft.getAnswer())
