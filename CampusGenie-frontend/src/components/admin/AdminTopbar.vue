@@ -32,8 +32,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import AdminUserCard from '@/components/admin/Card/AdminUserCard.vue'
 import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
 import { getPendingCount } from '@/api/admin/contirbute.js'
@@ -54,11 +54,16 @@ const props = defineProps({
   roleName: {
     type: String,
     default: '超级管理员'
+  },
+  refreshTrigger: {
+    type: Number,
+    default: 0
   }
 })
 
 const emit = defineEmits(['toggle-sidebar'])
 const router = useRouter()
+const route = useRoute()
 
 const noticeCount = ref(0)
 
@@ -79,6 +84,24 @@ function fetchPendingCount() {
 onMounted(() => {
   fetchPendingCount()
 })
+
+watch(() => props.refreshTrigger, () => {
+  fetchPendingCount()
+})
+
+watch(() => route.path, () => {
+  if (route.path.includes('/admin/audit')) {
+    fetchPendingCount()
+  }
+})
+
+setInterval(() => {
+  const shouldRefresh = sessionStorage.getItem('refreshPendingCount')
+  if (shouldRefresh) {
+    sessionStorage.removeItem('refreshPendingCount')
+    fetchPendingCount()
+  }
+}, 500)
 
 function goToAudit() {
   router.push('/admin/audit?status=0')

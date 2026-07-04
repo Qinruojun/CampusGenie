@@ -85,21 +85,9 @@ public class ContributionServiceImpl implements ContributionService {
 
     @Override
     public Integer getPendingReviewCount() {
-        try {
-            Object value = redisTemplate.opsForValue().get(RedisConstant.PENDING_REVIEW_COUNT);
-            if (value != null) {
-                if (value instanceof Integer) {
-                    return (Integer) value;
-                } else if (value instanceof Long) {
-                    return ((Long) value).intValue();
-                } else {
-                    return Integer.parseInt(value.toString());
-                }
-            }
-        } catch (Exception e) {
-            log.error("获取待审核数量失败，降级查询数据库", e);
-        }
-        return userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+        Integer dbCount = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+        refreshPendingReviewCountCache();
+        return dbCount != null ? dbCount : 0;
     }
 
     @Override
@@ -286,7 +274,19 @@ public class ContributionServiceImpl implements ContributionService {
             }
         }
 
+        refreshPendingReviewCountCache();
+
         return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
+    }
+
+    private void refreshPendingReviewCountCache() {
+        try {
+            Integer count = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+            redisTemplate.opsForValue().set(RedisConstant.PENDING_REVIEW_COUNT, count != null ? count : 0);
+            log.info("刷新待审核数量缓存: {}", count);
+        } catch (Exception e) {
+            log.error("刷新待审核数量缓存失败", e);
+        }
     }
 
     @Override

@@ -389,6 +389,7 @@ async function handleBatchApprove() {
   try {
     await loadContributionList()
     await loadStatisticsData()
+    sessionStorage.setItem('refreshPendingCount', '1')
   } catch (e) {
     console.error('刷新列表异常:', e)
   }
@@ -433,11 +434,13 @@ async function submitBatchReject(reason) {
   try {
     await loadContributionList()
     await loadStatisticsData()
+    sessionStorage.setItem('refreshPendingCount', '1')
   } catch (e) {
     console.error('刷新列表异常:', e)
   }
 }
 
+// 取消选择
 function openRejectDialog(item) {
   rejectTarget.value = item
   rejectDialogVisible.value = true

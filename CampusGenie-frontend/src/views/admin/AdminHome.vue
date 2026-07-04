@@ -80,16 +80,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import StatCard from '@/components/StatCard.vue'
+import { getStatistics as getKnowledgeStatistics } from '@/api/admin/knowledge.js'
+import { getStatistics as getContributionStatistics } from '@/api/admin/contirbute.js'
+import { getStatistics as getDraftStatistics } from '@/api/admin/knowledgeDraft.js'
+import { adminGetHotlist } from '@/api/admin/hotQuestion.js'
+import { SUCCESS } from '@/constants/code.js'
 
 const router = useRouter()
 
-const knowledgeCount = ref(8)
-const pendingCount = ref(3)
-const hotCount = ref(10)
-const draftCount = ref(5)
+const knowledgeCount = ref(0)
+const pendingCount = ref(0)
+const hotCount = ref(0)
+const draftCount = ref(0)
 
 const recentActivity = ref([
   { id: 1, icon: '✓', content: '审核通过了一条知识贡献', time: '10分钟前' },
@@ -102,6 +107,39 @@ const recentActivity = ref([
 const goTo = (path) => {
   router.push(path)
 }
+
+const loadStatistics = async () => {
+  try {
+    const [knowledgeRes, contributionRes, draftRes, hotRes] = await Promise.all([
+      getKnowledgeStatistics(),
+      getContributionStatistics(),
+      getDraftStatistics(),
+      adminGetHotlist()
+    ])
+
+    if (knowledgeRes.code === SUCCESS && knowledgeRes.data) {
+      knowledgeCount.value = (knowledgeRes.data.publishedCount || 0) + (knowledgeRes.data.stoppedCount || 0)
+    }
+
+    if (contributionRes.code === SUCCESS && contributionRes.data) {
+      pendingCount.value = contributionRes.data.pendingCount || 0
+    }
+
+    if (draftRes.code === SUCCESS && draftRes.data) {
+      draftCount.value = (draftRes.data.pendingCount || 0) + (draftRes.data.approvedCount || 0)
+    }
+
+    if (hotRes.code === SUCCESS && hotRes.data) {
+      hotCount.value = Array.isArray(hotRes.data) ? hotRes.data.length : 0
+    }
+  } catch (error) {
+    console.error('加载首页统计数据失败:', error)
+  }
+}
+
+onMounted(() => {
+  loadStatistics()
+})
 </script>
 
 <style scoped>
