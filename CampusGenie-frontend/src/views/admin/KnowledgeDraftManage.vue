@@ -33,9 +33,8 @@
 
           <select class="filter-select" v-model="queryForm.status">
             <option value="">全部状态</option>
-            <option value="pending">待审核</option>
-            <option value="approved">已通过</option>
-            <option value="rejected">已驳回</option>
+            <option :value="0">待审核</option>
+            <option :value="1">已通过</option>
           </select>
 
           <button class="sort-btn" :class="{ 'sort-desc': queryForm.sortOrder === SORT_ORDER_DESC, 'sort-asc': queryForm.sortOrder === SORT_ORDER_ASC }" @click="handleToggleSortOrder">
@@ -69,15 +68,15 @@
               @view="handleView"
               @edit="handleEdit"
               @approve="handleApprove"
-              @reject="handleReject"
+              @delete="handleDelete"
           />
         </div>
 
         <div class="pagination">
           <button @click="handlePrevPage">上一页</button>
-          <button :class="{ current: page === 1 }" @click="page = 1">1</button>
-          <button :class="{ current: page === 2 }" @click="page = 2">2</button>
-          <button :class="{ current: page === 3 }" @click="page = 3">3</button>
+          <template v-for="p in Math.min(3, Math.ceil(total / pageSize))" :key="p">
+            <button :class="{ current: page === p }" @click="page = p">{{ p }}</button>
+          </template>
           <button @click="handleNextPage">下一页</button>
         </div>
       </section>
@@ -86,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CategorySelect from '@/components/CategorySelect.vue'
 import { useCategoryOptions } from '@/composables/useCategoryOptions'
@@ -118,7 +117,7 @@ const {
   handleNextPage,
   handleToggleSortOrder,
   handleApprove: baseHandleApprove,
-  handleReject: baseHandleReject,
+  handleDelete: baseHandleDelete,
   handleEdit: baseHandleEdit
 } = useKnowledgeDraftList()
 
@@ -126,8 +125,8 @@ const handleApprove = async (id) => {
   await baseHandleApprove(id)
 }
 
-const handleReject = async (id) => {
-  await baseHandleReject(id)
+const handleDelete = async (id) => {
+  await baseHandleDelete(id)
 }
 
 const handleEdit = (item) => {
@@ -141,12 +140,19 @@ const handleView = (item) => {
 onMounted(() => {
   loadCategoryList()
   loadKnowledgeDraftList()
+  setTimeout(() => {
+    console.log('KnowledgeDraftManage data:', {
+      list: list.value,
+      total: total.value,
+      page: page.value,
+      pageSize: pageSize.value
+    })
+  }, 1500)
 })
 
 const statList = computed(() => {
-  const pendingCount = list.value.filter(item => item.statusDesc === '待审核').length
-  const approvedCount = list.value.filter(item => item.statusDesc === '已通过').length
-  const rejectedCount = list.value.filter(item => item.statusDesc === '已驳回').length
+  const pendingCount = list.value.filter(item => Number(item.status) === 0).length
+  const approvedCount = list.value.filter(item => Number(item.status) === 1).length
 
   return [
     {
@@ -171,11 +177,11 @@ const statList = computed(() => {
       tone: 'green'
     },
     {
-      title: '已驳回',
-      value: rejectedCount,
+      title: '本周更新',
+      value: 0,
       unit: '条',
-      icon: '✕',
-      tone: 'red'
+      icon: '↗',
+      tone: 'green'
     }
   ]
 })
@@ -184,8 +190,8 @@ const statList = computed(() => {
 <style scoped src="@/styles/card-list.css"></style>
 <style>
 .filter-panel {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
   gap: 16px;
   align-items: center;
   padding: 20px;

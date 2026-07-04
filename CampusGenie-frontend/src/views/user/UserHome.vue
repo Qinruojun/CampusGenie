@@ -83,6 +83,7 @@ function logout() {
 
 <style scoped>
 .hero-center {
+  width: 100%;
   min-height: calc(100vh - 238px);
   display: flex;
   flex-direction: column;
@@ -151,9 +152,10 @@ function logout() {
   background: rgba(35, 157, 83, 0.06);
 }
 .page {
-  width: min(980px, calc(100% - 48px));
-  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
   padding: 70px 0 96px;
+  background: radial-gradient(circle at top, #ffffff 0%, #fbfaf7 56%, #f7f5ef 100%);
 }
 
 .shortcut small {

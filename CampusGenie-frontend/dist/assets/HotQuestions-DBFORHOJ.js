@@ -1,0 +1,1 @@
+import{h as e,w as t}from"./index-CY_LEt7t.js";import{t as n}from"./HotQuestionPanel-jVSArCil.js";var r={__name:`HotQuestions`,setup(r){return(r,i)=>(t(),e(n,{"home-link-to":`/user/home`}))}};export{r as default};

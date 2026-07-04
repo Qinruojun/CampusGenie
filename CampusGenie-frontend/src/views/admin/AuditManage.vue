@@ -223,7 +223,7 @@ const statList = computed(() => [
     title: '待审核',
     value: statisticsData.value.pendingCount,
     unit: '条',
-    icon: '◷',
+    icon: '⏳',
     tone: 'orange'
   },
   {

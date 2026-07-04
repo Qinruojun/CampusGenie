@@ -22,7 +22,7 @@ import { SUCCESS } from '@/constants/code'
 import { login } from '@/api/admin/admin.js'
 
 import { useRouter } from 'vue-router'
-import {ROLE_KEY, TOKEN_KEY,USERNAME_KEY} from '@/constants/storage'
+import {ROLE_KEY, TOKEN_KEY,USERNAME_KEY, ADMIN_ROLE} from '@/constants/storage'
 const router = useRouter()
 const loginError = ref('')
 const loginForm = ref({
@@ -40,10 +40,14 @@ async function Login(){
   try {
     const login_res = await login(loginForm.value)
     if(login_res.code ===SUCCESS){
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USERNAME_KEY)
+      localStorage.removeItem(ROLE_KEY)
       localStorage.setItem(TOKEN_KEY,login_res.data.token)
       localStorage.setItem(USERNAME_KEY,login_res.data.username)
       localStorage.setItem(ROLE_KEY,login_res.data.role)
-      router.push('/admin/knowledge')//跳转到提问页
+      console.log('登录成功，角色:', login_res.data.role, 'ADMIN_ROLE:', ADMIN_ROLE)
+      router.push('/admin/home')
       return
     }
     loginError.value = login_res.msg || '登录失败，请检查账号和密码'

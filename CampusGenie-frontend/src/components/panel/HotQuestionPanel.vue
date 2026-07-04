@@ -158,14 +158,17 @@ const {
 
 <style scoped>
 .page {
-  width: min(980px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 70px 0 96px;
+  width: 100%;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #ffffff 0%, #fbfaf7 56%, #f7f5ef 100%);
 }
 
 .hot-page {
+  display: block;
+  width: min(980px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 70px 0 96px;
   max-width: 900px;
-
   text-align: center;
 }
 

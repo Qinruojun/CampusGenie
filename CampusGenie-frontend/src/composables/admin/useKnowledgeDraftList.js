@@ -1,4 +1,4 @@
-import { getPage, approve, reject, edit } from '@/api/admin/knowledgeDraft.js'
+import { getPage, approve, remove, edit } from '@/api/admin/knowledgeDraft.js'
 import { SORT_ORDER_ASC, SORT_ORDER_DESC } from '@/constants/status.js'
 import { SUCCESS } from '@/constants/code.js'
 import { usePageList } from '@/composables/usePageList.js'
@@ -46,22 +46,22 @@ export function useKnowledgeDraftList() {
         }
     }
 
-    const handleReject = async (id) => {
-        const ok = confirm('确定要驳回这条知识草稿吗？')
+    const handleDelete = async (id) => {
+        const ok = confirm('确定要删除这条知识草稿吗？')
         if (!ok) return
 
         try {
-            const res = await reject(id)
+            const res = await remove(id)
 
             if (res.code === SUCCESS) {
-                alert(res.msg || '驳回成功')
+                alert(res.msg || '删除成功')
                 await pageList.loadList()
             } else {
-                alert(res.msg || '驳回失败')
+                alert(res.msg || '删除失败')
             }
         } catch (error) {
             console.error(error)
-            const errorMsg = error.response?.data?.msg || error.message || '服务器异常，驳回失败'
+            const errorMsg = error.response?.data?.msg || error.message || '服务器异常，删除失败'
             alert(errorMsg)
         }
     }
@@ -87,7 +87,7 @@ export function useKnowledgeDraftList() {
         ...pageList,
         loadKnowledgeDraftList: pageList.loadList,
         handleApprove,
-        handleReject,
+        handleDelete,
         handleEdit
     }
 }

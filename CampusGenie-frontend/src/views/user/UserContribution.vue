@@ -114,7 +114,12 @@ onMounted(()=>{
 
 <style scoped>
 .contribute-page {
-  max-width: 900px;
+  width: 100%;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #ffffff 0%, #fbfaf7 56%, #f7f5ef 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .back-link {

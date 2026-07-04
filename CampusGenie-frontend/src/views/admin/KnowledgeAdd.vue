@@ -26,7 +26,6 @@ const form = ref({
 const loading = ref(false)
 
 
-
 const validateForm = () => {
   if (!form.value.question.trim()) {
     alert('请输入问题')
@@ -100,12 +99,9 @@ onMounted(() => {
 
 <template>
   <div class="page">
-    <div class="page-header">
-      <h2>新增知识条目</h2>
-      <button class="back-btn" @click="handleCancel">返回</button>
-    </div>
-
     <div class="form-card">
+      <h2 class="card-title">新增知识条目</h2>
+
       <div class="form-item">
         <label>问题标题</label>
         <input
@@ -146,10 +142,12 @@ onMounted(() => {
 
       <div class="form-item">
         <label>状态</label>
-        <select v-model="form.status">
-          <option :value="1">发布</option>
-          <option :value="0">停用</option>
-        </select>
+        <div class="status-container">
+          <select v-model="form.status" class="status-select">
+            <option :value="1">发布</option>
+            <option :value="0">停用</option>
+          </select>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -163,86 +161,96 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page {
-  padding: 24px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.back-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  cursor: pointer;
-}
-
+.page { padding: 24px; }
 .form-card {
   max-width: 800px;
+  margin: 0 auto;
   padding: 24px;
   background: #fff;
   border: 1px solid #eee;
   border-radius: 8px;
 }
-
-.form-item {
-  margin-bottom: 18px;
+.card-title {
+  text-align: center;
+  margin: 0 0 20px 0;
+  font-size: 24px;
 }
-
+.form-item { margin-bottom: 20px; }
 .form-item label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  text-align: center;
 }
-
 .form-item input,
 .form-item textarea,
 .form-item select {
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 14px;
+  background: #fff;
+  color: #374151;
+  line-height: 1.6;
+  transition: all 0.2s;
 }
-
 .form-item textarea {
   resize: vertical;
+  min-height: 120px;
 }
-
-.form-actions {
+.form-item input:focus,
+.form-item textarea:focus,
+.form-item select:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+.status-container {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  justify-content: center;
 }
-
-.cancel-btn,
-.submit-btn {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 6px;
+.status-select {
+  padding: 10px 16px;
   cursor: pointer;
 }
-
-.cancel-btn {
-  background: #eee;
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
 }
-
+.cancel-btn,
 .submit-btn {
-  background: #1677ff;
-  color: white;
+  padding: 10px 24px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-
+.cancel-btn {
+  background: #fff;
+  border-color: #9ca3af;
+  color: #374151;
+}
+.cancel-btn:hover {
+  background: #f3f4f6;
+}
+.submit-btn {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+.submit-btn:hover:not(:disabled) {
+  background: #15803d;
+  border-color: #15803d;
+}
 .submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

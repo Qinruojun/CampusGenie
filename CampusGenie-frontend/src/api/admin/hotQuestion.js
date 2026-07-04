@@ -1,18 +1,32 @@
-//管理知识条目
 import request from '../request'
-//export是把这个函数暴露给外部，让别的文件import导入可以用
+import { USE_MORK } from "@/constants/test.js";
+import { SUCCESS } from "@/constants/code.js";
+import { USER_HOT_QUESTION } from "@/mock/Response/userHotQuestion.js";
 
-export function adminGetHotlist(){
+export function adminGetHotlist() {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "获取热点问题成功",
+            "data": USER_HOT_QUESTION
+        })
+    }
     return request({
-        url:'/admin/hotquestions',//后端接口地址
-        method: 'get',
-
+        url: '/admin/hotquestions',
+        method: 'get'
     })
 }
 
-export function adminRefreshHotlist(){
+export function adminRefreshHotlist() {
+    if (USE_MORK) {
+        return Promise.resolve({
+            "code": SUCCESS,
+            "msg": "热点问题刷新成功",
+            "data": null
+        })
+    }
     return request({
-        url:'/admin/hotquestions/refresh',
-        method: 'post',
+        url: '/admin/hotquestions/refresh',
+        method: 'post'
     })
 }

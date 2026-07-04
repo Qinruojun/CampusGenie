@@ -85,12 +85,34 @@ export function Delete(id){
 //分页查询
 export function getPage(params){
     if(USE_MORK){
+        let filtered = [...mockKnowledgeList]
+        
+        if (params.keyword) {
+            filtered = filtered.filter(item => 
+                item.question.includes(params.keyword) || 
+                item.answer.includes(params.keyword)
+            )
+        }
+        
+        if (params.categoryId) {
+            filtered = filtered.filter(item => String(item.categoryId) === String(params.categoryId))
+        }
+        
+        if (params.status !== undefined && params.status !== '') {
+            filtered = filtered.filter(item => Number(item.status) === Number(params.status))
+        }
+        
+        const pageSize = params.pageSize || 10
+        const page = params.page || 1
+        const start = (page - 1) * pageSize
+        const end = start + pageSize
+        
         return Promise.resolve({
             "code": SUCCESS,
             "msg": "分页查询成功",
             "data": {
-                "total":mockCategoryList.length,
-                "records":mockKnowledgeList
+                "total": filtered.length,
+                "records": filtered.slice(start, end)
             }
         })
     }
@@ -117,14 +139,17 @@ export function Import(FormData){
 
 export function getStatistics() {
     if (USE_MORK) {
+        const publishedCount = mockKnowledgeList.filter(item => item.status === 1).length
+        const stoppedCount = mockKnowledgeList.filter(item => item.status === 0).length
+        
         return Promise.resolve({
             "code": SUCCESS,
             "msg": "获取统计数据成功",
             "data": {
-                "publishedCount": 1102,
-                "stoppedCount": 154,
-                "weeklyUpdateCount": 32,
-                "lastWeekUpdateCount": 27
+                "publishedCount": publishedCount,
+                "stoppedCount": stoppedCount,
+                "weeklyUpdateCount": 3,
+                "lastWeekUpdateCount": 2
             }
         })
     }

@@ -236,7 +236,6 @@
 
     <style scoped src="@/styles/card-list.css"></style>
     <style>
-    /* TODO  */
       .filter-panel {
         display: grid;
         grid-template-columns: minmax(280px, 1.7fr) 220px 160px 110px 90px 90px;
@@ -310,11 +309,9 @@
 <style scoped>
 .contribution-page {
   width: 100%;
-  min-height: calc(100vh - 72px);
-  padding: 72px 10vw 96px;
-  /*background: #f8f7f2;*/
-  /*color: #1c241c;*/
-
+  min-height: 100vh;
+  padding: 0;
+  background: radial-gradient(circle at top, #ffffff 0%, #fbfaf7 56%, #f7f5ef 100%);
 }
 
 .back-link {
@@ -329,9 +326,10 @@
 }
 
 .page {
- width: 100%;
+  width: min(980px, calc(100% - 48px));
   margin: 0 auto;
- padding: 70px 0 96px;
+  padding: 0;
+  background: transparent !important;
 }
 .page-head {
   text-align: center;

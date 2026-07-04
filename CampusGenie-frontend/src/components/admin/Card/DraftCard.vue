@@ -1,24 +1,22 @@
 <template>
   <article class="draft-card">
     <div class="main-info">
-      <div class="main-info-content">
-        <h3>{{ item.question }}</h3>
+      <h3>{{ item.question }}</h3>
 
-        <p class="answer">
-          答案预览：{{ item.answer }}
-        </p>
+      <p class="answer">
+        答案预览：{{ item.answer }}
+      </p>
 
-        <div class="meta">
-          <span>◇ 分类：{{ item.categoryName }}</span>
-          <span>▣ 来源：{{ item.source }}</span>
-          <span>▤ ID：{{ item.id }}</span>
-        </div>
+      <div class="meta">
+        <span>◇ 分类：{{ item.categoryName || '未分类' }}</span>
+        <span>▣ 来源：{{ item.source }}</span>
+        <span>▤ ID：{{ item.id }}</span>
       </div>
     </div>
 
     <div class="status-info">
       <span class="tag" :class="statusClass">
-        {{ item.statusDesc }}
+        {{ statusText }}
       </span>
 
       <p>创建时间：{{ formatTime(item.createdTime) }}</p>
@@ -26,16 +24,16 @@
     </div>
 
     <div class="actions">
-      <button v-if="item.statusDesc === '待审核'" class="btn approve" @click="$emit('approve', item.id)">
+      <button v-if="item.status === 0" class="btn approve" @click="$emit('approve', item.id)">
         审核通过
-      </button>
-
-      <button v-if="item.statusDesc === '待审核'" class="btn reject" @click="$emit('reject', item.id)">
-        驳回
       </button>
 
       <button class="btn edit" @click="$emit('edit', item)">
         编辑
+      </button>
+
+      <button class="btn delete" @click="$emit('delete', item.id)">
+        删除
       </button>
 
       <button class="detail" @click="$emit('view', item)">
@@ -46,34 +44,41 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   item: {
     type: Object,
     required: true
   }
 })
 
-defineEmits(['view', 'edit', 'approve', 'reject'])
+defineEmits(['view', 'edit', 'approve', 'delete'])
 
-const statusClass = {
-  computed() {
-    const statusDesc = this.item.statusDesc
-    if (statusDesc === '待审核') return 'pending'
-    if (statusDesc === '已通过') return 'approved'
-    if (statusDesc === '已驳回') return 'rejected'
-    return ''
-  }
-}
+const statusText = computed(() => {
+  const status = Number(props.item.status)
+  return status === 0 ? '待审核' : '已通过'
+})
+
+const statusClass = computed(() => {
+  const status = Number(props.item.status)
+  return status === 0 ? 'pending' : 'approved'
+})
 
 const formatTime = (time) => {
   if (!time) return '-'
+  if (Array.isArray(time)) {
+    const [year, month, day, hour, minute, second] = time
+    return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`
+  }
   return time.replace('T', ' ').substring(0, 19)
 }
 </script>
 
 <style scoped>
 .draft-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) 260px 280px;
   align-items: center;
   gap: 28px;
   min-height: 104px;
@@ -84,44 +89,34 @@ const formatTime = (time) => {
 }
 
 .main-info {
-  flex: 1;
   min-width: 0;
-  overflow-x: auto;
-}
-
-.main-info::-webkit-scrollbar {
-  display: none;
-}
-
-.main-info-content {
-  display: inline-block;
-  white-space: nowrap;
 }
 
 .main-info h3 {
   margin: 0 0 8px;
   font-size: 20px;
   color: #111827;
-  white-space: nowrap;
 }
 
 .answer {
+  max-width: 680px;
   margin: 0 0 10px;
   color: #4b5563;
   line-height: 1.5;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .meta {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   gap: 22px;
   color: #6b7280;
   font-size: 14px;
-  white-space: nowrap;
 }
 
 .status-info {
-  flex-shrink: 0;
   min-height: 76px;
   padding-left: 28px;
   border-left: 1px solid #e5e7eb;
@@ -153,60 +148,57 @@ const formatTime = (time) => {
   background: #dcfce7;
 }
 
-.tag.rejected {
-  color: #ef4444;
-  background: #fee2e2;
-}
-
-.draft-card .actions {
-  flex-shrink: 0;
+.actions {
   display: grid;
-  grid-template-columns: repeat(3, 86px);
+  grid-template-columns: repeat(3, 100px);
   justify-content: end;
   gap: 14px;
 }
 
-.draft-card .btn {
+.btn {
   height: 40px;
-  padding: 0;
   border-radius: 8px;
   background: #fff;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.draft-card .btn.approve {
+.btn.approve {
   color: #16a34a;
   border-color: #16a34a;
 }
 
-.draft-card .btn.approve:hover {
+.btn.approve:hover {
   color: #fff;
   border-color: #16a34a;
   background: #16a34a;
 }
 
-.draft-card .btn.reject {
-  color: #ef4444;
-  border-color: #ef4444;
-}
-
-.draft-card .btn.reject:hover {
-  color: #fff;
-  border-color: #ef4444;
-  background: #ef4444;
-}
-
-.draft-card .btn.edit {
+.btn.edit {
   color: #111827;
   border-color: #9ca3af;
 }
 
-.draft-card .btn.edit:hover {
+.btn.edit:hover {
   color: #fff;
   border-color: #3b82f6;
   background: #3b82f6;
+}
+
+.btn.delete {
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+.btn.delete:hover {
+  color: #fff;
+  border-color: #ef4444;
+  background: #ef4444;
 }
 
 .detail {
