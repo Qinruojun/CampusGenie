@@ -45,4 +45,20 @@ public class RedisConstant {
     /** 待审核知识条目数量 */
     public static final String PENDING_REVIEW_COUNT = "pending:review:count";
 
+    // ==================== 知识条目统计 ====================
+    /** 知识条目统计缓存 */
+    public static final String KNOWLEDGE_STATISTICS = "knowledge:statistics";
+
+    // ==================== 知识草稿统计 ====================
+    /** 知识草稿统计缓存 */
+    public static final String DRAFT_STATISTICS = "draft:statistics";
+
+    // ==================== 贡献统计 ====================
+    /** 贡献统计缓存 */
+    public static final String CONTRIBUTION_STATISTICS = "contribution:statistics";
+
+    // ==================== 用户贡献统计 ====================
+    /** 用户贡献统计缓存（按用户ID） */
+    public static final String USER_CONTRIBUTION_STATISTICS_PREFIX = "user:contribution:statistics:";
+
 }

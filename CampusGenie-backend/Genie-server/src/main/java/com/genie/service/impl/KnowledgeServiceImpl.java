@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.constant.ActionTypeConstant;
+import com.genie.constant.RedisConstant;
 import com.genie.constant.StatusConstant;
 import com.genie.constant.TargetTypeConstant;
 import com.genie.context.BaseContext;
@@ -32,6 +33,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +49,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class KnowledgeServiceImpl implements KnowledgeService {
     @Autowired
     private KnowledgeBaseMapper knowledgeBaseMapper;
@@ -55,6 +59,8 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     private CategoryMapper categoryMapper;
     @Autowired
     private KnowledgeDraftMapper knowledgeDraftMapper;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     @Transactional
@@ -77,6 +83,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .createdTime(LocalDateTime.now())
                 .build();
         adminLogMapper.insert(adminLog);
+        invalidateKnowledgeStatisticsCache();
     }
 
     @Override
@@ -117,6 +124,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .createdTime(LocalDateTime.now())
                 .build();
         adminLogMapper.insert(adminLog);
+        invalidateKnowledgeStatisticsCache();
     }
 
     @Override
@@ -149,6 +157,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .createdTime(LocalDateTime.now())
                 .build();
                 adminLogMapper.insert(adminLog);
+        invalidateKnowledgeStatisticsCache();
     }
 
     @Override
@@ -178,6 +187,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .createdTime(LocalDateTime.now())
                 .build();
         adminLogMapper.insert(adminLog);
+        invalidateKnowledgeStatisticsCache();
     }
 
     @Override
@@ -221,6 +231,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .createdTime(LocalDateTime.now())
                 .build();
                 adminLogMapper.insert(adminLog);
+        invalidateKnowledgeStatisticsCache();
         return batchDeleteVO;
 
 
@@ -361,21 +372,45 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     @Override
     public KnowledgeStatisticsVO getStatistics() {
-        // 已发布数量（status=1）
+        try {
+            KnowledgeStatisticsVO cached = (KnowledgeStatisticsVO) redisTemplate.opsForValue().get(RedisConstant.KNOWLEDGE_STATISTICS);
+            if (cached != null) {
+                return cached;
+            }
+        } catch (Exception e) {
+            log.warn("Redis 读取知识条目统计失败，降级到数据库查询", e);
+        }
+
+        KnowledgeStatisticsVO statistics = computeStatistics();
+        refreshKnowledgeStatisticsCache();
+        return statistics;
+    }
+
+    private KnowledgeStatisticsVO computeStatistics() {
         Integer publishedCount = knowledgeBaseMapper.countByStatus(StatusConstant.PUBLISHED);
-        
-        // 已停用知识库数量（status=0）
         Integer stoppedCount = knowledgeBaseMapper.countByStatus(StatusConstant.STOPPED);
-        
-        // 本周更新数量（本周一 00:00:00 至今）
         LocalDateTime startOfWeek = LocalDateTime.now().with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
         Integer weeklyUpdateCount = knowledgeBaseMapper.countByUpdatedTimeAfter(startOfWeek);
-        
-        // 上周更新数量（上周一 00:00:00 到上周日 23:59:59）
         LocalDateTime startOfLastWeek = startOfWeek.minusWeeks(1);
         LocalDateTime endOfLastWeek = startOfWeek.withHour(0).withMinute(0).withSecond(0).withNano(0);
         Integer lastWeekUpdateCount = knowledgeBaseMapper.countByUpdatedTimeBetween(startOfLastWeek, endOfLastWeek);
-        
         return new KnowledgeStatisticsVO(publishedCount, stoppedCount, weeklyUpdateCount, lastWeekUpdateCount);
+    }
+
+    private void refreshKnowledgeStatisticsCache() {
+        try {
+            KnowledgeStatisticsVO statistics = computeStatistics();
+            redisTemplate.opsForValue().set(RedisConstant.KNOWLEDGE_STATISTICS, statistics);
+        } catch (Exception e) {
+            log.error("刷新知识条目统计缓存失败", e);
+        }
+    }
+
+    private void invalidateKnowledgeStatisticsCache() {
+        try {
+            redisTemplate.delete(RedisConstant.KNOWLEDGE_STATISTICS);
+        } catch (Exception e) {
+            log.error("清除知识条目统计缓存失败", e);
+        }
     }
 }

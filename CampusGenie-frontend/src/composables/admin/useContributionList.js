@@ -1,9 +1,13 @@
-import {approve, getPage,reject,getStatistics} from '@/api/admin/contirbute.js'
+import { approve, getPage, reject, getStatistics } from '@/api/admin/contirbute.js'
 import { SORT_ORDER_DESC } from '@/constants/status.js'
 import { usePageList } from '@/composables/usePageList.js'
-import {SUCCESS} from "@/constants/code.js";
+import { SUCCESS } from "@/constants/code.js";
+import { eventBus, EVENT_TYPES } from '@/utils/eventBus.js'
 
 export function useContributionList() {
+    function triggerRefresh() {
+        eventBus.emit(EVENT_TYPES.REFRESH_PENDING_COUNT)
+    }
     const pageList = usePageList({
         pageApi: getPage,
 
@@ -31,19 +35,20 @@ export function useContributionList() {
             }
         },
     })
-    const handleApprove= async (item) => {
+    const handleApprove = async (item) => {
         const ok = confirm('确定要通过这条贡献吗？')
         if (!ok) return
         const data = {
-            editedQuestion:item.question,
+            editedQuestion: item.question,
             editedAnswer: item.answer,
         }
         try {
-            const res = await approve(item.id,data)
+            const res = await approve(item.id, data)
             if (res.code === SUCCESS) {
                 alert(res.msg || '审核通过成功')
                 await pageList.loadList()
                 await loadStatistics()
+                triggerRefresh()
             } else {
                 alert(res.msg || '审核通过失败')
             }
@@ -53,7 +58,7 @@ export function useContributionList() {
         }
 
     }
-    const handleReject= async (item,rejectReason) => {
+    const handleReject = async (item, rejectReason) => {
         const ok = confirm('确定要驳回这条贡献吗？')
         if (!ok) return
         const data = {
@@ -65,6 +70,7 @@ export function useContributionList() {
                 alert(res.msg || '审核驳回成功')
                 await pageList.loadList()
                 await loadStatistics()
+                triggerRefresh()
             } else {
                 alert(res.msg || '审核驳回失败')
             }

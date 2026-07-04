@@ -38,3 +38,7 @@ export function contribute(data){
        data: data
    })//前端传给后端的内容
 }
+
+export function getUserStatistics() {
+    return request.get('/user/contributions/statistics')
+}

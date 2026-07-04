@@ -213,6 +213,7 @@ import StatCard from "@/components/StatCard.vue";
 import { useRouter, useRoute } from 'vue-router'
 import { useContributionViewStore } from '@/stores/contributionViewStore'
 import { batchReview } from '@/api/admin/contirbute.js'
+import { eventBus, EVENT_TYPES } from '@/utils/eventBus.js'
 
 const {
   categoryOptions,
@@ -241,6 +242,10 @@ const {
 
 const router = useRouter()
 const route = useRoute()
+
+function refreshNoticeCount() {
+  eventBus.emit(EVENT_TYPES.REFRESH_PENDING_COUNT)
+}
 
 const statisticsData = ref({
   pendingCount: 0,
@@ -389,7 +394,7 @@ async function handleBatchApprove() {
   try {
     await loadContributionList()
     await loadStatisticsData()
-    sessionStorage.setItem('refreshPendingCount', '1')
+    refreshNoticeCount()
   } catch (e) {
     console.error('刷新列表异常:', e)
   }
@@ -434,7 +439,7 @@ async function submitBatchReject(reason) {
   try {
     await loadContributionList()
     await loadStatisticsData()
-    sessionStorage.setItem('refreshPendingCount', '1')
+    refreshNoticeCount()
   } catch (e) {
     console.error('刷新列表异常:', e)
   }
@@ -461,6 +466,7 @@ async function submitReject(reason) {
     rejectTarget.value = null
 
     await loadStatisticsData()
+    refreshNoticeCount()
   } finally {
     rejectLoading.value = false
   }

@@ -142,7 +142,7 @@
 </template>
 
     <script setup>
-      import { computed, onMounted } from 'vue'
+      import { computed, onMounted, ref } from 'vue'
 
       import CategorySelect from '@/components/CategorySelect.vue'
       import { useCategoryOptions } from '@/composables/useCategoryOptions'
@@ -153,6 +153,7 @@
       import { useContributionList } from "@/composables/user/useContributionList.js";
       import { useContributionViewStore } from '@/stores/contributionViewStore'
       import { useRouter } from 'vue-router'
+      import { getUserStatistics } from '@/api/user/contribution.js'
       const router = useRouter()
       const contributionViewStore = useContributionViewStore()
       const {
@@ -179,11 +180,28 @@
 
       } = useContributionList()
 
+      const statistics = ref({
+        pendingCount: 0,
+        approvedCount: 0,
+        rejectedCount: 0
+      })
+
+      const loadStatistics = async () => {
+        try {
+          const res = await getUserStatistics()
+          if (res.code === 200) {
+            statistics.value = res.data
+          }
+        } catch (e) {
+          console.error('加载统计数据失败', e)
+        }
+      }
 
 
       onMounted(()=>{
         loadCategoryList()
         loadContributionList()
+        loadStatistics()
       })
       const handleView = item => {
         contributionViewStore.setContribution(item)
@@ -204,28 +222,28 @@
       const statList = computed(() => [
         {
           title: '贡献总数',
-          value: total.value,
+          value: statistics.value.pendingCount + statistics.value.approvedCount + statistics.value.rejectedCount,
           unit: '条',
           icon: '▧',
           tone: 'green'
         },
         {
-          title: '当前页已通过',
-          value: currentPageStatusCount(REVIEW_PASS_MSG),
+          title: '已通过',
+          value: statistics.value.approvedCount,
           unit: '条',
           icon: '➤',
           tone: 'green'
         },
         {
-          title: '当前页待审核',
-          value: currentPageStatusCount(WAIT_FOR_REVIEW_MSG),
+          title: '待审核',
+          value: statistics.value.pendingCount,
           unit: '条',
           icon: '◷',
           tone: 'orange'
         },
         {
-          title: '当前页已驳回',
-          value: currentPageStatusCount(REVIEW_REJECT_MSG),
+          title: '已驳回',
+          value: statistics.value.rejectedCount,
           unit: '条',
           icon: '↗',
           tone: 'green'

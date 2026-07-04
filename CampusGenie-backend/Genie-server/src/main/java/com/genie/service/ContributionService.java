@@ -25,4 +25,6 @@ public interface ContributionService {
     ContributionStatisticsVO getStatistics();
 
     Integer getPendingReviewCount();
+
+    ContributionStatisticsVO getUserStatistics(Long userId);
 }

@@ -1,6 +1,7 @@
 package com.genie.service.impl;
 
 import com.genie.constant.ActionTypeConstant;
+import com.genie.constant.RedisConstant;
 import com.genie.constant.TargetTypeConstant;
 import com.genie.context.BaseContext;
 import com.genie.dto.ImportOptionDTO;
@@ -17,6 +18,7 @@ import com.genie.vo.ImportErrorVO;
 import com.genie.vo.ImportResultVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +38,8 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
     private KnowledgeBaseMapper knowledgeBaseMapper;
     @Autowired
     private AdminLogMapper adminLogMapper;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     @Override
@@ -152,8 +156,18 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
                 .createdTime(LocalDateTime.now())
                 .build();
         adminLogMapper.insert(adminLog);
+        
+        invalidateKnowledgeStatisticsCache();
                 
         return buildResult(totalCount, successCount, errors);
+    }
+
+    private void invalidateKnowledgeStatisticsCache() {
+        try {
+            redisTemplate.delete(RedisConstant.KNOWLEDGE_STATISTICS);
+        } catch (Exception e) {
+            log.error("清除知识条目统计缓存失败", e);
+        }
     }
 
     /**

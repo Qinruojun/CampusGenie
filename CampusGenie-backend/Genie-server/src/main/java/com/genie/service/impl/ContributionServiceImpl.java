@@ -113,6 +113,8 @@ public class ContributionServiceImpl implements ContributionService {
         userContribution.setCreatedTime(LocalDateTime.now());
         userContributionMapper.insert(userContribution);
         incrementPendingCount();
+        invalidateContributionStatisticsCache();
+        invalidateUserContributionStatisticsCache(userId);
     }
 
     @Override
@@ -183,6 +185,17 @@ public class ContributionServiceImpl implements ContributionService {
                 .createdTime(LocalDateTime.now())
                 .build();
         reviewLogMapper.insert(reviewLog);
+        invalidateKnowledgeStatisticsCache();
+        invalidateContributionStatisticsCache();
+        invalidateUserContributionStatisticsCache(userContribution.getUserId());
+    }
+
+    private void invalidateKnowledgeStatisticsCache() {
+        try {
+            redisTemplate.delete(RedisConstant.KNOWLEDGE_STATISTICS);
+        } catch (Exception e) {
+            log.error("清除知识条目统计缓存失败", e);
+        }
     }
 
     @Override
@@ -216,6 +229,8 @@ public class ContributionServiceImpl implements ContributionService {
                 .createdTime(LocalDateTime.now())
                 .build();
                 reviewLogMapper.insert(reviewLog);
+        invalidateContributionStatisticsCache();
+        invalidateUserContributionStatisticsCache(userContribution.getUserId());
     }
 
     @Override
@@ -275,6 +290,8 @@ public class ContributionServiceImpl implements ContributionService {
         }
 
         refreshPendingReviewCountCache();
+        invalidateContributionStatisticsCache();
+        invalidateKnowledgeStatisticsCache();
 
         return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
     }
@@ -291,11 +308,85 @@ public class ContributionServiceImpl implements ContributionService {
 
     @Override
     public ContributionStatisticsVO getStatistics() {
+        try {
+            ContributionStatisticsVO cached = (ContributionStatisticsVO) redisTemplate.opsForValue().get(RedisConstant.CONTRIBUTION_STATISTICS);
+            if (cached != null) {
+                return cached;
+            }
+        } catch (Exception e) {
+            log.warn("Redis 读取贡献统计失败，降级到数据库查询", e);
+        }
+
+        ContributionStatisticsVO statistics = computeContributionStatistics();
+        refreshContributionStatisticsCache();
+        return statistics;
+    }
+
+    private ContributionStatisticsVO computeContributionStatistics() {
         Integer pendingCount = userContributionMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
         Integer approvedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_PASS);
         Integer rejectedCount = userContributionMapper.countByStatus(StatusConstant.REVIEW_REJECT);
-        
         return new ContributionStatisticsVO(pendingCount, approvedCount, rejectedCount);
+    }
+
+    private void refreshContributionStatisticsCache() {
+        try {
+            ContributionStatisticsVO statistics = computeContributionStatistics();
+            redisTemplate.opsForValue().set(RedisConstant.CONTRIBUTION_STATISTICS, statistics);
+        } catch (Exception e) {
+            log.error("刷新贡献统计缓存失败", e);
+        }
+    }
+
+    private void invalidateContributionStatisticsCache() {
+        try {
+            redisTemplate.delete(RedisConstant.CONTRIBUTION_STATISTICS);
+        } catch (Exception e) {
+            log.error("清除贡献统计缓存失败", e);
+        }
+    }
+
+    @Override
+    public ContributionStatisticsVO getUserStatistics(Long userId) {
+        String cacheKey = RedisConstant.USER_CONTRIBUTION_STATISTICS_PREFIX + userId;
+        try {
+            ContributionStatisticsVO cached = (ContributionStatisticsVO) redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                return cached;
+            }
+        } catch (Exception e) {
+            log.warn("Redis 读取用户贡献统计失败，降级到数据库查询", e);
+        }
+
+        ContributionStatisticsVO statistics = computeUserStatistics(userId);
+        refreshUserContributionStatisticsCache(userId);
+        return statistics;
+    }
+
+    private ContributionStatisticsVO computeUserStatistics(Long userId) {
+        Integer pendingCount = userContributionMapper.countByUserIdAndStatus(userId, StatusConstant.WAIT_FOR_REVIEW);
+        Integer approvedCount = userContributionMapper.countByUserIdAndStatus(userId, StatusConstant.REVIEW_PASS);
+        Integer rejectedCount = userContributionMapper.countByUserIdAndStatus(userId, StatusConstant.REVIEW_REJECT);
+        return new ContributionStatisticsVO(pendingCount, approvedCount, rejectedCount);
+    }
+
+    private void refreshUserContributionStatisticsCache(Long userId) {
+        try {
+            String cacheKey = RedisConstant.USER_CONTRIBUTION_STATISTICS_PREFIX + userId;
+            ContributionStatisticsVO statistics = computeUserStatistics(userId);
+            redisTemplate.opsForValue().set(cacheKey, statistics);
+        } catch (Exception e) {
+            log.error("刷新用户贡献统计缓存失败", e);
+        }
+    }
+
+    private void invalidateUserContributionStatisticsCache(Long userId) {
+        try {
+            String cacheKey = RedisConstant.USER_CONTRIBUTION_STATISTICS_PREFIX + userId;
+            redisTemplate.delete(cacheKey);
+        } catch (Exception e) {
+            log.error("清除用户贡献统计缓存失败", e);
+        }
     }
 
 }

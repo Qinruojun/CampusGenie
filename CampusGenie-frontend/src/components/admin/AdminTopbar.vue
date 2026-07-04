@@ -32,11 +32,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AdminUserCard from '@/components/admin/Card/AdminUserCard.vue'
 import { ROLE_KEY, TOKEN_KEY, USERNAME_KEY } from '@/constants/storage.js'
 import { getPendingCount } from '@/api/admin/contirbute.js'
+import { eventBus, EVENT_TYPES } from '@/utils/eventBus.js'
 
 const props = defineProps({
   title: {
@@ -54,10 +55,6 @@ const props = defineProps({
   roleName: {
     type: String,
     default: '超级管理员'
-  },
-  refreshTrigger: {
-    type: Number,
-    default: 0
   }
 })
 
@@ -81,27 +78,24 @@ function fetchPendingCount() {
   })
 }
 
-onMounted(() => {
-  fetchPendingCount()
-})
-
-watch(() => props.refreshTrigger, () => {
-  fetchPendingCount()
-})
-
 watch(() => route.path, () => {
   if (route.path.includes('/admin/audit')) {
     fetchPendingCount()
   }
 })
 
-setInterval(() => {
-  const shouldRefresh = sessionStorage.getItem('refreshPendingCount')
-  if (shouldRefresh) {
-    sessionStorage.removeItem('refreshPendingCount')
-    fetchPendingCount()
-  }
-}, 500)
+function handleRefreshPendingCount() {
+  fetchPendingCount()
+}
+
+onMounted(() => {
+  fetchPendingCount()
+  eventBus.on(EVENT_TYPES.REFRESH_PENDING_COUNT, handleRefreshPendingCount)
+})
+
+onUnmounted(() => {
+  eventBus.off(EVENT_TYPES.REFRESH_PENDING_COUNT, handleRefreshPendingCount)
+})
 
 function goToAudit() {
   router.push('/admin/audit?status=0')
