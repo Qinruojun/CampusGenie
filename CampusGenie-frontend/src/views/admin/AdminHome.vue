@@ -87,6 +87,7 @@ import { getStatistics as getKnowledgeStatistics } from '@/api/admin/knowledge.j
 import { getStatistics as getContributionStatistics } from '@/api/admin/contirbute.js'
 import { getStatistics as getDraftStatistics } from '@/api/admin/knowledgeDraft.js'
 import { adminGetHotlist } from '@/api/admin/hotQuestion.js'
+import { getRecentLogs } from '@/api/admin/adminLog.js'
 import { SUCCESS } from '@/constants/code.js'
 
 const router = useRouter()
@@ -96,13 +97,128 @@ const pendingCount = ref(0)
 const hotCount = ref(0)
 const draftCount = ref(0)
 
-const recentActivity = ref([
-  { id: 1, icon: '✓', content: '审核通过了一条知识贡献', time: '10分钟前' },
-  { id: 2, icon: '📝', content: '创建了知识草稿：如何申请助学金', time: '30分钟前' },
-  { id: 3, icon: '🗑️', content: '删除了已停用的知识条目', time: '1小时前' },
-  { id: 4, icon: '⬆️', content: '批量导入了15条知识条目', time: '2小时前' },
-  { id: 5, icon: '🔥', content: '更新了热点问题列表', time: '3小时前' }
-])
+const recentActivity = ref([])
+
+function formatActivity(log) {
+  const iconMap = {
+    INSERT: {
+      knowledge_base: '📚',
+      knowledge_draft: '📝',
+      contribution: '✍️',
+      category: '📁'
+    },
+    UPDATE: {
+      knowledge_base: '✏️',
+      knowledge_draft: '✏️',
+      category: '✏️'
+    },
+    DELETE: {
+      knowledge_base: '🗑️',
+      knowledge_draft: '🗑️'
+    },
+    REVIEW_PASS: {
+      contribution: '✓',
+      knowledge_draft: '✓'
+    },
+    REVIEW_REJECT: {
+      contribution: '✗',
+      knowledge_draft: '✗'
+    },
+    DISABLE: {
+      knowledge_base: '🔒'
+    },
+    ENABLE: {
+      knowledge_base: '🔓'
+    },
+    BATCH_IMPORT: {
+      knowledge_base: '⬆️'
+    },
+    BATCH_DELETE: {
+      knowledge_base: '🗑️'
+    }
+  }
+
+  const contentMap = {
+    INSERT: {
+      knowledge_base: '创建了知识条目',
+      knowledge_draft: '创建了知识草稿',
+      contribution: '提交了知识贡献',
+      category: '创建了分类'
+    },
+    UPDATE: {
+      knowledge_base: '更新了知识条目',
+      knowledge_draft: '编辑了知识草稿',
+      category: '更新了分类'
+    },
+    DELETE: {
+      knowledge_base: '删除了知识条目',
+      knowledge_draft: '删除了知识草稿'
+    },
+    REVIEW_PASS: {
+      contribution: '审核通过了一条知识贡献',
+      knowledge_draft: '审核通过了知识草稿'
+    },
+    REVIEW_REJECT: {
+      contribution: '驳回了知识贡献',
+      knowledge_draft: '驳回了知识草稿'
+    },
+    DISABLE: {
+      knowledge_base: '停用了知识条目'
+    },
+    ENABLE: {
+      knowledge_base: '启用了知识条目'
+    },
+    BATCH_IMPORT: {
+      knowledge_base: '批量导入了知识条目'
+    },
+    BATCH_DELETE: {
+      knowledge_base: '批量删除了知识条目'
+    }
+  }
+
+  const actionType = String(log.actionType)
+  const targetType = log.targetType || ''
+  const detail = log.detail || ''
+  const createdTime = log.createdTime || log.created_time
+
+  const actionMapping = {
+    '1': 'REVIEW_PASS',
+    '2': 'REVIEW_REJECT'
+  }
+  const normalizedActionType = actionMapping[actionType] || actionType
+
+  const icon = iconMap[normalizedActionType]?.[targetType] || '📋'
+  const content = contentMap[normalizedActionType]?.[targetType] || `执行了操作: ${actionType}`
+
+  return {
+    id: log.id,
+    icon,
+    content,
+    time: formatTime(createdTime)
+  }
+}
+
+function formatTime(dateValue) {
+  if (!dateValue) return ''
+  let date
+  if (Array.isArray(dateValue)) {
+    date = new Date(dateValue[0], dateValue[1] - 1, dateValue[2], dateValue[3], dateValue[4], dateValue[5])
+  } else {
+    date = new Date(String(dateValue).replace('T', ' '))
+  }
+  if (isNaN(date.getTime())) return ''
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  if (days < 7) return `${days}天前`
+  return date.toLocaleDateString('zh-CN')
+}
 
 const goTo = (path) => {
   router.push(path)
@@ -110,11 +226,12 @@ const goTo = (path) => {
 
 const loadStatistics = async () => {
   try {
-    const [knowledgeRes, contributionRes, draftRes, hotRes] = await Promise.all([
+    const [knowledgeRes, contributionRes, draftRes, hotRes, logsRes] = await Promise.all([
       getKnowledgeStatistics(),
       getContributionStatistics(),
       getDraftStatistics(),
-      adminGetHotlist()
+      adminGetHotlist(),
+      getRecentLogs({ limit: 10 })
     ])
 
     if (knowledgeRes.code === SUCCESS && knowledgeRes.data) {
@@ -131,6 +248,14 @@ const loadStatistics = async () => {
 
     if (hotRes.code === SUCCESS && hotRes.data) {
       hotCount.value = Array.isArray(hotRes.data) ? hotRes.data.length : 0
+    }
+
+    if (logsRes.code === SUCCESS && logsRes.data) {
+      console.log('Admin logs:', logsRes.data)
+      console.log('Log count:', logsRes.data.length)
+      recentActivity.value = logsRes.data.map(formatActivity)
+    } else {
+      console.log('Logs response:', logsRes)
     }
   } catch (error) {
     console.error('加载首页统计数据失败:', error)
