@@ -1,6 +1,13 @@
 <template>
-<!--  <article class="knowledge-card">-->
-    <article class="reviewcontribution-card">
+    <article class="reviewcontribution-card" :class="{ 'batch-mode': showCheckbox }">
+    <label class="checkbox-col" v-if="showCheckbox && item.statusDesc === WAIT_FOR_REVIEW_MSG">
+      <input
+        type="checkbox"
+        :checked="checked"
+        @change="$emit('toggle-check', item.id)"
+      />
+    </label>
+
     <div class="main-info">
       <h3>{{ item.question }}</h3>
 
@@ -28,32 +35,32 @@
       </div>
 
       <div class="actions">
-        <button
-          v-if="item.statusDesc !== REVIEW_PASS_MSG && item.statusDesc !== REVIEW_REJECT_MSG"
-          class="btn edit approve-btn"
-          @click="$emit('approve', item)"
-        >
-          审核通过
-        </button>
+        <template v-if="!showCheckbox">
+          <button
+            v-if="item.statusDesc !== REVIEW_PASS_MSG && item.statusDesc !== REVIEW_REJECT_MSG"
+            class="btn edit approve-btn"
+            @click="$emit('approve', item)"
+          >
+            审核通过
+          </button>
 
-        <button
-          v-if="item.statusDesc !== REVIEW_PASS_MSG && item.statusDesc !== REVIEW_REJECT_MSG"
-          class="btn delete"
-          @click="$emit('reject', item)"
-        >
-          驳回
-        </button>
+          <button
+            v-if="item.statusDesc !== REVIEW_PASS_MSG && item.statusDesc !== REVIEW_REJECT_MSG"
+            class="btn delete"
+            @click="$emit('reject', item)"
+          >
+            驳回
+          </button>
+        </template>
 
         <button
           class="detail"
-          :class="{ 'detail-centered': item.statusDesc === REVIEW_PASS_MSG || item.statusDesc === REVIEW_REJECT_MSG }"
           @click="$emit('view', item)"
         >
           查看详情 ›
         </button>
       </div>
     </article>
-<!--  </article>-->
 </template>
 
 <script setup>
@@ -64,10 +71,18 @@ const props = defineProps({
   item: {
     type: Object,
     required: true
+  },
+  checked: {
+    type: Boolean,
+    default: false
+  },
+  showCheckbox: {
+    type: Boolean,
+    default: false
   }
 })
 
-defineEmits(['view', 'approve', 'reject'])
+defineEmits(['view', 'approve', 'reject', 'toggle-check'])
 
 
 const statusClass = computed(() => {
@@ -85,9 +100,10 @@ const statusClass = computed(() => {
 <style scoped src="@/styles/card-base.css"></style>
 <style>
 .reviewcontribution-card{
-  /*TODO*/
+  position: relative;
   width:100%
 }
+
 .tag.approved {
   color: #16a34a;
   background: #dcfce7;
@@ -103,11 +119,19 @@ const statusClass = computed(() => {
   background: #f3f4f6;
 }
 
-.detail-centered {
-  grid-column: 1 / -1;
-  justify-self: center;
-  margin-left: auto;
-  margin-right: auto;
+.reviewcontribution-card .actions {
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: repeat(3, 86px);
+  justify-content: end;
+  align-content: center;
+  gap: 14px;
+}
+
+.reviewcontribution-card .detail {
+  margin: 0;
+  height: auto;
+  text-align: right;
 }
 
 .btn.approve-btn {
@@ -125,5 +149,27 @@ const statusClass = computed(() => {
   color: #fff !important;
   border-color: #ef4444 !important;
   background: #ef4444 !important;
+}
+
+.checkbox-col {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-height: 104px;
+}
+.checkbox-col input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #16a34a;
+}
+
+.batch-mode .main-info {
+  padding-left: 28px;
 }
 </style>

@@ -104,6 +104,21 @@
         </div>
 
 
+        <div class="batch-toggle-bar">
+          <button
+            class="batch-toggle-btn"
+            :class="{ active: batchMode }"
+            @click="toggleBatchMode"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            {{ batchMode ? '退出批量' : '批量审核' }}
+          </button>
+          <span v-if="batchMode" class="batch-hint">勾选需要操作的贡献，然后点击批量通过或驳回</span>
+        </div>
+
         <div
           v-if="loading"
           class="loading-box"
@@ -122,13 +137,23 @@
           v-else
           class="card-list"
         >
+          <div class="batch-bar" v-if="batchMode && selectedIds.length > 0">
+            <span>已选 <strong>{{ selectedIds.length }}</strong> 条待审核贡献</span>
+            <button class="btn batch-approve" @click="handleBatchApprove">批量通过</button>
+            <button class="btn batch-reject" @click="handleBatchReject">批量驳回</button>
+            <button class="btn ghost small" @click="selectedIds.value = []">取消选择</button>
+          </div>
+
           <ContributionCard
             v-for="item in list"
             :key="item.id"
             :item="item"
+            :checked="selectedIds.includes(item.id)"
+            :show-checkbox="batchMode"
             @view="handleView"
             @approve="handleApprove"
             @reject="()=>openRejectDialog(item)"
+            @toggle-check="handleToggleCheck"
           />
         </div>
         <ReasonDialog
@@ -139,6 +164,15 @@
           confirm-text="确认驳回"
           :loading="rejectLoading"
           @confirm="submitReject"
+        />
+        <ReasonDialog
+          v-model:visible="batchRejectDialogVisible"
+          title="批量驳回用户贡献"
+          tip="请填写驳回原因，选中的贡献将统一驳回。"
+          placeholder="例如：问题描述不清晰、答案内容不完整、与知识库已有内容重复等"
+          confirm-text="确认批量驳回"
+          :loading="batchRejectLoading"
+          @confirm="submitBatchReject"
         />
 
         <div class="pagination">
@@ -175,6 +209,7 @@ import { SORT_ORDER_ASC, SORT_ORDER_DESC } from '@/constants/status.js'
 import StatCard from "@/components/StatCard.vue";
 import { useRouter, useRoute } from 'vue-router'
 import { useContributionViewStore } from '@/stores/contributionViewStore'
+import { batchReview } from '@/api/admin/contirbute.js'
 
 const {
   categoryOptions,
@@ -260,6 +295,91 @@ const rejectDialogVisible = ref(false)
 const rejectTarget = ref(null)
 const rejectLoading = ref(false)
 const contributionViewStore = useContributionViewStore()
+
+// 批量审核模式
+const batchMode = ref(false)
+
+function toggleBatchMode() {
+  batchMode.value = !batchMode.value
+  if (!batchMode.value) {
+    selectedIds.value = []
+  }
+}
+
+// 批量选择
+const selectedIds = ref([])
+
+function handleToggleCheck(id) {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx >= 0) {
+    selectedIds.value.splice(idx, 1)
+  } else {
+    selectedIds.value.push(id)
+  }
+}
+
+// 批量通过
+async function handleBatchApprove() {
+  const ids = selectedIds.value.slice()
+  if (ids.length === 0) return
+
+  try {
+    const res = await batchReview({ contributionIds: ids, action: 1 })
+
+    if (res.code === SUCCESS) {
+      const data = res.data || {}
+      let msg = `批量审核完成，成功 ${data.successCount ?? ids.length} 条`
+      if (data.failCount > 0) msg += `，${data.failCount} 条失败`
+      alert(msg)
+      selectedIds.value = []
+      await loadContributionList()
+      await loadStatisticsData()
+    } else {
+      alert(res.msg || '批量通过失败')
+    }
+  } catch (error) {
+    console.error(error)
+    alert('批量通过异常')
+  }
+}
+
+// 批量驳回
+const batchRejectDialogVisible = ref(false)
+const batchRejectLoading = ref(false)
+
+function handleBatchReject() {
+  if (selectedIds.value.length === 0) return
+  batchRejectDialogVisible.value = true
+}
+
+async function submitBatchReject(reason) {
+  const ids = selectedIds.value.slice()
+  if (ids.length === 0) return
+
+  batchRejectLoading.value = true
+  try {
+    const res = await batchReview({ contributionIds: ids, action: 2, rejectReason: reason })
+
+    if (res.code === SUCCESS) {
+      const data = res.data || {}
+      let msg = `批量审核完成，成功 ${data.successCount ?? ids.length} 条`
+      if (data.failCount > 0) msg += `，${data.failCount} 条失败`
+      alert(msg)
+      selectedIds.value = []
+      batchRejectDialogVisible.value = false
+      await loadContributionList()
+      await loadStatisticsData()
+    } else {
+      alert(res.msg || '批量驳回失败')
+    }
+  } catch (error) {
+    console.error(error)
+    alert('批量驳回异常')
+  } finally {
+    batchRejectLoading.value = false
+  }
+}
+
 function openRejectDialog(item) {
   rejectTarget.value = item
   rejectDialogVisible.value = true
@@ -324,6 +444,44 @@ onMounted(() => {
   align-items: center;
 }
 
+.batch-toggle-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.batch-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.batch-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.batch-toggle-btn.active {
+  color: #fff;
+  background: #16a34a;
+  border-color: #16a34a;
+}
+.batch-hint {
+  color: #6b7280;
+  font-size: 13px;
+}
+
 .filter-select,
 .filter-input {
   width: 100%;
@@ -382,6 +540,39 @@ onMounted(() => {
   margin-left: 4px;
   font-size: 14px;
   font-weight: 700;
+}
+
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+.batch-bar strong {
+  color: #16a34a;
+  font-size: 18px;
+}
+.batch-approve {
+  color: #16a34a !important;
+  border-color: #16a34a !important;
+}
+.batch-approve:hover {
+  color: #fff !important;
+  background: #16a34a !important;
+}
+.batch-reject {
+  color: #ef4444 !important;
+  border-color: #fca5a5 !important;
+}
+.batch-reject:hover {
+  color: #fff !important;
+  background: #ef4444 !important;
 }
 
 .loading-box,
