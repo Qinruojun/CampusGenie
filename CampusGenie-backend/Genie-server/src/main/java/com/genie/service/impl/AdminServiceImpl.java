@@ -74,4 +74,23 @@ public class AdminServiceImpl  implements AdminService {
         return  loginVO;
     }
 
+    @Override
+    public User getAdminInfo(Long id) {
+        return userMapper.selectById(id);
+    }
+
+    @Override
+    public void updateAdminInfo(Long id, String email, String phone) {
+        userMapper.updateInfo(id, email, phone);
+    }
+
+    @Override
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        String currentPassword = userMapper.selectPasswordById(id);
+        if (!currentPassword.equals(oldPassword)) {
+            throw new LoginFailedException("旧密码错误");
+        }
+        userMapper.updatePassword(id, newPassword);
+    }
+
 }

@@ -52,7 +52,7 @@
               <span class="nav-text">知识草稿</span>
             </button>
             <button class="nav-item" @click="goTo('/admin/audit')">
-              <span class="nav-icon">✓</span>
+              <span class="nav-icon"><ShieldIcon /></span>
               <span class="nav-text">审核管理</span>
             </button>
             <button class="nav-item" @click="goTo('/admin/hotQuestion')">
@@ -83,6 +83,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import StatCard from '@/components/StatCard.vue'
+import ShieldIcon from '@/components/icons/ShieldIcon.vue'
 import { getStatistics as getKnowledgeStatistics } from '@/api/admin/knowledge.js'
 import { getStatistics as getContributionStatistics } from '@/api/admin/contirbute.js'
 import { getStatistics as getDraftStatistics } from '@/api/admin/knowledgeDraft.js'
@@ -322,6 +323,20 @@ onMounted(() => {
 .nav-icon {
   font-size: 32px;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon svg {
+  width: 32px;
+  height: 32px;
+  color: #374151;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
 .nav-text {

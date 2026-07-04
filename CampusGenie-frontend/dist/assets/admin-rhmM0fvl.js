@@ -1,0 +1,1 @@
+import{t as e}from"./request-8jDvkGQp.js";function t(t){return e.post(`/admin/login`,t)}function n(){return e.get(`/admin/info`)}function r(t){return e.put(`/admin/info`,t)}function i(t){return e.put(`/admin/password`,t)}export{r as i,n,t as r,i as t};

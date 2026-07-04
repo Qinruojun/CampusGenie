@@ -15,7 +15,7 @@
               <span>👤</span>
             </div>
             <div class="profile-info">
-              <h2>{{ adminInfo.username }}</h2>
+              <h2>{{ adminInfo.username || '' }}</h2>
               <p>管理员</p>
             </div>
           </div>
@@ -25,19 +25,19 @@
             <div class="form-grid">
               <div class="form-item">
                 <label>用户名</label>
-                <input v-model="adminInfo.username" readonly />
+                <input :value="adminInfo.username || ''" readonly />
               </div>
               <div class="form-item">
                 <label>邮箱</label>
-                <input v-model="adminInfo.email" />
+                <input v-model="adminInfo.email" placeholder="" />
               </div>
               <div class="form-item">
                 <label>手机号</label>
-                <input v-model="adminInfo.phone" />
+                <input v-model="adminInfo.phone" placeholder="" />
               </div>
               <div class="form-item">
                 <label>创建时间</label>
-                <input :value="adminInfo.createdTime" readonly />
+                <input :value="formatCreatedTime(adminInfo.createdTime)" readonly />
               </div>
             </div>
           </div>
@@ -47,15 +47,15 @@
             <div class="form-grid">
               <div class="form-item">
                 <label>旧密码</label>
-                <input type="password" v-model="passwordForm.oldPassword" placeholder="请输入旧密码" />
+                <input type="password" v-model="passwordForm.oldPassword" placeholder="" />
               </div>
               <div class="form-item">
                 <label>新密码</label>
-                <input type="password" v-model="passwordForm.newPassword" placeholder="请输入新密码" />
+                <input type="password" v-model="passwordForm.newPassword" placeholder="" />
               </div>
               <div class="form-item">
                 <label>确认新密码</label>
-                <input type="password" v-model="passwordForm.confirmPassword" placeholder="请再次输入新密码" />
+                <input type="password" v-model="passwordForm.confirmPassword" placeholder="" />
               </div>
             </div>
           </div>
@@ -71,13 +71,15 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { getAdminInfo, updateAdminInfo, changePassword } from '@/api/admin/admin.js'
+import { SUCCESS } from '@/constants/code.js'
 
 const adminInfo = reactive({
-  username: 'admin',
-  email: 'admin@campusgenie.com',
-  phone: '13800138000',
-  createdTime: '2026-01-01 00:00:00'
+  username: '',
+  email: '',
+  phone: '',
+  createdTime: null
 })
 
 const passwordForm = reactive({
@@ -86,22 +88,73 @@ const passwordForm = reactive({
   confirmPassword: ''
 })
 
-const handleSave = () => {
-  if (passwordForm.newPassword) {
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('两次输入的新密码不一致')
-      return
-    }
-    if (!passwordForm.oldPassword) {
-      alert('请输入旧密码')
-      return
-    }
-    alert('密码修改成功')
-    passwordForm.oldPassword = ''
-    passwordForm.newPassword = ''
-    passwordForm.confirmPassword = ''
+function formatCreatedTime(dateValue) {
+  if (!dateValue) return ''
+  let date
+  if (Array.isArray(dateValue)) {
+    date = new Date(dateValue[0], dateValue[1] - 1, dateValue[2], dateValue[3], dateValue[4], dateValue[5])
+  } else {
+    date = new Date(String(dateValue).replace('T', ' '))
   }
-  alert('保存成功')
+  if (isNaN(date.getTime())) return ''
+  return date.toLocaleString('zh-CN')
+}
+
+const loadAdminInfo = async () => {
+  try {
+    const res = await getAdminInfo()
+    if (res.code === SUCCESS && res.data) {
+      adminInfo.username = res.data.username || ''
+      adminInfo.email = res.data.email || ''
+      adminInfo.phone = res.data.phone || ''
+      adminInfo.createdTime = res.data.createdTime || res.data.created_time || null
+    }
+  } catch (error) {
+    console.error('加载管理员信息失败:', error)
+  }
+}
+
+const handleSave = async () => {
+  const updateData = {}
+  if (adminInfo.email) updateData.email = adminInfo.email
+  if (adminInfo.phone) updateData.phone = adminInfo.phone
+
+  try {
+    if (Object.keys(updateData).length > 0) {
+      const res = await updateAdminInfo(updateData)
+      if (res.code === SUCCESS) {
+        alert('基本信息更新成功')
+      }
+    }
+
+    if (passwordForm.newPassword) {
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        alert('两次输入的新密码不一致')
+        return
+      }
+      if (!passwordForm.oldPassword) {
+        alert('请输入旧密码')
+        return
+      }
+      const res = await changePassword({
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword
+      })
+      if (res.code === SUCCESS) {
+        alert('密码修改成功')
+        passwordForm.oldPassword = ''
+        passwordForm.newPassword = ''
+        passwordForm.confirmPassword = ''
+      }
+    }
+
+    if (Object.keys(updateData).length === 0 && !passwordForm.newPassword) {
+      alert('请输入要修改的内容')
+    }
+  } catch (error) {
+    console.error('保存失败:', error)
+    alert('保存失败')
+  }
 }
 
 const handleReset = () => {
@@ -109,6 +162,10 @@ const handleReset = () => {
   passwordForm.newPassword = ''
   passwordForm.confirmPassword = ''
 }
+
+onMounted(() => {
+  loadAdminInfo()
+})
 </script>
 
 <style scoped>

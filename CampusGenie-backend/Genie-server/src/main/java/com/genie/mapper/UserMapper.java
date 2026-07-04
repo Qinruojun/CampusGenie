@@ -22,4 +22,16 @@ public interface UserMapper {
     void insert(User user);
 
     void updateLastLoginTime(Long id, LocalDateTime lastLoginTime);
+
+    @Select("select id, username, email, phone, created_time from user where id = #{id}")
+    User selectById(Long id);
+
+    @Select("update user set email = #{email}, phone = #{phone} where id = #{id}")
+    void updateInfo(Long id, String email, String phone);
+
+    @Select("update user set password = #{password} where id = #{id}")
+    void updatePassword(Long id, String password);
+
+    @Select("select password from user where id = #{id}")
+    String selectPasswordById(Long id);
 }
