@@ -72,12 +72,16 @@
           />
         </div>
 
-        <div class="pagination">
-          <button @click="handlePrevPage">上一页</button>
-          <template v-for="p in Math.min(3, Math.ceil(total / pageSize))" :key="p">
-            <button :class="{ current: page === p }" @click="page = p">{{ p }}</button>
+        <div class="pagination" :class="{ 'pagination-single': totalPages <= 1 }">
+          <template v-if="totalPages > 1">
+            <button @click="handlePrevPage">上一页</button>
+            <template v-for="p in pageNumbers" :key="p">
+              <span v-if="p === '...'" class="pagination-ellipsis">…</span>
+              <button v-else :class="{ current: page === p }" @click="page = p">{{ p }}</button>
+            </template>
+            <button @click="handleNextPage">下一页</button>
           </template>
-          <button @click="handleNextPage">下一页</button>
+          <span v-else class="page-info">共 {{ total }} 条</span>
         </div>
       </section>
     </main>
@@ -197,6 +201,28 @@ const statList = computed(() => {
     }
   ]
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+
+const pageNumbers = computed(() => {
+  const tp = totalPages.value
+  if (tp <= 1) return []
+  const pages = []
+  const cur = page.value
+  if (tp <= 7) {
+    for (let i = 1; i <= tp; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (cur > 3) pages.push('...')
+    const start = Math.max(2, cur - 1)
+    const end = Math.min(tp - 1, cur + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (cur < tp - 2) pages.push('...')
+    pages.push(tp)
+  }
+  return pages
+})
+
 </script>
 
 <style scoped src="@/styles/card-list.css"></style>
