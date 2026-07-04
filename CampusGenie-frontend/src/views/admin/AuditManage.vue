@@ -120,41 +120,43 @@
         </div>
 
         <div
-          v-if="loading"
-          class="loading-box"
-        >
-          正在加载贡献列表...
-        </div>
-
-        <div
-          v-else-if="list.length === 0"
+          v-if="list.length === 0 && !loading"
           class="empty-box"
         >
           暂无用户贡献数据
         </div>
 
         <div
-          v-else
-          class="card-list"
+          v-show="list.length > 0"
+          class="card-list-wrapper"
         >
-          <div class="batch-bar" v-if="batchMode && selectedIds.length > 0">
-            <span>已选 <strong>{{ selectedIds.length }}</strong> 条待审核贡献</span>
-            <button class="btn batch-approve" @click="handleBatchApprove">批量通过</button>
-            <button class="btn batch-reject" @click="handleBatchReject">批量驳回</button>
-            <button class="btn ghost small" @click="selectedIds.value = []">取消选择</button>
-          </div>
+          <Transition name="list">
+            <div class="card-list" :key="list.length">
+              <div class="batch-bar" v-if="batchMode && selectedIds.length > 0">
+                <span>已选 <strong>{{ selectedIds.length }}</strong> 条待审核贡献</span>
+                <button class="btn batch-approve" @click="handleBatchApprove">批量通过</button>
+                <button class="btn batch-reject" @click="handleBatchReject">批量驳回</button>
+                <button class="btn ghost small" @click="selectedIds.value = []">取消选择</button>
+              </div>
 
-          <ContributionCard
-            v-for="item in list"
-            :key="item.id"
-            :item="item"
-            :checked="selectedIds.includes(item.id)"
-            :show-checkbox="batchMode"
-            @view="handleView"
-            @approve="handleApprove"
-            @reject="()=>openRejectDialog(item)"
-            @toggle-check="handleToggleCheck"
-          />
+              <ContributionCard
+                v-for="item in list"
+                :key="item.id"
+                :item="item"
+                :checked="selectedIds.includes(item.id)"
+                :show-checkbox="batchMode"
+                @view="handleView"
+                @approve="handleApprove"
+                @reject="()=>openRejectDialog(item)"
+                @toggle-check="handleToggleCheck"
+              />
+            </div>
+          </Transition>
+          
+          <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <span>正在加载...</span>
+          </div>
         </div>
         <ReasonDialog
           v-model:visible="rejectDialogVisible"
@@ -302,8 +304,13 @@ const batchMode = ref(false)
 
 function toggleBatchMode() {
   batchMode.value = !batchMode.value
-  if (!batchMode.value) {
+  if (batchMode.value) {
+    queryForm.value.status = WAIT_FOR_REVIEW
+    handleSearch()
+  } else {
     selectedIds.value = []
+    queryForm.value.status = ''
+    handleSearch()
   }
 }
 
@@ -609,6 +616,76 @@ onMounted(() => {
 @media (max-width: 1400px) {
   .contribution-filter {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card-list-wrapper {
+  position: relative;
+  min-height: 200px;
+}
+
+.card-list {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  gap: 12px;
+  border-radius: 8px;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #16a34a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-box {
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

@@ -1,0 +1,1 @@
+import{E as e,_ as t}from"./index-Crpqm-g8.js";import{t as n}from"./HotQuestionPanel-CltZKBKT.js";var r={__name:`HotQuestions`,setup(r){return(r,i)=>(e(),t(n,{"home-link-to":`/user/home`}))}};export{r as default};
