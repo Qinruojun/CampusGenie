@@ -247,46 +247,47 @@ public class ContributionServiceImpl implements ContributionService {
         /**
          * 批量审核用户贡献
          */
-            List<Long> ids = dto.getContributionIds();
-            Integer action = dto.getAction();
-            String rejectReason = dto.getRejectReason();
-            // 参数校验
-            if (ids == null || ids.isEmpty()) {
-                throw new EmptyContributionListException("请选择要审核的贡献");
-            }
-            if (action == 2 && (rejectReason == null || rejectReason.trim().isEmpty())) {
-                throw new RejectReasonRequiredException("驳回理由不能为空");
-            }
-
-            int successCount = 0;
-            List<Long> failIds = new ArrayList<>();
-            Map<Long, String> failReasons = new HashMap<>();
-            //构建空ApproveDTO对象
-            ApproveDTO approveDTO = new ApproveDTO();
-            //构建RejectDTO对象
-            RejectDTO rejectDTO = new RejectDTO();
-            rejectDTO.setRejectReason(rejectReason);
-
-            for (Long id : ids) {
-                try {
-                    if (action == 1) {
-                        // 批量通过
-                        approve(id, approveDTO);
-                    } else if (action == 2) {
-                        // 批量驳回
-                        reject(id, rejectDTO);
-                    } else {
-                        throw new InvalidActionException("审核动作无效");
-                    }
-                    successCount++;
-                } catch (ContributionAlreadyReviewedException e) {
-                    failIds.add(id);
-                    failReasons.put(id, e.getMessage());
-                }
-            }
-
-            return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
+        List<Long> ids = dto.getContributionIds();
+        Integer action = dto.getAction();
+        String rejectReason = dto.getRejectReason();
+        // 参数校验
+        if (ids == null || ids.isEmpty()) {
+            throw new EmptyContributionListException("请选择要审核的贡献");
         }
+        if (action == 2 && (rejectReason == null || rejectReason.trim().isEmpty())) {
+            throw new RejectReasonRequiredException("驳回理由不能为空");
+        }
+
+        int successCount = 0;
+        List<Long> failIds = new ArrayList<>();
+        Map<Long, String> failReasons = new HashMap<>();
+        //构建空ApproveDTO对象
+        ApproveDTO approveDTO = new ApproveDTO();
+        //构建RejectDTO对象
+        RejectDTO rejectDTO = new RejectDTO();
+        rejectDTO.setRejectReason(rejectReason);
+
+        for (Long id : ids) {
+            try {
+                if (action == 1) {
+                    approve(id, approveDTO);
+                } else if (action == 2) {
+                    reject(id, rejectDTO);
+                } else {
+                    throw new InvalidActionException("审核动作无效");
+                }
+                successCount++;
+            } catch (ContributionAlreadyReviewedException e) {
+                failIds.add(id);
+                failReasons.put(id, e.getMessage());
+            } catch (Exception e) {
+                failIds.add(id);
+                failReasons.put(id, "处理失败：" + e.getMessage());
+            }
+        }
+
+        return new BatchReviewVO(successCount, failIds.size(), failIds, failReasons);
+    }
 
     @Override
     public ContributionStatisticsVO getStatistics() {

@@ -200,6 +200,7 @@
 <script setup>
 import {onMounted, computed, ref, watch} from 'vue'
 import {REVIEW_PASS,REVIEW_REJECT,WAIT_FOR_REVIEW} from "@/constants/status.js";
+import { SUCCESS } from "@/constants/code.js";
 import CategorySelect from '@/components/CategorySelect.vue'
 import ContributionCard from '@/components/admin/Card/ReviewContributionCard.vue'
 import ReasonDialog from '@/components/admin/dialog/RejectReasonDialog.vue'
@@ -325,21 +326,27 @@ async function handleBatchApprove() {
 
   try {
     const res = await batchReview({ contributionIds: ids, action: 1 })
-
     if (res.code === SUCCESS) {
       const data = res.data || {}
       let msg = `批量审核完成，成功 ${data.successCount ?? ids.length} 条`
       if (data.failCount > 0) msg += `，${data.failCount} 条失败`
       alert(msg)
       selectedIds.value = []
-      await loadContributionList()
-      await loadStatisticsData()
     } else {
       alert(res.msg || '批量通过失败')
+      return
     }
   } catch (error) {
-    console.error(error)
-    alert('批量通过异常')
+    console.error('批量通过请求异常:', error)
+    alert('批量通过异常: ' + (error.response?.data?.msg || error.message || '未知错误'))
+    return
+  }
+
+  try {
+    await loadContributionList()
+    await loadStatisticsData()
+  } catch (e) {
+    console.error('刷新列表异常:', e)
   }
 }
 
@@ -367,16 +374,23 @@ async function submitBatchReject(reason) {
       alert(msg)
       selectedIds.value = []
       batchRejectDialogVisible.value = false
-      await loadContributionList()
-      await loadStatisticsData()
     } else {
       alert(res.msg || '批量驳回失败')
+      return
     }
   } catch (error) {
-    console.error(error)
-    alert('批量驳回异常')
+    console.error('批量驳回请求异常:', error)
+    alert('批量驳回异常: ' + (error.response?.data?.msg || error.message || '未知错误'))
+    return
   } finally {
     batchRejectLoading.value = false
+  }
+
+  try {
+    await loadContributionList()
+    await loadStatisticsData()
+  } catch (e) {
+    console.error('刷新列表异常:', e)
   }
 }
 
