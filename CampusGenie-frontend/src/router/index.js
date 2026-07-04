@@ -14,6 +14,8 @@ const AddKnowledge = () => import('../views/admin/KnowledgeAdd.vue')
 const EditKnowledge = () => import('../views/admin/KnowledgeEdit.vue')
 const ImportKnowledge = () => import('../views/admin/KnowledgeImport.vue')
 const ViewKnowledge = () => import('../views/admin/KnowledgeView.vue')
+const ViewKnowledgeDraft = () => import('../views/admin/ViewKnowledgeDraft.vue')
+const EditKnowledgeDraft = () => import('../views/admin/EditKnowledgeDraft.vue')
 const ContributionView = () => import('../views/admin/ContributionView.vue')
 const AdminHotQuestion = () => import('@/views/admin/HotQuestion.vue')
 const AdminHome = () => import('@/views/admin/AdminHome.vue')
@@ -159,6 +161,24 @@ const router = createRouter({
           path: 'knowledgeDraft',
           name: 'admin-knowledge-draft',
           component: KnowledgeDraftManage,
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'viewKnowledgeDraft/:id',
+          name: 'view-knowledge-draft',
+          component: ViewKnowledgeDraft,
+          meta: {
+            requiresAuth: true,
+            role: ADMIN_ROLE
+          }
+        },
+        {
+          path: 'editKnowledgeDraft/:id',
+          name: 'edit-knowledge-draft',
+          component: EditKnowledgeDraft,
           meta: {
             requiresAuth: true,
             role: ADMIN_ROLE

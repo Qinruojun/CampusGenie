@@ -56,5 +56,10 @@ public class KnowledgeDraftVO {
      */
     @JsonFormat(pattern = "yyyy/MM/dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime reviewedTime;
+    
+    /**
+     * 审核人
+     */
+    private String reviewedBy;
 
 }

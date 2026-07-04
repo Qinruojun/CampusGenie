@@ -30,7 +30,7 @@ export const mockKnowledgeDraftList = [
     source: '教务处通知',
     status: 1,
     createdTime: '2026-06-28T09:15:00',
-    reviewedTime: '2026-06-29T16:30:00'
+    reviewedTime: '2026-07-03T16:30:00'
   },
   {
     id: 4,

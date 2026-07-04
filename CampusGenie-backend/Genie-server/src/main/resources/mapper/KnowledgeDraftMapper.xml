@@ -42,6 +42,17 @@
         select  id, question, answer, category_id, source, status, reviewed_by, reviewed_time, created_time from knowledge_draft where id = #{id}
     </select>
 
+    <select id="selectDetailById" resultType="com.genie.vo.KnowledgeDraftVO">
+        select kd.id, kd.question, kd.answer, c.name as categoryName, kd.source,
+        CASE kd.status
+        WHEN 0 THEN '待审核'
+        WHEN 1 THEN '已通过'
+        END as statusDesc, kd.status, kd.created_time as createdTime, kd.reviewed_time as reviewedTime, kd.reviewed_by as reviewedBy
+        from knowledge_draft kd
+        left join category c on kd.category_id = c.id
+        where kd.id = #{id}
+    </select>
+
 
     <select id="pageQuery" resultType="com.genie.vo.KnowledgeDraftVO">
         select kd.id, kd.question, kd.answer, c.name as categoryName, kd.source,
@@ -86,6 +97,30 @@
         select count(*)
         from knowledge_draft
         where status = #{status}
+    </select>
+
+    <select id="countByCreatedTimeAfter" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where created_time &gt;= #{time}
+    </select>
+
+    <select id="countByCreatedTimeBetween" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where created_time &gt;= #{start} and created_time &lt; #{end}
+    </select>
+
+    <select id="countApprovedByReviewedTimeAfter" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where status = 1 and reviewed_time &gt;= #{time}
+    </select>
+
+    <select id="countApprovedByReviewedTimeBetween" resultType="java.lang.Integer">
+        select count(*)
+        from knowledge_draft
+        where status = 1 and reviewed_time &gt;= #{start} and reviewed_time &lt; #{end}
     </select>
 
 </mapper>

@@ -93,6 +93,8 @@ import { useKnowledgeDraftList } from "@/composables/admin/useKnowledgeDraftList
 import { SORT_ORDER_ASC, SORT_ORDER_DESC } from "@/constants/status.js";
 import DraftCard from '@/components/admin/Card/DraftCard.vue'
 import StatCard from "@/components/StatCard.vue";
+import { getStatistics } from '@/api/admin/knowledgeDraft.js'
+import { SUCCESS } from '@/constants/code.js'
 
 const router = useRouter()
 
@@ -123,10 +125,12 @@ const {
 
 const handleApprove = async (id) => {
   await baseHandleApprove(id)
+  await loadStatistics()
 }
 
 const handleDelete = async (id) => {
   await baseHandleDelete(id)
+  await loadStatistics()
 }
 
 const handleEdit = (item) => {
@@ -137,23 +141,31 @@ const handleView = (item) => {
   router.push(`/admin/viewKnowledgeDraft/${item.id}`)
 }
 
+const statisticsData = ref({
+  pendingCount: 0,
+  approvedCount: 0,
+  weeklyUpdateCount: 0,
+  lastWeekUpdateCount: 0
+})
+
+const loadStatistics = async () => {
+  try {
+    const res = await getStatistics()
+    if (res.code === SUCCESS) {
+      statisticsData.value = res.data
+    }
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+  }
+}
+
 onMounted(() => {
   loadCategoryList()
   loadKnowledgeDraftList()
-  setTimeout(() => {
-    console.log('KnowledgeDraftManage data:', {
-      list: list.value,
-      total: total.value,
-      page: page.value,
-      pageSize: pageSize.value
-    })
-  }, 1500)
+  loadStatistics()
 })
 
 const statList = computed(() => {
-  const pendingCount = list.value.filter(item => Number(item.status) === 0).length
-  const approvedCount = list.value.filter(item => Number(item.status) === 1).length
-
   return [
     {
       title: '草稿总数',
@@ -164,21 +176,21 @@ const statList = computed(() => {
     },
     {
       title: '待审核',
-      value: pendingCount,
+      value: statisticsData.value.pendingCount,
       unit: '条',
       icon: '⏳',
       tone: 'orange'
     },
     {
       title: '已通过',
-      value: approvedCount,
+      value: statisticsData.value.approvedCount,
       unit: '条',
       icon: '✓',
       tone: 'green'
     },
     {
       title: '本周更新',
-      value: 0,
+      value: statisticsData.value.weeklyUpdateCount,
       unit: '条',
       icon: '↗',
       tone: 'green'

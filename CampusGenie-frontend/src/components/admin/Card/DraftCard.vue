@@ -28,11 +28,11 @@
         审核通过
       </button>
 
-      <button class="btn edit" @click="$emit('edit', item)">
+      <button v-if="item.status === 0" class="btn edit" @click="$emit('edit', item)">
         编辑
       </button>
 
-      <button class="btn delete" @click="$emit('delete', item.id)">
+      <button v-if="item.status === 0" class="btn delete" @click="$emit('delete', item.id)">
         删除
       </button>
 

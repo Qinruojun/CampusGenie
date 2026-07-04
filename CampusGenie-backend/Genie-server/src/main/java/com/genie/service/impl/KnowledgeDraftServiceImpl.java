@@ -16,6 +16,7 @@ import com.genie.mapper.ReviewLogMapper;
 import com.genie.result.PageResult;
 import com.genie.service.KnowledgeDraftService;
 import com.genie.vo.AdminContributionVO;
+import com.genie.vo.KnowledgeDraftStatisticsVO;
 import com.genie.vo.KnowledgeDraftVO;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -134,8 +135,6 @@ public class KnowledgeDraftServiceImpl  implements KnowledgeDraftService {
                 .createdTime(LocalDateTime.now())
                 .build();
         reviewLogMapper.insert(reviewLog);
-        //删除草稿
-        knowledgeDraftMapper.deleteById(id);
     }
 
     @Override
@@ -144,6 +143,26 @@ public class KnowledgeDraftServiceImpl  implements KnowledgeDraftService {
         Page<KnowledgeDraftVO> page = knowledgeDraftMapper.pageQuery(knowledgeDraftPageQueryDTO);
 
         return new PageResult(page.getTotal(),page.getResult());
+    }
+
+    @Override
+    public KnowledgeDraftStatisticsVO getStatistics() {
+        Integer pendingCount = knowledgeDraftMapper.countByStatus(StatusConstant.WAIT_FOR_REVIEW);
+        Integer approvedCount = knowledgeDraftMapper.countByStatus(StatusConstant.REVIEW_PASS);
+
+        LocalDateTime startOfWeek = LocalDateTime.now().with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        Integer weeklyUpdateCount = knowledgeDraftMapper.countApprovedByReviewedTimeAfter(startOfWeek);
+
+        LocalDateTime startOfLastWeek = startOfWeek.minusWeeks(1);
+        LocalDateTime endOfLastWeek = startOfWeek.withHour(0).withMinute(0).withSecond(0).withNano(0);
+        Integer lastWeekUpdateCount = knowledgeDraftMapper.countApprovedByReviewedTimeBetween(startOfLastWeek, endOfLastWeek);
+
+        return new KnowledgeDraftStatisticsVO(pendingCount, approvedCount, weeklyUpdateCount, lastWeekUpdateCount);
+    }
+
+    @Override
+    public KnowledgeDraftVO getDetailById(Long id) {
+        return knowledgeDraftMapper.selectDetailById(id);
     }
 
 }
