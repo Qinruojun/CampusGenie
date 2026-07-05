@@ -13,6 +13,7 @@
     "@vitejs/plugin-vue": "latest",
     "axios": "^1.16.1",
     "element-plus": "^2.14.1",
+    "lucide-vue-next": "^0.468.0",
     "pinia": "^3.0.4",
     "vite": "latest",
     "vue": "latest",
