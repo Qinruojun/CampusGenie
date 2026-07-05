@@ -36,6 +36,8 @@ import {
   roadmarks as mockRoadmarks
 } from "./data/mock";
 import { normalizeResourceType, typeLabel } from "./utils/labels.ts";
+import { customIslands } from "./stores/customIslands";
+import { addLocalPost, localPosts } from "./stores/localPosts";
 
 const route = useRoute();
 const router = useRouter();
@@ -58,11 +60,50 @@ const showAppTopbar = computed(() => !["create-island", "jazz", "jazz-library"].
 
 const routeNameBySlug: Record<string, string> = {
   "low-energy": "quiet-forest",
+  "coffee-room": "hug-station",
+  "tea-room": "warm-lamp",
   graduate: "lighthouse-hill",
   "tree-hole": "heard-bay",
   music: "jazz",
   running: "flowing-coast"
 };
+
+const localSpaceIslands: Island[] = [
+  {
+    id: -101,
+    slug: "coffee-room",
+    name: "咖啡室",
+    subtitle: "一杯咖啡，一段专注时刻",
+    description: "适合放下输入、整理当下感受，也适合把最近的灵感和小事写下来。",
+    slogan: "先坐一会儿，再继续往前。",
+    themeColor: "#8b5e3c",
+    accentColor: "#f7eee4",
+    season: "专注时段",
+    seasonSummary: "这里的帖子只会出现在咖啡室的回声广场。",
+    mood: "专注 40% · 平静 24%",
+    population: 1,
+    resources: 0,
+    position: { x: 88, y: 48 }
+  },
+  {
+    id: -102,
+    slug: "tea-room",
+    name: "茶室",
+    subtitle: "放下输入，开始感受",
+    description: "适合慢一点说话，记录一段不急着被回应的心情。",
+    slogan: "把声音放轻，把感受放近。",
+    themeColor: "#b7833f",
+    accentColor: "#fff3df",
+    season: "慢煮时段",
+    seasonSummary: "这里的帖子只会出现在茶室的回声广场。",
+    mood: "平静 38% · 松弛 22%",
+    population: 1,
+    resources: 0,
+    position: { x: 32, y: 45 }
+  }
+];
+
+const localOnlyIslandSlugs = new Set(localSpaceIslands.map((island) => island.slug));
 const selectedIslandSlug = ref("music");
 const islandTab = ref<IslandTab>("home");
 const islands = ref<Island[]>([...mockIslands]);
@@ -99,8 +140,13 @@ const draftPost = ref({
 const roadmarkFilter = ref("全部");
 
 watch(
-  () => route.meta.slug,
-  (slug) => {
+  () => [route.name, route.meta.slug, route.params.id],
+  ([routeName, slug, customId]) => {
+    if (routeName === "custom-island" && typeof customId === "string" && customId) {
+      selectedIslandSlug.value = `custom-${customId}`;
+      return;
+    }
+
     if (typeof slug === "string" && slug) {
       selectedIslandSlug.value = slug;
     }
@@ -109,7 +155,7 @@ watch(
 );
 
 const selectedIsland = computed(() => {
-  return islands.value.find((island) => island.slug === selectedIslandSlug.value) ?? islands.value[0] ?? mockIslands[0];
+  return postableIslands.value.find((island) => island.slug === selectedIslandSlug.value) ?? islands.value[0] ?? mockIslands[0];
 });
 
 const islandPosts = computed(() => {
@@ -139,6 +185,69 @@ const dataSourceLabel = computed(() => {
   }
   return apiOnline.value ? `${currentNickname.value} · API` : "";
 });
+
+const customPostableIslands = computed<Island[]>(() =>
+  customIslands.value.map((island, index) => ({
+    id: Number.MAX_SAFE_INTEGER - index,
+    slug: `custom-${island.id}`,
+    name: island.name,
+    subtitle: island.motto || "find your own way",
+    description: "这是你创建的社区，已经加入社区推荐和精神空间首页。",
+    slogan: island.motto || "find your own way",
+    themeColor: island.themeColor,
+    accentColor: "#eef5e8",
+    season: island.isChildIsland ? "二级社区" : "自建社区",
+    seasonSummary: "这是保存在本地的自建社区，可以继续发布回声。",
+    mood: "等待新的故事",
+    population: 1,
+    resources: 0,
+    position: {
+      x: 18 + (index % 4) * 21,
+      y: 78 + Math.floor(index / 4) * 10
+    }
+  }))
+);
+
+const postableIslands = computed<Island[]>(() => mergeIslandsBySlug(islands.value, localSpaceIslands, customPostableIslands.value));
+
+function mergeIslandsBySlug(...groups: Island[][]) {
+  const seen = new Set<string>();
+  return groups.flat().filter((island) => {
+    if (seen.has(island.slug)) {
+      return false;
+    }
+    seen.add(island.slug);
+    return true;
+  });
+}
+
+function mergePosts(primary: PostItem[], fallback: PostItem[]) {
+  const seen = new Set<number>();
+  return [...primary, ...fallback].filter((post) => {
+    if (seen.has(post.id)) {
+      return false;
+    }
+    seen.add(post.id);
+    return true;
+  });
+}
+
+function routeToCommunityPosts(slug: string) {
+  const scrollToPosts = () => {
+    window.setTimeout(() => {
+      document.getElementById("community-posts")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  };
+
+  if (slug.startsWith("custom-")) {
+    void router.push({ name: "custom-island", params: { id: slug.replace(/^custom-/, "") }, query: { section: "posts" } });
+    scrollToPosts();
+    return;
+  }
+
+  void router.push({ name: routeNameBySlug[slug] ?? "heard-bay", query: { section: "posts" } });
+  scrollToPosts();
+}
 
 function navigate(view: ViewKey) {
   actionMessage.value = "";
@@ -192,7 +301,7 @@ async function loadRemoteData() {
     const apiIslands = await listIslands();
     apiOnline.value = true;
     islands.value = apiIslands.map(mapApiIsland);
-    if (!islands.value.some((island) => island.slug === selectedIslandSlug.value)) {
+    if (!postableIslands.value.some((island) => island.slug === selectedIslandSlug.value)) {
       selectedIslandSlug.value = islands.value[0]?.slug ?? "tree-hole";
     }
 
@@ -209,7 +318,7 @@ async function loadRemoteData() {
 
     const mappedPosts = islandPayloads.flatMap((payload) => payload.apiPosts.map(mapApiPost));
     const mappedResources = islandPayloads.flatMap((payload) => payload.apiResources.map(mapApiResource));
-    feedPosts.value = mappedPosts.length > 0 ? mappedPosts : [...mockPosts];
+    feedPosts.value = mergePosts(localPosts.value, mappedPosts.length > 0 ? mappedPosts : [...mockPosts]);
     resources.value = mappedResources.length > 0 ? mappedResources : [...mockResources];
 
     for (const payload of islandPayloads) {
@@ -229,7 +338,7 @@ async function loadRemoteData() {
     apiOnline.value = false;
     islands.value = [...mockIslands];
     resources.value = [...mockResources];
-    feedPosts.value = [...mockPosts];
+    feedPosts.value = mergePosts(localPosts.value, [...mockPosts]);
     savedRoadmarks.value = [...mockRoadmarks];
   } finally {
     loading.value = false;
@@ -242,10 +351,11 @@ async function publishPost() {
   }
 
   isSubmittingPost.value = true;
-  const targetIsland = islands.value.find((island) => island.slug === draftPost.value.islandSlug) ?? selectedIsland.value;
+  const targetIsland = postableIslands.value.find((island) => island.slug === draftPost.value.islandSlug) ?? selectedIsland.value;
+  const isLocalOnlyTarget = targetIsland.slug.startsWith("custom-") || localOnlyIslandSlugs.has(targetIsland.slug);
   let createdPost: PostItem | null = null;
 
-  if (apiOnline.value) {
+  if (apiOnline.value && !isLocalOnlyTarget) {
     try {
       await ensureSession();
       const apiPost = await createApiPost(targetIsland.id, {
@@ -263,27 +373,24 @@ async function publishPost() {
     }
   }
 
-  feedPosts.value.unshift(
-    createdPost ?? {
-      id: Date.now(),
-      islandSlug: draftPost.value.islandSlug,
+  const post = createdPost ?? addLocalPost({
+      islandSlug: targetIsland.slug,
       title: draftPost.value.title.trim(),
       content: draftPost.value.content.trim(),
       author: draftPost.value.anonymous ? "匿名岛民" : currentNickname.value,
       anonymous: draftPost.value.anonymous,
       statusCard: draftPost.value.statusCard,
-      replyPreference: draftPost.value.replyPreference,
-      createdAt: "刚刚",
-      reactions: { HUG: 0, UNDERSTOOD: 0, ME_TOO: 0 },
-      comments: 0
-    }
-  );
+      replyPreference: draftPost.value.replyPreference
+    });
 
-  selectedIslandSlug.value = draftPost.value.islandSlug;
+  feedPosts.value = mergePosts([post], feedPosts.value);
+
+  selectedIslandSlug.value = targetIsland.slug;
   draftPost.value.title = "";
   draftPost.value.content = "";
   islandTab.value = "posts";
-  void router.push({ name: routeNameBySlug[selectedIslandSlug.value] ?? "heard-bay" });
+  actionMessage.value = createdPost ? "回声已发布到社区广场。" : "回声已保存，并发布到社区广场。";
+  routeToCommunityPosts(targetIsland.slug);
   isSubmittingPost.value = false;
 }
 
@@ -543,14 +650,20 @@ onMounted(() => {
         <component
           :is="Component"
           :islands="islands"
+          :postable-islands="postableIslands"
+          :selected-island="selectedIsland"
+          :island-posts="islandPosts"
           :draft-post="draftPost"
           :is-submitting-post="isSubmittingPost"
           :action-message="actionMessage"
           :filtered-roadmarks="filteredRoadmarks"
           :roadmark-filter="roadmarkFilter"
           @intent="handleIntent"
+          @navigate="navigate"
           @open-island="openIsland"
           @publish-post="publishPost"
+          @react-to-post="reactToPost"
+          @update:island-tab="islandTab = $event"
           @update:roadmark-filter="roadmarkFilter = $event"
         />
       </RouterView>

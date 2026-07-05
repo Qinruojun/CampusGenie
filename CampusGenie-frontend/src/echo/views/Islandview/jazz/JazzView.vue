@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from "vue";
 import {
   ArrowLeft,
   ArrowRight,
@@ -6,8 +7,26 @@ import {
   CalendarDays,
   CloudRain,
   Disc3,
+  Heart,
+  MessageCircle,
   Mic2,
+  Plus
 } from "lucide-vue-next";
+import { reactionLabel, statusCardLabel } from "../../../utils/labels.ts";
+
+const props = defineProps({
+  islandPosts: {
+    type: Array,
+    default: () => []
+  },
+  actionMessage: {
+    type: String,
+    default: ""
+  }
+});
+
+const emit = defineEmits(["reactToPost"]);
+const visiblePosts = computed(() => props.islandPosts.filter((post) => post.islandSlug === "music"));
 
 const featureCards = [
   {
@@ -26,7 +45,7 @@ const featureCards = [
     title: "回声广场",
     copy: "分享最近在听的歌",
     icon: Mic2,
-    to: { name: "create-post" }
+    to: { name: "jazz", query: { section: "posts" } }
   },
   {
     title: "岛屿四季",
@@ -85,6 +104,54 @@ const featureCards = [
           </span>
           <ArrowRight :size="24" />
         </RouterLink>
+      </section>
+
+      <section id="community-posts" class="jazz-posts">
+        <div class="posts-head">
+          <div>
+            <p class="eyebrow">回声广场</p>
+            <h2>爵士岛的社区回声</h2>
+            <p>发到爵士岛的帖子会出现在这里。</p>
+          </div>
+          <RouterLink class="post-action" :to="{ name: 'create-post', query: { island: 'music' } }">
+            <Plus :size="18" />
+            <span>发布回声</span>
+          </RouterLink>
+        </div>
+
+        <p v-if="actionMessage" class="inline-message">{{ actionMessage }}</p>
+
+        <div v-if="visiblePosts.length" class="post-list">
+          <article v-for="post in visiblePosts" :key="post.id" class="post-card">
+            <div class="post-meta">
+              <span>{{ post.author }}</span>
+              <span>{{ post.createdAt }}</span>
+              <span>{{ statusCardLabel(post.statusCard) }}</span>
+            </div>
+            <h3>{{ post.title }}</h3>
+            <p>{{ post.content }}</p>
+            <footer>
+              <button
+                v-for="(count, reaction) in post.reactions"
+                :key="reaction"
+                type="button"
+                @click="emit('reactToPost', post, String(reaction))"
+              >
+                <Heart :size="15" />
+                {{ reactionLabel(String(reaction)) }} {{ count }}
+              </button>
+              <button type="button">
+                <MessageCircle :size="15" />
+                {{ post.comments }} 回声
+              </button>
+            </footer>
+          </article>
+        </div>
+
+        <article v-else class="empty-posts">
+          <strong>这里还没有回声</strong>
+          <span>发布第一条帖子后，它会显示在爵士岛的回声广场。</span>
+        </article>
       </section>
 
       <p class="jazz-signature">不必成为专家，只需保持听的好奇。 — 爵士岛</p>
@@ -316,6 +383,127 @@ const featureCards = [
   font-weight: 800;
 }
 
+.jazz-posts {
+  display: grid;
+  gap: 18px;
+  margin-top: 44px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid rgba(91, 22, 77, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 248, 238, 0.5);
+  box-shadow: 0 18px 48px rgba(70, 28, 82, 0.1);
+}
+
+.posts-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.posts-head .eyebrow {
+  margin: 0;
+  color: #7b1e63;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.posts-head h2 {
+  margin: 8px 0 0;
+  color: #5b164d;
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.posts-head p:not(.eyebrow) {
+  margin: 8px 0 0;
+  color: rgba(73, 25, 70, 0.72);
+  font-weight: 800;
+}
+
+.post-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 14px;
+  color: #fff4fb;
+  border-radius: 8px;
+  background: #7b1e63;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.inline-message {
+  margin: 0;
+  color: #7b1e63;
+  font-weight: 900;
+}
+
+.post-list {
+  display: grid;
+  gap: 14px;
+}
+
+.post-card,
+.empty-posts {
+  padding: 18px;
+  border: 1px solid rgba(91, 22, 77, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: rgba(73, 25, 70, 0.64);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.post-card h3 {
+  margin: 10px 0 0;
+  color: #4b1745;
+  font-size: 22px;
+}
+
+.post-card p {
+  margin: 10px 0 0;
+  color: rgba(73, 25, 70, 0.82);
+  line-height: 1.7;
+}
+
+.post-card footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.post-card footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 10px;
+  color: #7b1e63;
+  border: 1px solid rgba(91, 22, 77, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 248, 238, 0.68);
+  font-weight: 800;
+}
+
+.empty-posts {
+  display: grid;
+  gap: 6px;
+  color: rgba(73, 25, 70, 0.72);
+}
+
+.empty-posts strong {
+  color: #5b164d;
+  font-size: 18px;
+}
+
 @media (max-width: 1180px) {
   .jazz-main {
     width: min(1080px, calc(100vw - 40px));
@@ -343,6 +531,10 @@ const featureCards = [
 
   .feature-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .posts-head {
+    display: grid;
   }
 }
 

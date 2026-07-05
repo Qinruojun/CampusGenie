@@ -1,0 +1,296 @@
+[33mcommit 50d2a376ad74458067a845210ea0c083b69eb84f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/community[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Merge: 351a60f aada007
+Author: hhy-creator <3483087853@qq.com>
+Date:   Sun Jul 5 16:36:26 2026 +0800
+
+    Merge pull request #19 from Qinruojun/test
+    
+    Test
+
+[33mcommit aada007a6ce52f42a4c1803ccfb43650d9157bb3[m[33m ([m[1;31morigin/test[m[33m)[m
+Author: hhy <3483087853@qq.com>
+Date:   Sun Jul 5 16:34:33 2026 +0800
+
+    修改用户页面
+
+[33mcommit 2ee68474d1f61cd36b1bea571accd8b1322413f7[m
+Author: hhy <3483087853@qq.com>
+Date:   Sun Jul 5 16:15:20 2026 +0800
+
+    信息模块
+
+[33mcommit 351a60fcea2b86bff86e65a22f9b2eda2443fce2[m
+Merge: 185dd03 0d7e045
+Author: hhy-creator <3483087853@qq.com>
+Date:   Sun Jul 5 15:50:50 2026 +0800
+
+    Merge pull request #18 from Qinruojun/test
+    
+    Test
+
+[33mcommit 0d7e04592e9d073fa8a061bb0fb7acaba15cfa68[m
+Author: hhy <3483087853@qq.com>
+Date:   Sun Jul 5 15:29:24 2026 +0800
+
+    岛屿
+
+[33mcommit 266751dfd50baba84ee57c61277848999df7df61[m
+Merge: 185dd03 89cb7cf
+Author: hhy <3483087853@qq.com>
+Date:   Sun Jul 5 14:52:23 2026 +0800
+
+    Merge feat/community branch
+
+[33mcommit 89cb7cf70cd54291c7d2d9a3011c5cb9766b07a7[m
+Author: Qinruojun <adventurer1337@outlook.com>
+Date:   Sun Jul 5 13:11:54 2026 +0800
+
+    完成社区功能
+
+[33mcommit 185dd0383e60560e2bdffcb754b990e922a3fb13[m
+Author: Qiu-Zi-Shan <1312113164@qq.com>
+Date:   Sun Jul 5 12:20:01 2026 +0800
+
+    feat: improve qa related questions
+
+[33mcommit dc536423c27b24d05bc54d650395572531e1bc0b[m
+Merge: d5976cb 230ce4a
+Author: 丘紫珊 <1312113164@qq.com>
+Date:   Sat Jul 4 23:39:25 2026 +0800
+
+    Merge pull request #16 from Qinruojun/feat/redis
+    
+    Feat/redis
+
+[33mcommit d5976cb17d16a0d453e23fc86018661d2e8bc4ed[m
+Merge: fe3ea81 543e54e
+Author: 丘紫珊 <1312113164@qq.com>
+Date:   Sat Jul 4 23:32:51 2026 +0800
+
+    Merge pull request #15 from Qinruojun/feature/model
+    
+    refactor rag qa service
+
+[33mcommit 230ce4a2a7a2491d992b2f5c19bec8209e64123f[m[33m ([m[1;31morigin/feat/redis[m[33m)[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 22:52:45 2026 +0800
+
+    前端修改结束
+
+[33mcommit e0032a94131c7000f0bdf0bd3b49dcd17d3d89c1[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 22:27:30 2026 +0800
+
+    进行最后用户信息界面的开发启动
+
+[33mcommit d8d3f9356f9b535a9363ae42fde025fbf688281a[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 21:43:08 2026 +0800
+
+    管理员界面基本结束
+
+[33mcommit cbb92cce978d41b05912136158908eead5ed30be[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 21:30:00 2026 +0800
+
+    修改热点开始
+
+[33mcommit 480b8b6df81902c778ac9630b42f25a098ad86bd[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 21:21:05 2026 +0800
+
+    开始修改分页bug
+
+[33mcommit a8cd9f0e479ba1a228a113c5ed46d8c5b43b0afc[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 20:46:33 2026 +0800
+
+    管理员动态开发完成
+
+[33mcommit ca57e0f71445a6b85087c22ba14e4a8a478c9a61[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 20:10:04 2026 +0800
+
+    统计redis初步完成
+
+[33mcommit a7b9cacb28c9a1a0e3d877e9f12b4581ac2d7fd6[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 16:55:42 2026 +0800
+
+    修铃铛bug
+
+[33mcommit 543e54e678422e3cd42f5c85cf1707abde640804[m[33m ([m[1;31morigin/feature/model[m[33m)[m
+Author: Qiu-Zi-Shan <1312113164@qq.com>
+Date:   Sat Jul 4 16:46:17 2026 +0800
+
+    refactor rag qa service
+
+[33mcommit 4771923ef3eda7a71f5a7c4ba765b9ac5b9ed50d[m[33m ([m[1;32mfeat/redis[m[33m)[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 16:37:19 2026 +0800
+
+    batchdelete
+
+[33mcommit d1fe37cf9514748bc81c9ab17c2d8dd155420a50[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 15:50:39 2026 +0800
+
+    批量审核完成
+
+[33mcommit e5d52e97d8f1e895995bbdaa79cf94a43ecc4543[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 15:28:26 2026 +0800
+
+    批量审核完成
+
+[33mcommit a3f39254534ea0d10c179fcee0f646ac49360fb8[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 15:16:18 2026 +0800
+
+    测试一半
+
+[33mcommit 2df27d1193f1ea37eefda8111665262226ec156b[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 14:51:26 2026 +0800
+
+    批量导入细节修改
+
+[33mcommit 79e69684973701b861da73c25993644e209bf687[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 14:22:28 2026 +0800
+
+    知识草稿开发完成
+
+[33mcommit e1c619c7fc5ff344369893e93472df07d3c17256[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 14:08:14 2026 +0800
+
+    修改删除功能中
+
+[33mcommit 1234386ccdfd5508f4bb931d131501402594cdc1[m
+Author: hhy <3483087853@qq.com>
+Date:   Sat Jul 4 11:55:40 2026 +0800
+
+    三大界面开发
+
+[33mcommit 51f33dd8e1ca108e8ca2e6882c4a4ec3e0d7086c[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 22:54:22 2026 +0800
+
+    知识草稿初版
+
+[33mcommit 04a30c930df9e1eac099f29e396699ca3137bde2[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 21:31:03 2026 +0800
+
+    查看详情细节修改
+
+[33mcommit dad6b69f883b3a1a3afb4747f2608a3671bbd486[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 21:00:13 2026 +0800
+
+    更新时间按钮
+
+[33mcommit 696f73931323066d8f1d8d5a03e5ac3d28b91304[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 20:47:54 2026 +0800
+
+    修改更新时间箭头
+
+[33mcommit ac54cb6590c704524f13c19325e983bc41fd0968[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 20:35:42 2026 +0800
+
+    铃铛修改
+
+[33mcommit 51723af0d1001d4e4b8fbb0b91c41a327f1597b7[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 20:27:11 2026 +0800
+
+    铃铛修改
+
+[33mcommit 159ce3276fc8f2bc69c37160cfab219d56bca8a5[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 20:04:35 2026 +0800
+
+    按钮悬停特效
+
+[33mcommit d24f678f04c3e4a6c850902161fe308359f52520[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 19:43:14 2026 +0800
+
+    登录失败封号
+
+[33mcommit 81a8c04013e689c122f8ae0626724c94c2f6d6a5[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 16:00:25 2026 +0800
+
+    导出功能实现
+
+[33mcommit c691eb3fe5b9168ca062b1514888b960051421e0[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 15:18:08 2026 +0800
+
+    用户查看自己贡献详情更新
+
+[33mcommit c0dfc9e3b4567e31e662fd0003c37d934dd9e591[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 15:01:30 2026 +0800
+
+    设计好了管理员查看详情卡片
+
+[33mcommit 327e520c9bbb0891ce4766eaa1c793cefa72d557[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 15:00:29 2026 +0800
+
+    设计好了管理员查看详情卡片
+
+[33mcommit 3054f669f82ae0d2109d344b41aa473a9ddb5479[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 14:46:47 2026 +0800
+
+    新增知识条目详情卡片
+
+[33mcommit 2c7930c49e8470df57d5478d41a0748253ce52fc[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 11:53:04 2026 +0800
+
+    用户贡献限流实现
+
+[33mcommit ffffc83c4002883937e82d51cd2521a2020c0657[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 10:46:39 2026 +0800
+
+    热点查询问题的redis更新
+
+[33mcommit dc4d47a2b7a7d9efe3d8dab714eedf4b1d95b6f8[m
+Author: hhy <3483087853@qq.com>
+Date:   Fri Jul 3 09:27:28 2026 +0800
+
+    引入redis配置
+
+[33mcommit fe3ea8187f7503f7c00ba811ee9ef5dd04885b24[m
+Merge: 847f063 56ea1b9
+Author: 丘紫珊 <1312113164@qq.com>
+Date:   Sun Jun 14 15:37:02 2026 +0800
+
+    Merge pull request #14 from Qinruojun/fix/test01
+    
+    Fix/test01
+
+[33mcommit 56ea1b9917621137a2a640183ff0a92500ed75b5[m[33m ([m[1;31morigin/fix/test01[m[33m)[m
+Merge: 9bd2195 847f063
+Author: 丘紫珊 <1312113164@qq.com>
+Date:   Sun Jun 14 15:36:18 2026 +0800
+
+    Merge branch 'main' into fix/test01
+
+[33mcommit 9bd2195281f5910fade7338627fcd6e46d26f75c[m
+Author: hhy <3483087853@qq.com>
+Date:   Sun Jun 14 11:35:13 2026 +0800
+
+    增加统计功能，知识条目删除功能异常修复
+
+[33mcommit d7260b132a180d8405ebd3e1b6c7fc2d956fd1ad[m[33m ([m[1;31morigin/fix/jack-on-fix-qa[m[33m)[m
+Author: Jack <jack13652781162@outlook.com>
+Date:   Fri Jun 12 23:55:08 2026 
