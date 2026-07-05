@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -49,8 +51,10 @@ public class QAServiceImpl implements QAService {
         if (pythonResult != null) {
             String answer = (String) pythonResult.get("answer");
             Object kbIdObj = pythonResult.get("knowledge_id"); // 获取 ID
+            Object relatedQuestionsObj = pythonResult.get("related_questions");
 
             answerVO.setAnswer(answer);
+            answerVO.setRelatedQuestions(toStringList(relatedQuestionsObj));
 
             // 如果 ID 不为空，说明命中了本地知识库
             if (kbIdObj != null) {
@@ -110,5 +114,20 @@ public class QAServiceImpl implements QAService {
                 sessionId);
 
         return answerVO;
+    }
+
+    private List<String> toStringList(Object value) {
+        if (!(value instanceof List<?>)) {
+            return new ArrayList<>();
+        }
+
+        List<?> rawList = (List<?>) value;
+        List<String> result = new ArrayList<>();
+        for (Object item : rawList) {
+            if (item != null) {
+                result.add(item.toString());
+            }
+        }
+        return result;
     }
 }

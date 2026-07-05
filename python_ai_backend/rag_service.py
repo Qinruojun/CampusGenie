@@ -3,7 +3,7 @@ import os
 import re
 import time
 import traceback
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from threading import RLock
 from typing import Callable, Optional
 
@@ -33,11 +33,13 @@ class RagAnswer:
     """统一 RAG 输出格式，API 层会把 kb_id 映射成 knowledge_id。"""
     answer: str
     kb_id: Optional[int] = None
+    related_questions: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "answer": self.answer,
             "kb_id": self.kb_id,
+            "related_questions": self.related_questions,
         }
 
 
@@ -134,6 +136,7 @@ class KnowledgeRepository:
                             metadata={
                                 "kb_id": row["id"],
                                 "category_id": row["category_id"],
+                                "question": row["question"],
                             },
                         )
                     )
@@ -371,6 +374,7 @@ class RagQAService:
         chat_history = self._format_history(history)
         retrieval_question = self._build_retrieval_question(question, history)
         docs_with_scores = self._retrieve(retrieval_question)
+        related_questions = self._search_related_questions(retrieval_question, question)
         print(f"[DEBUG] 数据库检索耗时: {time.time() - total_start_time:.2f}s")
 
         if docs_with_scores:
@@ -392,6 +396,7 @@ class RagQAService:
                 rag_answer = RagAnswer(
                     answer=response.content.strip(),
                     kb_id=matched_kb_id,
+                    related_questions=related_questions,
                 )
                 self.memory.add_turn(session_id, question, rag_answer.answer)
                 return rag_answer.to_dict()
@@ -400,6 +405,7 @@ class RagQAService:
         web_question = self._build_web_search_question(question, chat_history)
         rag_answer = RagAnswer(
             answer=self.web_search.search(web_question).strip(),
+            related_questions=related_questions,
         )
         self.memory.add_turn(session_id, question, rag_answer.answer)
         return rag_answer.to_dict()
@@ -436,10 +442,59 @@ class RagQAService:
             if score < self.config.distance_threshold
         ]
 
+    def _search_related_questions(self, retrieval_question: str, current_question: str) -> list[str]:
+        """为前端推荐相似问题；不使用回答阈值，尽量保证每次都有 3 个推荐。"""
+        try:
+            raw_docs = self.vectorstore.similarity_search_with_score(
+                retrieval_question,
+                k=max(self.config.retrieval_k * 4, 12),
+            )
+            return self._build_related_questions(raw_docs, current_question)
+        except Exception as exc:
+            if DEBUG_MODE:
+                print(f"[WARNING] 相关问题推荐生成失败: {exc}")
+            return []
+
     @staticmethod
     def _format_docs(docs_with_scores: list[tuple[Document, float]]) -> str:
         """把检索结果拼成大模型提示词中的上下文文本。"""
         return "\n\n".join(doc.page_content for doc, _score in docs_with_scores)
+
+    @classmethod
+    def _build_related_questions(
+        cls,
+        docs_with_scores: list[tuple[Document, float]],
+        current_question: str,
+        limit: int = 3,
+    ) -> list[str]:
+        """直接从相似度最高的检索结果中提取推荐问题。"""
+        related_questions: list[str] = []
+        normalized_current = current_question.strip()
+
+        for doc, _score in docs_with_scores:
+            question = cls._extract_question(doc).strip()
+            if not question or question == normalized_current:
+                continue
+            if question in related_questions:
+                continue
+
+            related_questions.append(question)
+            if len(related_questions) >= limit:
+                break
+
+        return related_questions
+
+    @staticmethod
+    def _extract_question(doc: Document) -> str:
+        """优先从 metadata 取原问题；旧索引没有该字段时，从 page_content 兜底解析。"""
+        question = doc.metadata.get("question")
+        if question:
+            return str(question)
+
+        match = re.search(r"问题：(.+?)(?:\n答案：|$)", doc.page_content, re.S)
+        if match:
+            return match.group(1).strip()
+        return ""
 
     @staticmethod
     def _format_history(history: list[ConversationTurn]) -> str:

@@ -274,11 +274,16 @@ const sendQuestion = async (questionText) => {
     await loadConversations()
   } catch (error) {
     console.error(error)
+    const errorMessage =
+      error.response?.data?.msg ||
+      error.response?.data?.message ||
+      error.response?.data?.detail ||
+      '服务器异常，请稍后再试。'
 
     messages.value.push({
       id: Date.now() + 1,
       role: 'assistant',
-      content: '服务器异常，请稍后再试。'
+      content: errorMessage
     })
     await scrollMessagesToBottom()
   } finally {

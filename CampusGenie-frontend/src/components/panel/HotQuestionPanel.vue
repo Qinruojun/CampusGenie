@@ -132,7 +132,6 @@ const {
             <RouterLink :to="{name: 'qa-result',
                               query:{
                                 q:item.question,
-                                answer:item.answer,
                                 from: resultFrom,
                               }
             }"
@@ -143,7 +142,6 @@ const {
                   <span v-if="showHotMark && item.rank <= 3" class="hot-mark">🔥</span>
                   {{ item.question }}
                 </strong>
-                <span class="hot-answer">{{ item.answer || '暂无答案' }}</span>
               </span>
               <small>{{ item.queryCount }} 次浏览</small>
             </RouterLink>
@@ -287,16 +285,10 @@ const {
   gap: 6px;
 }
 
-.hot-content strong,
-.hot-answer {
+.hot-content strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.hot-answer {
-  color: var(--muted);
-  font-size: 13px;
 }
 
 small {

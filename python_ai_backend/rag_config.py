@@ -68,7 +68,7 @@ class RagConfig:
 
     # 大模型配置：ChatOpenAI 兼容接口，可以接本地或远程 OpenAI 格式服务。
     model_name: str = field(default_factory=lambda: os.getenv("RAG_LLM_MODEL", "qwen"))
-    llm_api_base: str = field(default_factory=lambda: os.getenv("RAG_LLM_API_BASE", "http://116.62.139.249:8000/v1"))
+    llm_api_base: str = field(default_factory=lambda: os.getenv("RAG_LLM_API_BASE", "http://114.55.73.45:8000/v1"))
     llm_api_key: str = field(default_factory=lambda: os.getenv("RAG_LLM_API_KEY", "not-needed"))
     temperature: float = 0.1
     max_tokens: int = 800

@@ -25,12 +25,13 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """前端响应体。knowledge_id 为本地知识库命中时的知识条目 ID。"""
+    """前端响应体。related_questions 是相似度最高的推荐问题。"""
 
     answer: str
     cost_time: float
     session_id: str
     knowledge_id: Optional[int] = None
+    related_questions: list[str] = Field(default_factory=list)
 
 
 @asynccontextmanager
@@ -76,6 +77,7 @@ def _build_chat_response(answer: Any, cost_time: float, session_id: str) -> Chat
             cost_time=cost_time,
             session_id=session_id,
             knowledge_id=answer.get("kb_id"),
+            related_questions=answer.get("related_questions", []),
         )
 
     return ChatResponse(

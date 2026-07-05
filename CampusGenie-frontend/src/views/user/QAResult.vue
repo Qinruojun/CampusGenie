@@ -1,14 +1,71 @@
 <script setup>
 import { useRoute } from 'vue-router'
+import { ref, watch } from 'vue'
+import { askQuestion } from '@/api/user/qa.js'
+
 const route = useRoute()
-const question = route.query.q
-const answer = route.query.answer
 const isFromAdminHot = route.query.from === 'admin-hot'
 const showBackToHot = route.query.from === 'hot' || isFromAdminHot
 const hotListPath = isFromAdminHot ? '/admin/hotQuestion' : '/user/hot'
 const homePath = isFromAdminHot ? '/admin/knowledge' : '/user/home'
 
+const question = ref('')
+const answer = ref('')
+const relatedQuestions = ref([])
+const loading = ref(false)
+const errorMessage = ref('')
 
+function normalizeRelatedQuestions(data) {
+  const rawList = data?.relatedQuestions || data?.related_questions || []
+  if (!Array.isArray(rawList)) {
+    return []
+  }
+
+  return rawList
+    .map(item => (typeof item === 'string' ? item : item?.question))
+    .filter(Boolean)
+}
+
+async function loadAnswer(questionText) {
+  const text = String(questionText || '').trim()
+  if (!text) return
+
+  question.value = text
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    const res = await askQuestion(text)
+    const data = res?.data || {}
+    answer.value = data.answer || '暂无答案'
+    relatedQuestions.value = normalizeRelatedQuestions(data)
+  } catch (error) {
+    console.error(error)
+    if (!answer.value) {
+      answer.value = ''
+    }
+    relatedQuestions.value = []
+    errorMessage.value = answer.value ? '' : '答案加载失败，请稍后再试。'
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleRelatedQuestionClick(item) {
+  loadAnswer(item)
+}
+
+watch(
+  () => route.query.q,
+  (newQuestion) => {
+    const fallbackAnswer = route.query.answer
+    if (fallbackAnswer) {
+      answer.value = String(fallbackAnswer)
+    }
+    loadAnswer(newQuestion)
+  },
+  { immediate: true }
+)
 
 </script>
 
@@ -32,15 +89,23 @@ const homePath = isFromAdminHot ? '/admin/knowledge' : '/user/home'
       <div class="check">✓</div>
       <div>
         <p class="muted">系统匹配到的答案</p>
-        <h2>{{ answer }}</h2>
+        <h2 v-if="loading">答案加载中...</h2>
+        <h2 v-else-if="errorMessage">{{ errorMessage }}</h2>
+        <h2 v-else>{{ answer }}</h2>
 
       </div>
     </section>
 
     <section class="card panel related">
       <h3>相关问题</h3>
+      <p v-if="loading" class="muted">正在生成相关问题...</p>
       <ul class="simple-list">
-        <li v-for="item in relatedQuestions" :key="item" class="simple-row">
+        <li
+          v-for="item in relatedQuestions"
+          :key="item"
+          class="simple-row"
+          @click="handleRelatedQuestionClick(item)"
+        >
           <span>{{ item }}</span>
           <span>›</span>
         </li>
@@ -138,17 +203,36 @@ h1 {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .simple-row {
   display: flex;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 16px;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  background: #fff;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.simple-row span:first-child {
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.simple-row span:last-child {
+  flex-shrink: 0;
+  color: var(--muted);
 }
 
 .simple-row:hover {
+  background: rgba(35, 157, 83, 0.06);
+  border-color: rgba(35, 157, 83, 0.22);
   color: #16a34a;
 }
 </style>
