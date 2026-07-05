@@ -622,9 +622,162 @@ const allNodes = computed<SpaceNode[]>(() => [
   color: #8a9b82;
 }
 
+@media (max-width: 1440px) and (min-width: 821px) {
+  .spirit-space {
+    min-height: 760px;
+    padding: 30px 42px 72px;
+  }
+
+  .season-card {
+    min-width: 210px;
+    min-height: 68px;
+    padding: 10px 14px;
+  }
+
+  .season-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .hero-copy {
+    max-width: 430px;
+    margin-top: 42px;
+  }
+
+  .hero-copy h1 {
+    font-size: 56px;
+  }
+
+  .hero-copy p {
+    margin-top: 16px;
+    font-size: 15px;
+  }
+
+  .handline {
+    width: 132px;
+    margin-top: 16px;
+  }
+
+  .filter-panel {
+    gap: 14px;
+    width: 132px;
+    margin-top: 56px;
+    padding: 16px 14px;
+  }
+
+  .filter-panel a {
+    min-height: 30px;
+    font-size: 13px;
+  }
+
+  .map-field {
+    inset: 88px 56px 98px 190px;
+  }
+
+  .space-node {
+    gap: 6px;
+    width: 118px;
+  }
+
+  .node-icon {
+    width: 72px;
+    height: 72px;
+  }
+
+  .node-large .node-icon {
+    width: 92px;
+    height: 92px;
+  }
+
+  .node-small .node-icon {
+    width: 66px;
+    height: 66px;
+  }
+
+  .space-node strong {
+    font-size: 15px;
+  }
+
+  .space-node small {
+    font-size: 12px;
+  }
+
+  .status-pill {
+    bottom: 28px;
+    gap: 16px;
+    min-height: 50px;
+    padding: 0 22px;
+  }
+
+  .create-island {
+    right: 38px;
+    bottom: 26px;
+  }
+
+  .create-island span {
+    width: 56px;
+    height: 56px;
+  }
+
+  .foreground-left svg {
+    width: 150px;
+    height: 150px;
+  }
+
+  .foreground-right {
+    right: 92px;
+    bottom: 30px;
+  }
+
+  .foreground-right svg:nth-child(1) {
+    width: 92px;
+    height: 92px;
+  }
+
+  .foreground-right svg:nth-child(2) {
+    width: 70px;
+    height: 70px;
+  }
+
+  .foreground-right svg:nth-child(3) {
+    width: 108px;
+    height: 108px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 821px) {
+  .spirit-space {
+    min-height: 700px;
+    padding-top: 24px;
+    padding-bottom: 62px;
+  }
+
+  .hero-copy {
+    margin-top: 30px;
+  }
+
+  .filter-panel {
+    margin-top: 42px;
+  }
+
+  .map-field {
+    inset: 74px 52px 86px 180px;
+  }
+
+  .node-icon {
+    width: 66px;
+    height: 66px;
+  }
+
+  .node-large .node-icon {
+    width: 84px;
+    height: 84px;
+  }
+}
+
 @media (max-width: 1120px) {
   .spirit-space {
-    min-height: 980px;
+    min-height: 900px;
   }
 
   .map-field {

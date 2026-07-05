@@ -352,6 +352,61 @@ h1 {
   font-size: 18px;
 }
 
+@media (max-width: 1440px) and (min-width: 761px) {
+  .space-route {
+    gap: 18px;
+  }
+
+  .space-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 0.48fr);
+    gap: 24px;
+    min-height: 440px;
+    padding: 42px;
+  }
+
+  h1 {
+    font-size: 58px;
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    font-size: 19px;
+  }
+
+  .space-copy > p:not(.subtitle) {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .route-actions {
+    margin-top: 24px;
+  }
+
+  .route-orb {
+    width: min(230px, 100%);
+  }
+
+  .community-posts {
+    gap: 14px;
+    padding: 28px;
+  }
+
+  .posts-head h2 {
+    font-size: 32px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .space-hero {
+    min-height: 380px;
+    padding: 34px;
+  }
+
+  .route-orb {
+    width: min(200px, 100%);
+  }
+}
+
 @media (max-width: 760px) {
   .space-hero {
     grid-template-columns: 1fr;

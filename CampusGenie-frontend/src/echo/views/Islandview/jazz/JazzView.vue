@@ -504,6 +504,133 @@ const featureCards = [
   font-size: 18px;
 }
 
+@media (max-width: 1440px) and (min-width: 1181px) {
+  .back-home {
+    top: 22px;
+    left: 36px;
+    min-height: 36px;
+    padding: 0 14px;
+  }
+
+  .jazz-main {
+    width: min(1280px, calc(100vw - 48px));
+    padding: 64px 0 46px;
+  }
+
+  .hero-grid {
+    grid-template-columns: minmax(430px, 1fr) minmax(280px, 0.58fr) minmax(220px, 0.36fr);
+    gap: 28px;
+  }
+
+  .stage-card {
+    min-height: 390px;
+  }
+
+  .stage-card img {
+    height: 390px;
+    border-radius: 16px;
+  }
+
+  .hero-copy::before,
+  .hero-copy::after {
+    font-size: 34px;
+  }
+
+  .hero-copy::before {
+    left: -54px;
+  }
+
+  .hero-copy h1 {
+    font-size: 50px;
+  }
+
+  .hero-underline {
+    height: 20px;
+    margin: 8px 0 18px;
+  }
+
+  .hero-copy h2 {
+    font-size: 23px;
+  }
+
+  .hero-copy p {
+    margin-top: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .listening-card {
+    width: min(300px, 100%);
+  }
+
+  .listening-card img {
+    height: 220px;
+  }
+
+  .vinyl {
+    top: -70px;
+    width: 92px;
+    height: 92px;
+    border-width: 7px;
+  }
+
+  .feature-row {
+    gap: 14px;
+    margin-top: 38px;
+  }
+
+  .feature-card {
+    gap: 12px;
+    min-height: 104px;
+    padding: 18px;
+    border-radius: 12px;
+  }
+
+  .feature-card > svg:first-child {
+    width: 40px;
+    height: 40px;
+  }
+
+  .feature-card strong {
+    font-size: 21px;
+  }
+
+  .feature-card small {
+    margin-top: 5px;
+    font-size: 12px;
+  }
+
+  .jazz-posts {
+    gap: 14px;
+    margin-top: 34px;
+    padding: 28px;
+  }
+
+  .posts-head h2 {
+    font-size: 32px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 1181px) {
+  .jazz-main {
+    padding-top: 56px;
+  }
+
+  .stage-card,
+  .stage-card img {
+    min-height: 0;
+    height: 340px;
+  }
+
+  .feature-row {
+    margin-top: 30px;
+  }
+
+  .jazz-posts {
+    margin-top: 28px;
+  }
+}
+
 @media (max-width: 1180px) {
   .jazz-main {
     width: min(1080px, calc(100vw - 40px));

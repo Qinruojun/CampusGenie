@@ -1000,6 +1000,91 @@ button:disabled {
   background: #fffefa;
 }
 
+@media (max-width: 1440px) and (min-width: 901px) {
+  .topbar {
+    min-height: 64px;
+    padding: 10px 36px;
+  }
+
+  main {
+    width: min(1120px, calc(100% - 28px));
+    padding: 24px 0 56px;
+  }
+
+  h1 {
+    font-size: 52px;
+  }
+
+  .section-heading h1 {
+    font-size: 44px;
+  }
+
+  .lead {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .home-copy {
+    padding: 36px;
+  }
+
+  .map-stage {
+    min-height: 560px;
+  }
+
+  .island-hero {
+    padding: 24px;
+  }
+
+  .island-hero figure,
+  .island-hero img,
+  .island-cover-fallback {
+    min-height: 260px;
+  }
+
+  .season-panel,
+  .emotion-card,
+  .preview-list,
+  .rules-panel,
+  .library-view,
+  .post-card,
+  .resource-card {
+    padding: 18px;
+  }
+
+  .stat-band div {
+    padding: 18px;
+  }
+
+  .stat-band strong {
+    font-size: 26px;
+  }
+
+  .form-view {
+    padding: 28px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 901px) {
+  .topbar {
+    min-height: 60px;
+  }
+
+  main {
+    padding: 20px 0 44px;
+  }
+
+  .map-stage {
+    min-height: 500px;
+  }
+
+  .island-hero figure,
+  .island-hero img,
+  .island-cover-fallback {
+    min-height: 240px;
+  }
+}
+
 @media (max-width: 900px) {
   .topbar {
     align-items: stretch;

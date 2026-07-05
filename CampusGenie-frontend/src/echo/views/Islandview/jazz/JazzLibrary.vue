@@ -436,6 +436,117 @@ onBeforeUnmount(() => {
   gap: 4px;
 }
 
+@media (max-width: 1440px) and (min-width: 1181px) {
+  .library-shell {
+    width: min(1240px, calc(100vw - 48px));
+    padding: 16px 0 42px;
+  }
+
+  .library-nav {
+    gap: 16px;
+    min-height: 62px;
+  }
+
+  .return-link,
+  .play-button {
+    min-height: 36px;
+  }
+
+  .return-link {
+    padding: 0 14px;
+  }
+
+  .library-nav nav {
+    gap: 24px;
+  }
+
+  .library-nav nav a {
+    font-size: 15px;
+  }
+
+  .play-button {
+    padding: 0 18px;
+    font-size: 17px;
+  }
+
+  .library-layout {
+    grid-template-columns: minmax(460px, 0.96fr) minmax(440px, 0.82fr);
+    gap: 38px;
+    min-height: calc(100vh - 120px);
+    padding-top: 12px;
+  }
+
+  .photo-panel {
+    min-height: 440px;
+    height: min(540px, calc(100vh - 160px));
+    border-radius: 18px;
+  }
+
+  .resource-panel {
+    gap: 12px;
+    max-width: 600px;
+  }
+
+  .section-head {
+    margin-bottom: 4px;
+  }
+
+  .section-head h1 {
+    font-size: 42px;
+  }
+
+  .lead {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .resource-card {
+    grid-template-columns: 76px 1fr 92px;
+    gap: 14px;
+    min-height: 112px;
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  .book-cover {
+    width: 68px;
+    height: 88px;
+  }
+
+  .book-main h2 {
+    font-size: 17px;
+  }
+
+  .author,
+  .quote {
+    font-size: 12px;
+  }
+
+  .quote {
+    margin-bottom: 8px;
+  }
+
+  .tags span {
+    padding: 4px 8px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 1181px) {
+  .library-layout {
+    min-height: calc(100vh - 104px);
+  }
+
+  .photo-panel {
+    min-height: 390px;
+    height: min(470px, calc(100vh - 138px));
+  }
+
+  .resource-card {
+    min-height: 104px;
+  }
+}
+
 @media (max-width: 1180px) {
   .library-shell {
     width: min(980px, calc(100vw - 44px));

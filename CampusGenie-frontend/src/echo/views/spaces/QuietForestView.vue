@@ -335,6 +335,61 @@ function startMeditation() {
   font-size: 18px;
 }
 
+@media (max-width: 1440px) and (min-width: 761px) {
+  .meditation-view {
+    gap: 14px;
+  }
+
+  .meditation-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 0.48fr);
+    gap: 24px;
+    min-height: 440px;
+    padding: 42px;
+  }
+
+  .meditation-copy h1 {
+    font-size: 58px;
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    font-size: 19px;
+  }
+
+  .meditation-copy > p:not(.subtitle) {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .meditation-start {
+    margin-top: 22px;
+  }
+
+  .meditation-orb {
+    width: min(230px, 100%);
+  }
+
+  .meditation-posts {
+    gap: 14px;
+    padding: 28px;
+  }
+
+  .posts-head h2 {
+    font-size: 32px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .meditation-hero {
+    min-height: 380px;
+    padding: 34px;
+  }
+
+  .meditation-orb {
+    width: min(200px, 100%);
+  }
+}
+
 @keyframes breathe {
   0%,
   100% {
