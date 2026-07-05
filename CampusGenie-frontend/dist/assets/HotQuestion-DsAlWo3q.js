@@ -1,0 +1,1 @@
+import{M as e,b as t}from"./index-BWPJ4-2x.js";import{t as n}from"./HotQuestionPanel-CaCnnWTB.js";var r={__name:`HotQuestion`,setup(r){return(r,i)=>(e(),t(n,{title:`热点问题统计`,desc:`后台定时统计用户近期高频查询问题，管理员可根据趋势优化知识库内容。`,eyebrow:`Admin Analytics`,"show-refresh":!0,"show-stats":!0,"show-trend-text":!1,"show-hot-mark":!1,polling:!0,"result-from":`admin-hot`}))}};export{r as default};

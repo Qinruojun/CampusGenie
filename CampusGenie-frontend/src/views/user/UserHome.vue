@@ -39,11 +39,12 @@ function logout() {
     <header class="home-topbar">
       <RouterLink class="home-brand" to="/user/home">CampusGenie</RouterLink>
       <nav class="home-nav" aria-label="用户导航">
+        <RouterLink class="home-nav-link" to="/user/home">首页</RouterLink>
         <RouterLink to="/user/hot">热点问题</RouterLink>
         <RouterLink to="/user/qa">快速问答</RouterLink>
         <RouterLink to="/user/contribute">我要贡献</RouterLink>
         <RouterLink to="/user/contributionlist">我的贡献</RouterLink>
-        <RouterLink class="island-nav-link" to="/user/islands">岛屿</RouterLink>
+        <RouterLink to="/user/islands">岛屿</RouterLink>
       </nav>
       <button class="logout-btn" type="button" @click="logout">
         {{ username }} · 退出登录
@@ -151,6 +152,16 @@ function logout() {
 .home-nav a.router-link-active {
   color: var(--green);
   background: rgba(35, 157, 83, 0.08);
+}
+
+.home-nav .home-nav-link {
+  color: #fff;
+  background: var(--green);
+}
+
+.home-nav .home-nav-link:hover {
+  color: #fff;
+  background: #1b7f45;
 }
 
 .home-nav .island-nav-link {

@@ -1,0 +1,1 @@
+import{M as e,S as t,y as n}from"./index-BWPJ4-2x.js";import{t as r}from"./_plugin-vue_export-helper-BDNMzG2s.js";var i={},a={viewBox:`0 0 24 24`};function o(r,i){return e(),t(`svg`,a,[...i[0]||=[n(`path`,{d:`M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6l-7-3Z`},null,-1),n(`path`,{d:`m9.5 12 1.8 1.8 4-4`},null,-1)]])}var s=r(i,[[`render`,o]]);export{s as t};
