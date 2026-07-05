@@ -11,6 +11,7 @@ public class MessageConstant {
     public static final String NOT_FOUND = "数据不存在";
     public static final String OPERATION_SUCCESS = "操作成功";
     public static final String OPERATION_FAILED = "操作失败";
+    public static final String INTERNAL_SERVER_ERROR = "服务器内部错误";
 
     // 用户/管理员
     public static final String ACCOUNT_NOT_FOUND = "账号不存在";

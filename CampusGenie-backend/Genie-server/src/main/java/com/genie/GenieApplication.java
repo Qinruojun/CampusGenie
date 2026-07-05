@@ -10,7 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableTransactionManagement //开启注解方式的事务管理
+@EnableTransactionManagement
 @Slf4j
 @EnableCaching
 public class GenieApplication {
