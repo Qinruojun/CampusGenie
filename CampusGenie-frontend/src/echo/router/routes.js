@@ -75,7 +75,7 @@ export const echoRoutes = [
     path: "spaces/hug-station",
     name: echoRouteNames.hugStation,
     component: HugStationView,
-    meta: { title: "拥抱站", slug: "tree-hole" }
+    meta: { title: "咖啡室", slug: "coffee-room" }
   },
   {
     path: "spaces/dream-island",
@@ -105,7 +105,7 @@ export const echoRoutes = [
     path: "spaces/warm-lamp",
     name: echoRouteNames.warmLamp,
     component: WarmLampView,
-    meta: { title: "暖灯岛", slug: "tree-hole" }
+    meta: { title: "茶室", slug: "tea-room" }
   },
   {
     path: "spaces/custom/:id",

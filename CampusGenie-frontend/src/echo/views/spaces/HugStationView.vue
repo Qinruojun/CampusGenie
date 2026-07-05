@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { HeartHandshake } from "lucide-vue-next";
+import { Coffee } from "lucide-vue-next";
 import SpaceRouteView from "./SpaceRouteView.vue";
 </script>
 
 <template>
   <SpaceRouteView
-    title="拥抱站"
-    subtitle="给自己，也给别人"
-    description="当你需要一点安慰，或者想给别人留下一句支持，可以来到这里。"
-    :icon="HeartHandshake"
-    tone="#d98585"
-    accent="#fff0ef"
+    title="咖啡室"
+    subtitle="一杯咖啡，一段专注时刻"
+    description="这里适合放下输入、开始感受。你可以写下最近的一点灵感、一次停顿，或者一段还没有整理好的心情。"
+    :icon="Coffee"
+    tone="#8b5e3c"
+    accent="#f7eee4"
+    island-slug="coffee-room"
   />
 </template>

@@ -1,6 +1,5 @@
 package com.genie.handler;
 
-import com.genie.constant.CodeConstant;
 import com.genie.constant.MessageConstant;
 import com.genie.exception.AccountLockedException;
 import com.genie.exception.BaseException;
@@ -86,13 +85,6 @@ public class GlobalExceptionHandler {
     public Result<Void> handleAccountLockedException(AccountLockedException ex) {
         log.warn("账号锁定：{}", ex.getMessage());
         return Result.error(ex.getMessage());
-    }
-
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Result<Void> handleException(Exception ex) {
-        log.error("服务器内部异常：", ex);
-        return Result.error(CodeConstant.INTERNAL_SERVER_ERROR, MessageConstant.INTERNAL_SERVER_ERROR);
     }
 
 }

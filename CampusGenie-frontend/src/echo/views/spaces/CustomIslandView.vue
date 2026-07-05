@@ -3,7 +3,17 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Leaf, Trash2 } from "lucide-vue-next";
 import { findCustomIsland, removeCustomIsland } from "../../stores/customIslands";
+import type { PostItem } from "../../data/mock";
 import SpaceRouteView from "./SpaceRouteView.vue";
+
+defineProps<{
+  islandPosts?: PostItem[];
+  actionMessage?: string;
+}>();
+
+const emit = defineEmits<{
+  reactToPost: [post: PostItem, reaction: string];
+}>();
 
 const route = useRoute();
 const router = useRouter();
@@ -41,6 +51,10 @@ function deleteIsland() {
       :icon="Leaf"
       :tone="island.themeColor"
       accent="#eef5e8"
+      :island-slug="`custom-${island.id}`"
+      :island-posts="islandPosts ?? []"
+      :action-message="actionMessage"
+      @react-to-post="(post, reaction) => emit('reactToPost', post, reaction)"
     />
   </section>
 

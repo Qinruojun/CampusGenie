@@ -1,9 +1,22 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { RouterLink } from "vue-router";
-import { ArrowLeft, CirclePlay, TreePine } from "lucide-vue-next";
+import { ArrowLeft, CirclePlay, Heart, MessageCircle, Plus, TreePine } from "lucide-vue-next";
+import type { PostItem } from "../../data/mock";
+import { reactionLabel, statusCardLabel } from "../../utils/labels";
 
 const isMeditating = ref(false);
+
+const props = defineProps<{
+  islandPosts?: PostItem[];
+  actionMessage?: string;
+}>();
+
+const emit = defineEmits<{
+  reactToPost: [post: PostItem, reaction: string];
+}>();
+
+const visiblePosts = computed(() => (props.islandPosts ?? []).filter((post) => post.islandSlug === "low-energy"));
 
 function startMeditation() {
   isMeditating.value = true;
@@ -42,6 +55,54 @@ function startMeditation() {
     </div>
 
     <p v-if="isMeditating" class="breath-line">吸气 4 秒，停留 2 秒，呼气 6 秒。重复三轮就好。</p>
+
+    <section id="community-posts" class="meditation-posts">
+      <div class="posts-head">
+        <div>
+          <p class="eyebrow">回声广场</p>
+          <h2>冥想社区的回声</h2>
+          <p>发到冥想社区的帖子会出现在这里。</p>
+        </div>
+        <RouterLink class="post-action" :to="{ name: 'create-post', query: { island: 'low-energy' } }">
+          <Plus :size="18" />
+          <span>发布回声</span>
+        </RouterLink>
+      </div>
+
+      <p v-if="actionMessage" class="inline-message">{{ actionMessage }}</p>
+
+      <div v-if="visiblePosts.length" class="post-list">
+        <article v-for="post in visiblePosts" :key="post.id" class="post-card">
+          <div class="post-meta">
+            <span>{{ post.author }}</span>
+            <span>{{ post.createdAt }}</span>
+            <span>{{ statusCardLabel(post.statusCard) }}</span>
+          </div>
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.content }}</p>
+          <footer>
+            <button
+              v-for="(count, reaction) in post.reactions"
+              :key="reaction"
+              type="button"
+              @click="emit('reactToPost', post, String(reaction))"
+            >
+              <Heart :size="15" />
+              {{ reactionLabel(String(reaction)) }} {{ count }}
+            </button>
+            <button type="button">
+              <MessageCircle :size="15" />
+              {{ post.comments }} 回声
+            </button>
+          </footer>
+        </article>
+      </div>
+
+      <article v-else class="empty-posts">
+        <strong>这里还没有回声</strong>
+        <span>发布第一条帖子后，它会显示在冥想社区的回声广场。</span>
+      </article>
+    </section>
   </section>
 </template>
 
@@ -154,6 +215,126 @@ function startMeditation() {
   font-weight: 800;
 }
 
+.meditation-posts {
+  display: grid;
+  gap: 18px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid rgba(114, 150, 70, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 252, 246, 0.82);
+  box-shadow: 0 18px 48px rgba(53, 61, 55, 0.1);
+}
+
+.posts-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.posts-head .eyebrow {
+  margin: 0;
+  color: #729646;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.posts-head h2 {
+  margin: 8px 0 0;
+  color: #1f342b;
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.posts-head p:not(.eyebrow) {
+  margin: 8px 0 0;
+  color: #647067;
+  font-weight: 700;
+}
+
+.post-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 14px;
+  color: #fff;
+  border-radius: 8px;
+  background: #729646;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.inline-message {
+  margin: 0;
+  color: #729646;
+  font-weight: 900;
+}
+
+.post-list {
+  display: grid;
+  gap: 14px;
+}
+
+.post-card,
+.empty-posts {
+  padding: 18px;
+  border: 1px solid rgba(38, 49, 45, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #6f7872;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.post-card h3 {
+  margin: 10px 0 0;
+  color: #22372d;
+  font-size: 22px;
+}
+
+.post-card p {
+  margin: 10px 0 0;
+  color: #4f5d55;
+  line-height: 1.7;
+}
+
+.post-card footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.post-card footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 10px;
+  color: #729646;
+  border: 1px solid rgba(114, 150, 70, 0.22);
+  border-radius: 999px;
+  background: #eff6d7;
+  font-weight: 800;
+}
+
+.empty-posts {
+  display: grid;
+  gap: 6px;
+  color: #53615a;
+}
+
+.empty-posts strong {
+  color: #1f342b;
+  font-size: 18px;
+}
+
 @keyframes breathe {
   0%,
   100% {
@@ -174,6 +355,10 @@ function startMeditation() {
   .meditation-orb {
     width: min(220px, 100%);
     order: -1;
+  }
+
+  .posts-head {
+    display: grid;
   }
 }
 </style>

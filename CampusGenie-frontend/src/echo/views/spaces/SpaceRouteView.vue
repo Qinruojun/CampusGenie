@@ -1,41 +1,50 @@
 <script setup lang="ts">
-import type { Component, PropType } from "vue";
+import { computed, type Component } from "vue";
 import { RouterLink, type RouteLocationRaw } from "vue-router";
-import { ArrowLeft, Compass, PenLine } from "lucide-vue-next";
+import { ArrowLeft, Compass, Heart, MessageCircle, PenLine, Plus } from "lucide-vue-next";
+import type { Island, PostItem, ViewKey } from "../../data/mock";
+import { reactionLabel, statusCardLabel } from "../../utils/labels";
 
-defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-  subtitle: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  icon: {
-    type: Object as PropType<Component>,
-    required: true
-  },
-  tone: {
-    type: String,
-    required: true
-  },
-  accent: {
-    type: String,
-    required: true
-  },
-  primaryTo: {
-    type: Object as PropType<RouteLocationRaw>,
-    default: () => ({ name: "create-post" })
-  },
-  primaryLabel: {
-    type: String,
-    default: "发布一条回声"
+const props = withDefaults(defineProps<{
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: Component;
+  tone: string;
+  accent: string;
+  primaryTo?: RouteLocationRaw;
+  primaryLabel?: string;
+  selectedIsland?: Island;
+  islandSlug?: string;
+  islandPosts?: PostItem[];
+  actionMessage?: string;
+}>(), {
+  primaryLabel: "发布一条回声",
+  islandPosts: () => []
+});
+
+const emit = defineEmits<{
+  navigate: [view: ViewKey];
+  reactToPost: [post: PostItem, reaction: string];
+}>();
+
+const postIslandSlug = computed(() => props.islandSlug || props.selectedIsland?.slug || "");
+const visiblePosts = computed(() => {
+  if (!postIslandSlug.value) {
+    return props.islandPosts;
   }
+
+  return props.islandPosts.filter((post) => post.islandSlug === postIslandSlug.value);
+});
+const primaryTarget = computed<RouteLocationRaw>(() => {
+  if (props.primaryTo) {
+    return props.primaryTo;
+  }
+
+  return {
+    name: "create-post",
+    query: postIslandSlug.value ? { island: postIslandSlug.value } : undefined
+  };
 });
 </script>
 
@@ -57,7 +66,7 @@ defineProps({
         <p>{{ description }}</p>
 
         <div class="route-actions">
-          <RouterLink class="primary-action" :to="primaryTo">
+          <RouterLink class="primary-action" :to="primaryTarget">
             <PenLine :size="18" />
             <span>{{ primaryLabel }}</span>
           </RouterLink>
@@ -69,6 +78,54 @@ defineProps({
         <component :is="icon" :size="86" />
       </div>
     </div>
+
+    <section id="community-posts" class="community-posts">
+      <div class="posts-head">
+        <div>
+          <p class="eyebrow">回声广场</p>
+          <h2>{{ title }}的社区回声</h2>
+          <p>发到这个社区的帖子会出现在这里。</p>
+        </div>
+        <RouterLink class="post-action" :to="primaryTarget">
+          <Plus :size="18" />
+          <span>发布回声</span>
+        </RouterLink>
+      </div>
+
+      <p v-if="actionMessage" class="inline-message">{{ actionMessage }}</p>
+
+      <div v-if="visiblePosts.length" class="post-list">
+        <article v-for="post in visiblePosts" :key="post.id" class="post-card">
+          <div class="post-meta">
+            <span>{{ post.author }}</span>
+            <span>{{ post.createdAt }}</span>
+            <span>{{ statusCardLabel(post.statusCard) }}</span>
+          </div>
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.content }}</p>
+          <footer>
+            <button
+              v-for="(count, reaction) in post.reactions"
+              :key="reaction"
+              type="button"
+              @click="emit('reactToPost', post, String(reaction))"
+            >
+              <Heart :size="15" />
+              {{ reactionLabel(String(reaction)) }} {{ count }}
+            </button>
+            <button type="button">
+              <MessageCircle :size="15" />
+              {{ post.comments }} 回声
+            </button>
+          </footer>
+        </article>
+      </div>
+
+      <article v-else class="empty-posts">
+        <strong>这里还没有回声</strong>
+        <span>发布第一条帖子后，它会显示在这个社区的回声广场。</span>
+      </article>
+    </section>
   </section>
 </template>
 
@@ -81,7 +138,8 @@ defineProps({
 
 .back-link,
 .primary-action,
-.ghost-action {
+.ghost-action,
+.post-action {
   display: inline-flex;
   align-items: center;
   justify-self: start;
@@ -179,6 +237,121 @@ h1 {
     inset 0 0 34px rgba(255, 255, 255, 0.58);
 }
 
+.community-posts {
+  display: grid;
+  gap: 18px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid rgba(38, 49, 45, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 252, 246, 0.82);
+  box-shadow: 0 18px 48px rgba(53, 61, 55, 0.1);
+}
+
+.posts-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.posts-head .eyebrow {
+  margin: 0;
+  color: var(--tone);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.posts-head h2 {
+  margin: 8px 0 0;
+  color: #1f342b;
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.posts-head p:not(.eyebrow) {
+  margin: 8px 0 0;
+  color: #647067;
+  font-weight: 700;
+}
+
+.post-action {
+  min-height: 42px;
+  padding: 9px 14px;
+  color: #fff;
+  border-radius: 8px;
+  background: var(--tone);
+}
+
+.inline-message {
+  margin: 0;
+  color: var(--tone);
+  font-weight: 900;
+}
+
+.post-list {
+  display: grid;
+  gap: 14px;
+}
+
+.post-card,
+.empty-posts {
+  padding: 18px;
+  border: 1px solid rgba(38, 49, 45, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #6f7872;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.post-card h3 {
+  margin: 10px 0 0;
+  color: #22372d;
+  font-size: 22px;
+}
+
+.post-card p {
+  margin: 10px 0 0;
+  color: #4f5d55;
+  line-height: 1.7;
+}
+
+.post-card footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.post-card footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 10px;
+  color: var(--tone);
+  border: 1px solid color-mix(in srgb, var(--tone) 20%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 70%, #fff);
+  font-weight: 800;
+}
+
+.empty-posts {
+  display: grid;
+  gap: 6px;
+  color: #53615a;
+}
+
+.empty-posts strong {
+  color: #1f342b;
+  font-size: 18px;
+}
+
 @media (max-width: 760px) {
   .space-hero {
     grid-template-columns: 1fr;
@@ -188,6 +361,10 @@ h1 {
   .route-orb {
     width: min(220px, 100%);
     order: -1;
+  }
+
+  .posts-head {
+    display: grid;
   }
 }
 </style>

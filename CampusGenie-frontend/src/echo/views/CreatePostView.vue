@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed, watch } from "vue";
 import { Send } from "lucide-vue-next";
+import { useRoute } from "vue-router";
 import { replyPreferences, statusCards } from "../data/mock";
 import type { Island } from "../data/mock";
 
@@ -12,8 +14,9 @@ interface DraftPost {
   anonymous: boolean;
 }
 
-defineProps<{
+const props = defineProps<{
   islands: Island[];
+  postableIslands?: Island[];
   draftPost: DraftPost;
   isSubmittingPost: boolean;
   actionMessage: string;
@@ -22,6 +25,23 @@ defineProps<{
 const emit = defineEmits<{
   publishPost: [];
 }>();
+
+const route = useRoute();
+const selectableIslands = computed(() => props.postableIslands?.length ? props.postableIslands : props.islands);
+
+watch(
+  () => [route.query.island, selectableIslands.value.map((island) => island.slug).join("|")],
+  ([island]) => {
+    if (typeof island !== "string") {
+      return;
+    }
+
+    if (selectableIslands.value.some((item) => item.slug === island)) {
+      props.draftPost.islandSlug = island;
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -35,7 +55,7 @@ const emit = defineEmits<{
       <label>
         岛屿
         <select v-model="draftPost.islandSlug">
-          <option v-for="island in islands" :key="island.slug" :value="island.slug">{{ island.name }}</option>
+          <option v-for="island in selectableIslands" :key="island.slug" :value="island.slug">{{ island.name }}</option>
         </select>
       </label>
       <label>
@@ -86,6 +106,7 @@ const emit = defineEmits<{
         <Send :size="18" />
         {{ isSubmittingPost ? "发布中" : "发布" }}
       </button>
+      <p class="inline-message">发布后会进入所选社区的回声广场。</p>
       <p v-if="actionMessage" class="inline-message">{{ actionMessage }}</p>
     </form>
   </section>
