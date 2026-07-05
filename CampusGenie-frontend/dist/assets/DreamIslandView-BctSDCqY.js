@@ -1,0 +1,1 @@
+import{E as e,M as t,V as n,b as r}from"./index-BWPJ4-2x.js";import{t as i}from"./cloud-CseP4blJ.js";import{t as a}from"./SpaceRouteView-B2l4wWQV.js";var o=e({__name:`DreamIslandView`,setup(e){return(e,o)=>(t(),r(a,{title:`想象岛`,subtitle:`放飞你的思绪`,description:`这里留给灵感、幻想、创作和暂时不需要结论的念头。`,icon:n(i),tone:`#9176c8`,accent:`#f1ecfb`},null,8,[`icon`]))}});export{o as default};

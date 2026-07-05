@@ -23,6 +23,8 @@ const AdminProfile = () => import('@/views/admin/AdminProfile.vue')
 const AdminLayout = () => import('@/layouts/AdminLayout.vue')
 const UserQAChat = () => import('@/views/user/QAChat.vue')
 const UserProfile = () => import('@/views/user/UserProfile.vue')
+const EchoIsland = () => import('@/echo/EchoIsland.vue')
+import { echoRoutes } from '@/echo/router/routes.js'
 import { USER_ROLE, USERNAME_KEY } from '../constants/storage'
 import { TOKEN_KEY, ADMIN_ROLE, ROLE_KEY } from '../constants/storage'
 //把页面改成懒加载
@@ -49,6 +51,17 @@ const router = createRouter({
         requiresAuth: true,
         role: USER_ROLE
       }
+    },
+    {
+      path: '/user/islands',
+      name: 'user-islands',
+      component: EchoIsland,
+      meta: {
+        hideNav: true,
+        requiresAuth: true,
+        role: USER_ROLE
+      },
+      children: echoRoutes
     },
     {
       path: '/user/login',
@@ -274,13 +287,13 @@ const router = createRouter({
       ]
     }
   ]
-}
+})
 
   //还要进行路由守卫，拦截未登陆的访问
 
 
 
-)
+
 router.beforeEach((to) => {
   console.log('--- 路由正在跳转到 ---', to.path)
 
@@ -341,5 +354,3 @@ router.beforeEach((to) => {
 // })
 
 export default router
-
-

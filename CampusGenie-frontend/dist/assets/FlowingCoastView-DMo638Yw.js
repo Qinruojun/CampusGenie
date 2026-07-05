@@ -1,0 +1,1 @@
+import{E as e,M as t,V as n,b as r}from"./index-BWPJ4-2x.js";import{t as i}from"./waves-8h5Wwgcz.js";import{t as a}from"./SpaceRouteView-B2l4wWQV.js";var o=e({__name:`FlowingCoastView`,setup(e){return(e,o)=>(t(),r(a,{title:`流动海岸`,subtitle:`释放情绪`,description:`情绪不需要马上被解释。你可以把它写下来，让它像潮水一样先流过。`,icon:n(i),tone:`#679fd0`,accent:`#edf8ff`},null,8,[`icon`]))}});export{o as default};
