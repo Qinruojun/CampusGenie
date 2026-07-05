@@ -597,6 +597,92 @@ footer {
   color: #e1a42d;
 }
 
+@media (max-width: 1440px) and (min-width: 721px) {
+  .explore-view {
+    gap: 16px;
+  }
+
+  .explore-header {
+    min-height: 92px;
+  }
+
+  .explore-header h1 {
+    font-size: 46px;
+  }
+
+  .explore-header h2 {
+    margin-top: 6px;
+    font-size: 19px;
+  }
+
+  .explore-header p {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+
+  .explore-actions {
+    gap: 12px;
+  }
+
+  .explore-note {
+    margin-top: 18px;
+    padding-right: 24px;
+  }
+
+  .explore-note::before {
+    width: 88px;
+  }
+
+  .explore-grid {
+    gap: 16px;
+  }
+
+  .explore-card {
+    grid-template-rows: auto minmax(148px, 1fr) auto;
+    gap: 12px;
+    min-height: 340px;
+    padding: 14px;
+  }
+
+  .explore-card.wide {
+    min-height: 224px;
+  }
+
+  .explore-card.wide .card-visual {
+    min-height: 170px;
+  }
+
+  .explore-card h3 {
+    margin-top: 8px;
+    font-size: 21px;
+  }
+
+  .card-subtitle {
+    font-size: 14px;
+  }
+
+  .card-description {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .card-visual {
+    min-height: 150px;
+  }
+
+  .category-pill,
+  .tag-list span {
+    min-height: 25px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .explore-footer-note {
+    font-size: 14px;
+  }
+}
+
 @media (max-width: 1200px) {
   .explore-grid {
     grid-template-columns: 1fr;

@@ -623,6 +623,145 @@ function createIsland() {
   opacity: 0.55;
 }
 
+@media (max-width: 1440px) and (min-width: 1121px) {
+  .cg-create-page {
+    padding: 26px 44px 48px;
+  }
+
+  .cg-back-link {
+    font-size: 14px;
+  }
+
+  .cg-create-card {
+    grid-template-columns: minmax(360px, 470px) minmax(360px, 470px);
+    gap: 38px;
+    width: min(1080px, calc(100vw - 80px));
+    min-height: 640px;
+    margin-top: 24px;
+    padding: 38px 44px;
+    border-radius: 24px;
+  }
+
+  .cg-create-form {
+    gap: 12px;
+  }
+
+  .cg-header-row {
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .cg-plus-badge {
+    width: 48px;
+    height: 48px;
+  }
+
+  .cg-create-header h1 {
+    font-size: 48px;
+  }
+
+  .cg-create-header p {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .cg-upload-control {
+    grid-template-columns: 142px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 98px;
+    padding: 10px 18px 10px 10px;
+  }
+
+  .cg-upload-control img {
+    width: 142px;
+    height: 80px;
+  }
+
+  .cg-upload-copy {
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .cg-upload-title {
+    gap: 8px;
+    font-size: 15px;
+  }
+
+  .cg-input-wrap,
+  .cg-select-wrap {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  .cg-textarea-wrap {
+    min-height: 84px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .cg-textarea-wrap textarea {
+    height: 58px;
+  }
+
+  .cg-submit {
+    min-height: 46px;
+  }
+
+  .cg-preview-card {
+    height: 520px;
+  }
+
+  .cg-preview-pill {
+    top: 18px;
+    right: 18px;
+    min-width: 68px;
+    padding: 9px 14px;
+    font-size: 14px;
+  }
+
+  .cg-preview-content {
+    right: 24px;
+    bottom: 26px;
+    left: 24px;
+  }
+
+  .cg-preview-content h2 {
+    font-size: 36px;
+  }
+
+  .cg-preview-content p {
+    margin: 14px 0 22px;
+    font-size: 18px;
+  }
+
+  .cg-preview-meta {
+    gap: 10px;
+    padding: 8px 14px 8px 9px;
+  }
+
+  .cg-preview-meta strong {
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 1121px) {
+  .cg-create-page {
+    padding-top: 22px;
+    padding-bottom: 36px;
+  }
+
+  .cg-create-card {
+    min-height: 580px;
+    margin-top: 18px;
+    padding: 30px 40px;
+  }
+
+  .cg-preview-card {
+    height: 470px;
+  }
+}
+
 @media (max-width: 1120px) {
   .cg-create-card {
     grid-template-columns: 1fr;
